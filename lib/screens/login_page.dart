@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'forgot_password_screen.dart';
 import 'register_page.dart'; 
 import '../main.dart'; 
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart'; // Import Localization
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -133,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
               ),
             ),
           ),
@@ -145,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
               ),
             ),
           ),
@@ -178,7 +180,7 @@ class _LoginPageState extends State<LoginPage> {
                             "SAPA", 
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w900,
-                              color: TwitterTheme.blue,
+                              color: SisapaTheme.blue,
                               letterSpacing: -1.0,
                             ),
                           ),
@@ -263,7 +265,7 @@ class _LoginPageState extends State<LoginPage> {
                               MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
                             );
                           },
-                          child: Text(t.translate('auth_forgot_pass'), style: TextStyle(color: TwitterTheme.blue)), //
+                          child: Text(t.translate('auth_forgot_pass'), style: TextStyle(color: SisapaTheme.blue)), //
                         ),
                       ),
                       SizedBox(height: 24),
@@ -274,7 +276,7 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: _signIn,
                           child: Text(t.translate('auth_login')), //
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: TwitterTheme.blue,
+                            backgroundColor: SisapaTheme.blue,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 16),
                             elevation: 0,
@@ -298,7 +300,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: Text(
                               t.translate('auth_create_one'), //
                               style: TextStyle(
-                                color: TwitterTheme.blue,
+                                color: SisapaTheme.blue,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

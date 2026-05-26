@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class CommonErrorWidget extends StatelessWidget {
   final String message;
@@ -53,8 +55,8 @@ class CommonErrorWidget extends StatelessWidget {
                 icon: Icon(Icons.refresh),
                 label: Text("Try Again"),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: TwitterTheme.blue,
-                  side: BorderSide(color: TwitterTheme.blue),
+                  foregroundColor: SisapaTheme.blue,
+                  side: BorderSide(color: SisapaTheme.blue),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),

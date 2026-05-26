@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/moderation_service.dart';
-import '../../main.dart'; // For AvatarHelper and TwitterTheme
+import '../../main.dart'; // For AvatarHelper and SisapaTheme
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 
 class BlockedUsersPage extends StatelessWidget {
   const BlockedUsersPage({super.key});

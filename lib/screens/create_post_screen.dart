@@ -14,6 +14,8 @@ import 'package:badword_guard/badword_guard.dart';
 import 'package:google_generative_ai/google_generative_ai.dart'; 
 import 'package:image_cropper/image_cropper.dart'; 
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../services/prediction_service.dart';
 import '../services/cloudinary_service.dart';
 import '../services/overlay_service.dart';
@@ -407,7 +409,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       builder: (ctx) => AlertDialog(
         title: Row(children: [Icon(Icons.gpp_bad, color: Colors.red), SizedBox(width: 8), Text(t.translate('general_rejected'))]),
         content: Text("${t.translate('post_rejected_desc')}\n\nReason: $reason"),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.translate('general_edit'), style: TextStyle(color: TwitterTheme.blue)))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.translate('general_edit'), style: TextStyle(color: SisapaTheme.blue)))],
       ),
     );
   }
@@ -452,7 +454,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: t.translate('post_crop_image'),
-            toolbarColor: TwitterTheme.blue,
+            toolbarColor: SisapaTheme.blue,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
@@ -552,10 +554,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
               if (_isAccountPrivate) ...[
                  ListTile(
-                  leading: const Icon(Icons.people, color: TwitterTheme.blue),
+                  leading: const Icon(Icons.people, color: SisapaTheme.blue),
                   title: Text(t.translate('profile_followers')),
                   subtitle: Text(t.translate('post_vis_followers_desc')),
-                  trailing: _visibility == 'followers' ? const Icon(Icons.check, color: TwitterTheme.blue) : null,
+                  trailing: _visibility == 'followers' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
                   onTap: () {
                     setState(() => _visibility = 'followers');
                     Navigator.pop(context);
@@ -569,10 +571,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 ),
               ] else ...[
                 ListTile(
-                  leading: const Icon(Icons.public, color: TwitterTheme.blue),
+                  leading: const Icon(Icons.public, color: SisapaTheme.blue),
                   title: Text(t.translate('post_vis_public')), 
                   subtitle: Text(t.translate('post_vis_public_desc')), 
-                  trailing: _visibility == 'public' ? const Icon(Icons.check, color: TwitterTheme.blue) : null,
+                  trailing: _visibility == 'public' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
                   onTap: () {
                     setState(() => _visibility = 'public');
                     Navigator.pop(context);
@@ -582,7 +584,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ListTile(
                 leading: const Icon(Icons.lock, color: Colors.red),
                 title: Text(t.translate('post_vis_me')), 
-                trailing: _visibility == 'private' ? const Icon(Icons.check, color: TwitterTheme.blue) : null,
+                trailing: _visibility == 'private' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
                 onTap: () {
                   setState(() => _visibility = 'private');
                   Navigator.pop(context);
@@ -600,7 +602,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     var t = AppLocalizations.of(context)!;
     IconData icon;
     String label;
-    Color color = TwitterTheme.blue;
+    Color color = SisapaTheme.blue;
 
     if (_visibility == 'private') {
       icon = Icons.lock;
@@ -671,7 +673,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop('save'),
-            style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
             child: Text(t.translate('general_save')),
           ),
         ],
@@ -830,7 +832,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           title: _isCommunityContext
               ? Row(
                   children: [
-                    const Icon(Icons.groups, color: TwitterTheme.blue, size: 20),
+                    const Icon(Icons.groups, color: SisapaTheme.blue, size: 20),
                     const SizedBox(width: 8),
                     Flexible(child: Text(_communityName ?? t.translate('general_community'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
                   ],
@@ -843,7 +845,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: ElevatedButton(
                 onPressed: _canPost && !_isProcessing && !_isSavingDraft ? _submitPost : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: TwitterTheme.blue,
+                  backgroundColor: SisapaTheme.blue,
                   foregroundColor: Colors.white,
                   shape: const StadiumBorder()
                 ),
@@ -884,8 +886,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               label: Text(t.translate('nav_community')), 
                               selected: _postAsCommunity,
                               onSelected: (val) => setState(() => _postAsCommunity = true),
-                              selectedColor: TwitterTheme.blue.withOpacity(0.2),
-                              labelStyle: TextStyle(color: _postAsCommunity ? TwitterTheme.blue : null),
+                              selectedColor: SisapaTheme.blue.withOpacity(0.2),
+                              labelStyle: TextStyle(color: _postAsCommunity ? SisapaTheme.blue : null),
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -915,7 +917,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold, 
                                   fontSize: 16,
-                                  color: _postAsCommunity ? TwitterTheme.blue : null
+                                  color: _postAsCommunity ? SisapaTheme.blue : null
                                 )
                               ),
                               if (_isCommunityContext)
@@ -958,8 +960,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   child: Container(
                                     margin: const EdgeInsets.only(top: 8),
                                     padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(color: TwitterTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                    child: Text("${t.translate('search_suggestion_prefix')} $_predictedText", style: const TextStyle(color: TwitterTheme.blue)),
+                                    decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                    child: Text("${t.translate('search_suggestion_prefix')} $_predictedText", style: const TextStyle(color: SisapaTheme.blue)),
                                   ),
                                 )
                             ],
@@ -979,8 +981,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    IconButton(icon: const Icon(Icons.image, color: TwitterTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: false)),
-                    IconButton(icon: const Icon(Icons.videocam, color: TwitterTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: true)),
+                    IconButton(icon: const Icon(Icons.image, color: SisapaTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: false)),
+                    IconButton(icon: const Icon(Icons.videocam, color: SisapaTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: true)),
                     
                     if (!_isCommunityContext)
                       InkWell(
@@ -1262,7 +1264,7 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
                   width: 36, height: 36, padding: const EdgeInsets.all(8),
                   child: _isSuccess 
                     ? const Icon(Icons.check, size: 20, color: Colors.white)
-                    : const CircularProgressIndicator(strokeWidth: 3, color: TwitterTheme.blue),
+                    : const CircularProgressIndicator(strokeWidth: 3, color: SisapaTheme.blue),
                 ),
               ),
             ),
@@ -1285,7 +1287,7 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
                     child: Material(
                         elevation: 8, borderRadius: BorderRadius.circular(12), color: theme.cardColor,
                         child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [
-                        if (_isSuccess) const Icon(Icons.check_circle, color: TwitterTheme.blue) else if (_isError) const Icon(Icons.error, color: Colors.red) else const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                        if (_isSuccess) const Icon(Icons.check_circle, color: SisapaTheme.blue) else if (_isError) const Icon(Icons.error, color: Colors.red) else const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
                         const SizedBox(width: 12), Expanded(child: Text(_message, style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color))),
                         ])),
                     ),

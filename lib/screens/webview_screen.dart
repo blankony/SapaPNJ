@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../main.dart'; // Untuk akses TwitterTheme
+import '../main.dart'; // Untuk akses SisapaTheme
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
@@ -95,7 +97,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 child: LinearProgressIndicator(
                   value: _progress / 100,
                   backgroundColor: theme.dividerColor,
-                  valueColor: const AlwaysStoppedAnimation<Color>(TwitterTheme.blue),
+                  valueColor: const AlwaysStoppedAnimation<Color>(SisapaTheme.blue),
                 ),
               )
             : null,

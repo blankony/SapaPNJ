@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../main.dart'; // Untuk tema
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -125,7 +127,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       onPressed: _isLoading ? null : _changePassword,
                       child: Text('Update Password'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: TwitterTheme.blue,
+                        backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(

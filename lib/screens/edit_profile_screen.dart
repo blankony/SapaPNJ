@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:image_cropper/image_cropper.dart'; 
 import '../main.dart'; 
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import 'change_password_screen.dart'; 
 import '../services/cloudinary_service.dart'; 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -31,7 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isLoading = false;
   
   int _selectedIconId = 0;
-  Color _selectedColor = TwitterTheme.blue;
+  Color _selectedColor = SisapaTheme.blue;
   String? _profileImageUrl; 
   File? _selectedImageFile; 
   
@@ -146,7 +148,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: isAvatar ? t.translate('profile_crop_avatar') : t.translate('profile_crop_banner'),
-            toolbarColor: TwitterTheme.blue,
+            toolbarColor: SisapaTheme.blue,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: isAvatar ? CropAspectRatioPreset.square : CropAspectRatioPreset.ratio3x2,
             lockAspectRatio: true,
@@ -184,7 +186,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
               SizedBox(height: 16),
               ListTile(
-                leading: Icon(Icons.camera_alt, color: TwitterTheme.blue),
+                leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
                 title: Text(t.translate('profile_camera')),
                 onTap: () {
                   Navigator.pop(context);
@@ -192,7 +194,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.photo_library, color: TwitterTheme.blue),
+                leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
                 title: Text(t.translate('profile_gallery')),
                 onTap: () {
                   Navigator.pop(context);
@@ -413,7 +415,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: TextButton(
                 onPressed: _isLoading ? null : _saveChanges,
                 style: TextButton.styleFrom(
-                  backgroundColor: TwitterTheme.blue, 
+                  backgroundColor: SisapaTheme.blue, 
                   shape: StadiumBorder(), 
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
                 ),
@@ -448,7 +450,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               CachedNetworkImage(
                                 imageUrl: _bannerImageUrl!,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Center(child: CircularProgressIndicator(color: TwitterTheme.blue)),
+                                placeholder: (context, url) => Center(child: CircularProgressIndicator(color: SisapaTheme.blue)),
                                 errorWidget: (context, url, error) => Icon(Icons.error_outline, color: Colors.grey),
                               ),
                             Container(
@@ -500,7 +502,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               child: Container(
                                 padding: EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: TwitterTheme.blue,
+                                  color: SisapaTheme.blue,
                                   shape: BoxShape.circle,
                                   border: Border.all(color: theme.scaffoldBackgroundColor, width: 2)
                                 ),

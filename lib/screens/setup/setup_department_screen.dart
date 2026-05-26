@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../data/pnj_data.dart';
 import 'setup_verification_screen.dart';
 import '../../services/overlay_service.dart'; 
@@ -112,7 +114,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                   t.translate('setup_dept_title'), // "Where do you study?"
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: TwitterTheme.blue,
+                    color: SisapaTheme.blue,
                   ),
                 ),
                 SizedBox(height: 8),
@@ -175,7 +177,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _saveAndNext,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: TwitterTheme.blue,
+                      backgroundColor: SisapaTheme.blue,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

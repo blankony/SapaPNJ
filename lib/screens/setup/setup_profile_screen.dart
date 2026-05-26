@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/cloudinary_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT INI DITAMBAHKAN
 import 'setup_department_screen.dart';
@@ -65,7 +67,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: isAvatar ? 'Crop Avatar' : 'Crop Banner',
-            toolbarColor: TwitterTheme.blue,
+            toolbarColor: SisapaTheme.blue,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: isAvatar ? CropAspectRatioPreset.square : CropAspectRatioPreset.ratio3x2,
             lockAspectRatio: true,
@@ -206,7 +208,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                     l10n.translate('personalize_your_account'),
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: TwitterTheme.blue,
+                      color: SisapaTheme.blue,
                     ),
                   ),
                   SizedBox(height: 8),
@@ -239,9 +241,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                               ? Center(child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.add_a_photo, color: TwitterTheme.blue),
+                                    Icon(Icons.add_a_photo, color: SisapaTheme.blue),
                                     // Localization: Add Banner
-                                    Text(l10n.translate('add_banner'), style: TextStyle(color: TwitterTheme.blue))
+                                    Text(l10n.translate('add_banner'), style: TextStyle(color: SisapaTheme.blue))
                                   ],
                                 ))
                               : null,
@@ -264,7 +266,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                                   : null,
                               ),
                               child: _avatarFile == null 
-                                ? Icon(Icons.add_a_photo, color: TwitterTheme.blue, size: 30)
+                                ? Icon(Icons.add_a_photo, color: SisapaTheme.blue, size: 30)
                                 : null,
                             ),
                           ),
@@ -318,7 +320,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _saveAndNext,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: TwitterTheme.blue,
+                        backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

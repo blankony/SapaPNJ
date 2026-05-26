@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 import '../../main.dart'; 
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import 'about_page.dart'; 
 import '../edit_profile_screen.dart';
 import 'account_center_page.dart'; 
@@ -74,13 +76,13 @@ class SettingsPage extends StatelessWidget {
               ListTile(
                 leading: Text("🇺🇸", style: TextStyle(fontSize: 24)),
                 title: Text("English"),
-                trailing: languageNotifier.value.languageCode == 'en' ? Icon(Icons.check, color: TwitterTheme.blue) : null,
+                trailing: languageNotifier.value.languageCode == 'en' ? Icon(Icons.check, color: SisapaTheme.blue) : null,
                 onTap: () => _changeLanguage(context, 'en'),
               ),
               ListTile(
                 leading: Text("🇮🇩", style: TextStyle(fontSize: 24)),
                 title: Text("Bahasa Indonesia"),
-                trailing: languageNotifier.value.languageCode == 'id' ? Icon(Icons.check, color: TwitterTheme.blue) : null,
+                trailing: languageNotifier.value.languageCode == 'id' ? Icon(Icons.check, color: SisapaTheme.blue) : null,
                 onTap: () => _changeLanguage(context, 'id'),
               ),
               SizedBox(height: 12),
@@ -179,7 +181,7 @@ class SettingsPage extends StatelessWidget {
             child: Text(
               t.translate('settings_header_notif'), // "Notifications"
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: TwitterTheme.blue, fontWeight: FontWeight.bold
+                color: SisapaTheme.blue, fontWeight: FontWeight.bold
               ),
             ),
           ),

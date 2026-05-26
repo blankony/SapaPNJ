@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../auth_gate.dart'; 
 import '../../services/overlay_service.dart'; 
 import '../../services/app_localizations.dart';
@@ -62,7 +64,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
              t.translate('verify_already_verified'), // "Already verified..."
              Icons.info, 
              (){},
-             color: TwitterTheme.blue
+             color: SisapaTheme.blue
            );
          }
       }
@@ -107,9 +109,9 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                   padding: EdgeInsets.all(30),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: TwitterTheme.blue.withOpacity(0.1),
+                    color: SisapaTheme.blue.withOpacity(0.1),
                   ),
-                  child: Icon(Icons.verified_user_outlined, size: 80, color: TwitterTheme.blue),
+                  child: Icon(Icons.verified_user_outlined, size: 80, color: SisapaTheme.blue),
                 ),
               ),
               SizedBox(height: 32),
@@ -118,7 +120,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: TwitterTheme.blue,
+                  color: SisapaTheme.blue,
                 ),
               ),
               SizedBox(height: 16),
@@ -136,12 +138,12 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                     onPressed: _isLoading ? null : _sendVerification,
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: TwitterTheme.blue, width: 2),
+                      side: BorderSide(color: SisapaTheme.blue, width: 2),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                     child: _isLoading 
                       ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text(t.translate('verify_send_btn'), style: TextStyle(color: TwitterTheme.blue, fontWeight: FontWeight.bold)),
+                      : Text(t.translate('verify_send_btn'), style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)),
                   ),
                 )
               else
@@ -169,7 +171,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                 child: ElevatedButton(
                   onPressed: _finishSetup,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: TwitterTheme.blue,
+                    backgroundColor: SisapaTheme.blue,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

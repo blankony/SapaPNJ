@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 
 class VideoTrimmerScreen extends StatefulWidget {
   final File file;
@@ -111,7 +113,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
         actions: [
           TextButton(
             onPressed: _isInitialized ? _saveTrimmedVideo : null,
-            child: Text("Done", style: TextStyle(fontWeight: FontWeight.bold, color: TwitterTheme.blue)),
+            child: Text("Done", style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)),
           ),
         ],
       ),
@@ -143,7 +145,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
                     IconButton(
                       iconSize: 40,
                       icon: Icon(_isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
-                      color: TwitterTheme.blue,
+                      color: SisapaTheme.blue,
                       onPressed: () {
                         setState(() {
                           if (_isPlaying) {
@@ -172,7 +174,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
 
                 // Range Slider (The Trimmer UI)
                 RangeSlider(
-                  activeColor: TwitterTheme.blue,
+                  activeColor: SisapaTheme.blue,
                   inactiveColor: Colors.grey.shade300,
                   min: 0.0,
                   max: _totalDuration,

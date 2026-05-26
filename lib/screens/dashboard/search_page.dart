@@ -7,6 +7,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../widgets/blog_post_card.dart';
 import '../../widgets/common_error_widget.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../dashboard/profile_page.dart';
 import '../community/community_detail_screen.dart';
 import '../../services/prediction_service.dart';
@@ -416,7 +418,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                             ? t.translate('search_listening') 
                                             : t.translate('search_hint'), 
                                         hintStyle: TextStyle(
-                                          color: _isListening ? TwitterTheme.blue : theme.hintColor,
+                                          color: _isListening ? SisapaTheme.blue : theme.hintColor,
                                           fontStyle: _isListening ? FontStyle.italic : FontStyle.normal,
                                           fontWeight: _isListening ? FontWeight.bold : FontWeight.normal,
                                         ),
@@ -470,7 +472,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                       padding: const EdgeInsets.only(bottom: 8.0, left: 24.0, right: 24.0),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.lightbulb_outline, size: 14, color: TwitterTheme.blue),
+                                          Icon(Icons.lightbulb_outline, size: 14, color: SisapaTheme.blue),
                                           SizedBox(width: 8),
                                           Expanded(
                                             child: RichText(
@@ -478,7 +480,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                                 style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 13),
                                                 children: [
                                                   TextSpan(text: t.translate('search_suggestion_prefix')), 
-                                                  TextSpan(text: _searchSuggestion, style: TextStyle(fontWeight: FontWeight.bold, color: TwitterTheme.blue)),
+                                                  TextSpan(text: _searchSuggestion, style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)),
                                                 ],
                                               ),
                                             ),
@@ -522,7 +524,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Icon(Icons.trending_up, color: TwitterTheme.blue),
+                  Icon(Icons.trending_up, color: SisapaTheme.blue),
                   SizedBox(width: 8),
                   Text(t.translate('search_trending_title'),
                       style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
@@ -567,7 +569,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                           dense: false,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: Text("${index + 1}", style: TextStyle(color: theme.hintColor, fontWeight: FontWeight.bold, fontSize: 16)),
-                          title: Text(tag, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isHashtag ? TwitterTheme.blue : theme.textTheme.bodyLarge?.color)),
+                          title: Text(tag, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isHashtag ? SisapaTheme.blue : theme.textTheme.bodyLarge?.color)),
                           subtitle: Text("$count distinct posts"),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -589,9 +591,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                             children: [
                               Text(
                                 _showAllTrending ? t.translate('general_show_less') : t.translate('general_show_more'), 
-                                style: TextStyle(color: TwitterTheme.blue, fontWeight: FontWeight.bold)
+                                style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)
                               ),
-                              Icon(_showAllTrending ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: TwitterTheme.blue, size: 16)
+                              Icon(_showAllTrending ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: SisapaTheme.blue, size: 16)
                             ],
                           ),
                         ),
@@ -663,9 +665,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                     children: [
                                       CircleAvatar(
                                         radius: 28,
-                                        backgroundColor: TwitterTheme.blue.withOpacity(0.1),
+                                        backgroundColor: SisapaTheme.blue.withOpacity(0.1),
                                         backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
-                                        child: imageUrl == null ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'C', style: TextStyle(fontWeight: FontWeight.bold, color: TwitterTheme.blue)) : null,
+                                        child: imageUrl == null ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'C', style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)) : null,
                                       ),
                                       SizedBox(height: 8),
                                       Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.bold)),
@@ -957,8 +959,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             return ListTile(
               leading: CircleAvatar(
                 backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
-                backgroundColor: TwitterTheme.blue.withOpacity(0.1),
-                child: imageUrl == null ? Icon(Icons.groups, color: TwitterTheme.blue) : null,
+                backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+                child: imageUrl == null ? Icon(Icons.groups, color: SisapaTheme.blue) : null,
               ),
               title: Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text("$memberCount ${t.translate('general_members')}"),
@@ -1058,7 +1060,7 @@ class _UserSearchTileState extends State<_UserSearchTile> {
                 )
               : ElevatedButton(
                   onPressed: _toggleFollow, 
-                  style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white, elevation: 0, padding: EdgeInsets.symmetric(horizontal: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), 
+                  style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, elevation: 0, padding: EdgeInsets.symmetric(horizontal: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), 
                   child: Text(t.translate('community_follow')) 
                 )
           ],

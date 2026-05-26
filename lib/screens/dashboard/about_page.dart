@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
 
 class AboutPage extends StatelessWidget {
@@ -47,7 +49,7 @@ class AboutPage extends StatelessWidget {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
               ),
             ),
           ),
@@ -59,7 +61,7 @@ class AboutPage extends StatelessWidget {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
               ),
             ),
           ),
@@ -77,15 +79,15 @@ class AboutPage extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          TwitterTheme.blue.withOpacity(0.1),
-                          TwitterTheme.blue.withOpacity(0.05),
+                          SisapaTheme.blue.withOpacity(0.1),
+                          SisapaTheme.blue.withOpacity(0.05),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: TwitterTheme.blue.withOpacity(0.2),
+                          color: SisapaTheme.blue.withOpacity(0.2),
                           blurRadius: 20,
                           spreadRadius: 2,
                         )
@@ -101,7 +103,7 @@ class AboutPage extends StatelessWidget {
                     t('app_name'), // Uses existing key
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: TwitterTheme.blue,
+                      color: SisapaTheme.blue,
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -125,7 +127,7 @@ class AboutPage extends StatelessWidget {
                       color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: TwitterTheme.blue.withOpacity(0.3),
+                        color: SisapaTheme.blue.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -136,7 +138,7 @@ class AboutPage extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.info_outline,
-                              color: TwitterTheme.blue,
+                              color: SisapaTheme.blue,
                               size: 24,
                             ),
                             SizedBox(width: 12),
@@ -144,7 +146,7 @@ class AboutPage extends StatelessWidget {
                               t('about_app_section'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: TwitterTheme.blue,
+                                color: SisapaTheme.blue,
                               ),
                             ),
                           ],
@@ -163,7 +165,7 @@ class AboutPage extends StatelessWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.school, color: TwitterTheme.blue, size: 20),
+                            Icon(Icons.school, color: SisapaTheme.blue, size: 20),
                             SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -199,7 +201,7 @@ class AboutPage extends StatelessWidget {
                     t('about_dev_team'),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: TwitterTheme.blue,
+                      color: SisapaTheme.blue,
                     ),
                   ),
                   SizedBox(height: 24),
@@ -232,16 +234,16 @@ class AboutPage extends StatelessWidget {
                     onPressed: _launchRepo,
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                      side: BorderSide(color: TwitterTheme.blue, width: 1.5),
+                      side: BorderSide(color: SisapaTheme.blue, width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    icon: Icon(Icons.code, size: 20, color: TwitterTheme.blue),
+                    icon: Icon(Icons.code, size: 20, color: SisapaTheme.blue),
                     label: Text(
                       t('about_view_source'),
                       style: TextStyle(
-                        color: TwitterTheme.blue,
+                        color: SisapaTheme.blue,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -279,7 +281,7 @@ class AboutPage extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: TwitterTheme.blue.withOpacity(0.3),
+          color: SisapaTheme.blue.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -290,7 +292,7 @@ class AboutPage extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: TwitterTheme.blue,
+                color: SisapaTheme.blue,
                 width: 2.5,
               ),
             ),
@@ -336,13 +338,13 @@ class AboutPage extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: TwitterTheme.blue.withOpacity(0.1),
+              color: SisapaTheme.blue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               nim,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: TwitterTheme.blue,
+                color: SisapaTheme.blue,
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
               ),

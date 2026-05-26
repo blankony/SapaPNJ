@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../dashboard/profile_page.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
@@ -54,7 +56,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: TwitterTheme.blue,
+          labelColor: SisapaTheme.blue,
           unselectedLabelColor: theme.hintColor,
           indicatorSize: TabBarIndicatorSize.label,
           tabs: [
@@ -66,7 +68,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
       body: Stack(
         children: [
            // Blobs for vibe
-           Positioned(top: 50, right: -50, child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: TwitterTheme.blue.withOpacity(isDark ? 0.05 : 0.03)))),
+           Positioned(top: 50, right: -50, child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.05 : 0.03)))),
            
            TabBarView(
             controller: _tabController,

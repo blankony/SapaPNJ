@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
@@ -301,7 +303,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
                     ElevatedButton(
                       onPressed: () => _handleRequest(true),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: TwitterTheme.blue,
+                        backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white
                       ),
                       child: Text(t.translate('notif_req_confirm')) // "Confirm"
@@ -440,7 +442,7 @@ class _NotificationTile extends StatelessWidget {
         break;
       case 'comment':
         badgeIcon = Icons.chat_bubble;
-        badgeColor = TwitterTheme.blue;
+        badgeColor = SisapaTheme.blue;
         actionText = t.translate('action_replied');
         break;
       case 'follow':

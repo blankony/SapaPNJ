@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../main.dart'; // Pastikan path ini benar untuk akses TwitterTheme
+import '../main.dart'; // Pastikan path ini benar untuk akses SisapaTheme
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class AiHistoryDrawer extends StatelessWidget {
   final Function(String sessionId) onChatSelected;
@@ -42,7 +44,7 @@ class AiHistoryDrawer extends StatelessWidget {
                         "Chat History",
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: TwitterTheme.blue
+                          color: SisapaTheme.blue
                         ),
                       ),
                       IconButton(
@@ -60,7 +62,7 @@ class AiHistoryDrawer extends StatelessWidget {
                     icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
                     label: const Text("New Chat"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: TwitterTheme.blue,
+                      backgroundColor: SisapaTheme.blue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

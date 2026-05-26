@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../widgets/blog_post_card.dart'; 
 import '../widgets/comment_tile.dart'; 
 import '../main.dart'; 
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../../services/overlay_service.dart';
 import 'follow_list_screen.dart'; // REQUIRED
 
@@ -185,14 +187,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
       child: Stack(
         clipBehavior: Clip.none, 
         children: [
-          Container(height: 120, color: TwitterTheme.darkGrey),
+          Container(height: 120, color: SisapaTheme.darkGrey),
           Positioned(
             top: 130, right: 16,
             child: isMyProfile
               ? OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: Text("Edit Profile"))
               : amIFollowing
                 ? OutlinedButton(onPressed: _unfollowUser, child: Text("Unfollow"))
-                : ElevatedButton(onPressed: _followUser, style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white), child: Text("Follow")),
+                : ElevatedButton(onPressed: _followUser, style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white), child: Text("Follow")),
           ),
           Positioned(top: 80, left: 16, child: CircleAvatar(radius: 42, backgroundColor: theme.scaffoldBackgroundColor, child: CircleAvatar(radius: 40, child: Text(name.isNotEmpty ? name[0].toUpperCase() : "A", style: TextStyle(fontSize: 30))))),
         ],

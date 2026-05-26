@@ -14,6 +14,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart'; 
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/ai_event_bus.dart';
 import '../../widgets/common_error_widget.dart';
 import '../../services/overlay_service.dart';
@@ -509,11 +511,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
             if (_messages.isEmpty) ...[
                Positioned(
                 top: -100, right: -100,
-                child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: TwitterTheme.blue.withOpacity(isDark ? 0.15 : 0.1))),
+                child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.15 : 0.1))),
               ),
               Positioned(
                 bottom: 150, left: -50,
-                child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: TwitterTheme.blue.withOpacity(isDark ? 0.1 : 0.05))),
+                child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.1 : 0.05))),
               ),
             ],
             Column(
@@ -541,12 +543,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle, color: theme.cardColor,
-                boxShadow: [BoxShadow(color: TwitterTheme.blue.withOpacity(0.25), blurRadius: 30, spreadRadius: 2)]
+                boxShadow: [BoxShadow(color: SisapaTheme.blue.withOpacity(0.25), blurRadius: 30, spreadRadius: 2)]
               ),
               child: Image.asset('images/app_icon.png', height: 70, width: 70),
             ),
             const SizedBox(height: 32),
-            Text("Spirit AI", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w900, color: TwitterTheme.blue)),
+            Text("Spirit AI", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w900, color: SisapaTheme.blue)),
             Text(t.translate('ai_subtitle'), style: theme.textTheme.titleMedium?.copyWith(color: theme.hintColor, fontWeight: FontWeight.normal)), // "Your Virtual Assistant"
             const SizedBox(height: 40),
             Column(
@@ -580,7 +582,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
         ),
         child: Row(
           children: [
-            Icon(icon, color: TwitterTheme.blue, size: 20),
+            Icon(icon, color: SisapaTheme.blue, size: 20),
             SizedBox(width: 16),
             Expanded(child: Text(text, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
             Icon(Icons.arrow_forward_ios, size: 12, color: theme.hintColor),
@@ -607,7 +609,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       padding: const EdgeInsets.only(bottom: 16, left: 0),
       child: Row(
         children: [
-          CircleAvatar(radius: 16, backgroundColor: TwitterTheme.blue.withOpacity(0.1), child: Image.asset('images/app_icon.png', height: 16, color: TwitterTheme.blue)),
+          CircleAvatar(radius: 16, backgroundColor: SisapaTheme.blue.withOpacity(0.1), child: Image.asset('images/app_icon.png', height: 16, color: SisapaTheme.blue)),
           SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -640,7 +642,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: isDark ? TwitterTheme.darkGrey.withOpacity(0.2) : TwitterTheme.extraLightGrey,
+                color: isDark ? SisapaTheme.darkGrey.withOpacity(0.2) : SisapaTheme.extraLightGrey,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: TextField(
@@ -657,7 +659,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                       ? t.translate('ai_listening') // "Listening..."
                       : t.translate('ai_hint'),     // "Ask Spirit AI..."
                   hintStyle: TextStyle(
-                    color: _isRecording ? TwitterTheme.blue : theme.hintColor,
+                    color: _isRecording ? SisapaTheme.blue : theme.hintColor,
                     fontWeight: _isRecording ? FontWeight.bold : FontWeight.normal
                   ),
                   border: InputBorder.none,
@@ -705,11 +707,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                     child: Container(
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _isTyping ? theme.disabledColor : TwitterTheme.blue,
+                        color: _isTyping ? theme.disabledColor : SisapaTheme.blue,
                         shape: BoxShape.circle,
                         boxShadow: [
                           if (!_isTyping)
-                            BoxShadow(color: TwitterTheme.blue.withOpacity(0.4), blurRadius: 10, offset: Offset(0, 4))
+                            BoxShadow(color: SisapaTheme.blue.withOpacity(0.4), blurRadius: 10, offset: Offset(0, 4))
                         ]
                       ),
                       child: Icon(Icons.send_rounded, color: Colors.white, size: 24),
@@ -744,7 +746,7 @@ class _ChatBubble extends StatelessWidget {
     final isUser = message.isUser;
     
     final textColor = isUser ? Colors.white : (theme.textTheme.bodyLarge?.color ?? Colors.black);
-    final bgColor = isUser ? TwitterTheme.blue : theme.cardColor;
+    final bgColor = isUser ? SisapaTheme.blue : theme.cardColor;
     
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
@@ -753,7 +755,7 @@ class _ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(radius: 18, backgroundColor: TwitterTheme.blue.withOpacity(0.1), child: Image.asset('images/app_icon.png', height: 20, color: TwitterTheme.blue)),
+            CircleAvatar(radius: 18, backgroundColor: SisapaTheme.blue.withOpacity(0.1), child: Image.asset('images/app_icon.png', height: 20, color: SisapaTheme.blue)),
             SizedBox(width: 10),
           ],
           Flexible(

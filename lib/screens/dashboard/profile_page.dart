@@ -14,6 +14,8 @@ import '../../widgets/blog_post_card.dart';
 import '../../widgets/comment_tile.dart';
 import '../../widgets/common_error_widget.dart'; 
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../edit_profile_screen.dart';
 import '../image_viewer_screen.dart';
 import 'settings_page.dart';
@@ -166,13 +168,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               children: [
                 Row(
                   children: [
-                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: TwitterTheme.blue)),
+                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: SisapaTheme.blue)),
                     SizedBox(width: 12),
                     Text(t.translate('profile_uploading'), style: TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
                 SizedBox(height: 10),
-                LinearProgressIndicator(backgroundColor: TwitterTheme.blue.withOpacity(0.1), valueColor: AlwaysStoppedAnimation(TwitterTheme.blue)),
+                LinearProgressIndicator(backgroundColor: SisapaTheme.blue.withOpacity(0.1), valueColor: AlwaysStoppedAnimation(SisapaTheme.blue)),
               ],
             ),
           ),
@@ -210,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
               SizedBox(height: 16),
               ListTile(
-                leading: Icon(Icons.camera_alt, color: TwitterTheme.blue),
+                leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
                 title: Text(t.translate('profile_camera')),
                 onTap: () {
                   Navigator.pop(context);
@@ -218,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 },
               ),
               ListTile(
-                leading: Icon(Icons.photo_library, color: TwitterTheme.blue),
+                leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
                 title: Text(t.translate('profile_gallery')),
                 onTap: () {
                   Navigator.pop(context);
@@ -248,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: isBanner ? t.translate('profile_crop_banner') : t.translate('profile_crop_avatar'), 
-          toolbarColor: TwitterTheme.blue, 
+          toolbarColor: SisapaTheme.blue, 
           toolbarWidgetColor: Colors.white, 
           initAspectRatio: isBanner ? CropAspectRatioPreset.ratio3x2 : CropAspectRatioPreset.square, 
           lockAspectRatio: true
@@ -292,12 +294,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               SizedBox(height: 16),
               if (currentBannerUrl != null && currentBannerUrl.isNotEmpty)
                 ListTile(
-                  leading: Icon(Icons.visibility_outlined, color: TwitterTheme.blue),
+                  leading: Icon(Icons.visibility_outlined, color: SisapaTheme.blue),
                   title: Text(t.translate('profile_view_banner')),
                   onTap: () { Navigator.pop(context); _openFullImage(context, currentBannerUrl, heroTag); },
                 ),
               ListTile(
-                leading: Icon(Icons.photo_library_outlined, color: TwitterTheme.blue),
+                leading: Icon(Icons.photo_library_outlined, color: SisapaTheme.blue),
                 title: Text(t.translate('profile_change_banner')),
                 onTap: () { Navigator.pop(context); _showImageSourceSelection(isBanner: true); },
               ),
@@ -324,12 +326,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               SizedBox(height: 16),
               if (currentImageUrl != null && currentImageUrl.isNotEmpty)
                 ListTile(
-                  leading: Icon(Icons.visibility_outlined, color: TwitterTheme.blue),
+                  leading: Icon(Icons.visibility_outlined, color: SisapaTheme.blue),
                   title: Text(t.translate('profile_view_photo')),
                   onTap: () { Navigator.pop(context); _openFullImage(context, currentImageUrl, heroTag); },
                 ),
               ListTile(
-                leading: Icon(Icons.photo_library_outlined, color: TwitterTheme.blue),
+                leading: Icon(Icons.photo_library_outlined, color: SisapaTheme.blue),
                 title: Text(t.translate('profile_change_photo')),
                 onTap: () { Navigator.pop(context); _showImageSourceSelection(isBanner: false); },
               ),
@@ -534,7 +536,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
         Widget content = RefreshIndicator(
           onRefresh: _handleRefresh,
-          color: TwitterTheme.blue,
+          color: SisapaTheme.blue,
           edgeOffset: pinnedHeaderHeight,
           notificationPredicate: (notification) => true,
           child: NestedScrollView(
@@ -547,8 +549,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   elevation: 0,
                   scrolledUnderElevation: 0,
                   expandedHeight: 218.0, 
-                  backgroundColor: isDarkMode ? Color(0xFF15202B) : TwitterTheme.white,
-                  iconTheme: IconThemeData(color: isDarkMode ? TwitterTheme.white : TwitterTheme.blue),
+                  backgroundColor: isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
+                  iconTheme: IconThemeData(color: isDarkMode ? SisapaTheme.white : SisapaTheme.blue),
                   automaticallyImplyLeading: widget.includeScaffold,
                   
                   title: AnimatedOpacity(
@@ -559,16 +561,16 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         Text(
                           name, 
                           style: TextStyle(
-                            color: isDarkMode ? TwitterTheme.white : TwitterTheme.black, 
+                            color: isDarkMode ? SisapaTheme.white : SisapaTheme.black, 
                             fontWeight: FontWeight.bold
                           )
                         ),
                         if (isVerified) ...[
                           SizedBox(width: 4),
-                          Icon(Icons.verified, size: 16, color: TwitterTheme.blue),
+                          Icon(Icons.verified, size: 16, color: SisapaTheme.blue),
                         ] else if (isPrivateAccount) ...[
                           SizedBox(width: 4),
-                          Icon(Icons.lock, size: 16, color: isDarkMode ? TwitterTheme.white : TwitterTheme.black),
+                          Icon(Icons.lock, size: 16, color: isDarkMode ? SisapaTheme.white : SisapaTheme.black),
                         ],
                       ],
                     ),
@@ -603,7 +605,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         overlayColor: WidgetStateProperty.all(Colors.transparent),
                         dividerColor: Colors.transparent, 
                       ),
-                      isDarkMode ? Color(0xFF15202B) : TwitterTheme.white,
+                      isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
                     ),
                   ),
               ];
@@ -690,9 +692,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             child: Hero(
               tag: 'banner', 
               child: Container(
-                color: TwitterTheme.darkGrey, 
+                color: SisapaTheme.darkGrey, 
                 child: bannerImageUrl != null 
-                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, errorWidget: (context, url, error) => Container(color: TwitterTheme.darkGrey)) 
+                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey)) 
                   : (isMyProfile ? Center(child: Icon(Icons.camera_alt, color: Colors.white)) : null)
               )
             ),
@@ -748,7 +750,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     if (!isPrivate) {
       return ElevatedButton(
         onPressed: _isProcessingFollow ? null : () => _followUser(false), 
-        style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white),
+        style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
         child: Text(t.translate('community_follow')),
       );
     }
@@ -774,7 +776,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         
         return ElevatedButton(
           onPressed: _isProcessingFollow ? null : () => _followUser(true), 
-          style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
           child: Text(t.translate('community_follow')),
         );
       },
@@ -814,7 +816,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             ),
             if (isVerified) ...[
               SizedBox(width: 4),
-              Icon(Icons.verified, size: 22, color: TwitterTheme.blue),
+              Icon(Icons.verified, size: 22, color: SisapaTheme.blue),
             ] else if (data['isPrivate'] ?? false) ...[
               SizedBox(width: 6),
               Icon(Icons.lock, size: 22, color: theme.textTheme.titleLarge?.color),
@@ -870,8 +872,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => KtmVerificationScreen())),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: TwitterTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: TwitterTheme.blue)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.verified_outlined, size: 16, color: TwitterTheme.blue), SizedBox(width: 6), Text(t.translate('profile_verify_get'), style: TextStyle(color: TwitterTheme.blue, fontWeight: FontWeight.bold, fontSize: 12))]),
+                decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: SisapaTheme.blue)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.verified_outlined, size: 16, color: SisapaTheme.blue), SizedBox(width: 6), Text(t.translate('profile_verify_get'), style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold, fontSize: 12))]),
               ),
             ),
           ),
@@ -879,7 +881,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         SizedBox(height: 8),
         if (!_isBlocked) ...[
           Text(displayBio.isEmpty ? t.translate('profile_no_bio') : displayBio, style: theme.textTheme.bodyLarge),
-          if ((data['bio'] ?? '').length > 100) GestureDetector(onTap: () => setState(() => _isBioExpanded = !_isBioExpanded), child: Text(_isBioExpanded ? t.translate('general_show_less') : t.translate('general_show_more'), style: TextStyle(color: TwitterTheme.blue, fontWeight: FontWeight.bold))),
+          if ((data['bio'] ?? '').length > 100) GestureDetector(onTap: () => setState(() => _isBioExpanded = !_isBioExpanded), child: Text(_isBioExpanded ? t.translate('general_show_less') : t.translate('general_show_more'), style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold))),
           SizedBox(height: 8),
           Row(children: [Icon(Icons.calendar_today, size: 14, color: theme.hintColor), SizedBox(width: 4), Text(_formatJoinedDate(data['createdAt']), style: theme.textTheme.titleSmall)]),
           SizedBox(height: 8),
@@ -954,7 +956,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     showDialog(context: context, builder: (context) => AlertDialog(
       title: Text(t.translate('profile_academic_title')), 
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(t.translate('profile_dept'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)), Text(dept, style: TextStyle(fontSize: 16)), SizedBox(height: 16), Text(t.translate('profile_prodi'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)), Text(prodi, style: TextStyle(fontSize: 16))]), 
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('general_cancel'), style: TextStyle(color: TwitterTheme.blue)))]
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('general_cancel'), style: TextStyle(color: SisapaTheme.blue)))]
     ));
   }
 

@@ -13,6 +13,8 @@ import '../widgets/common_error_widget.dart'; // REQUIRED
 import '../services/prediction_service.dart'; 
 import '../services/cloudinary_service.dart'; 
 import '../main.dart'; 
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -293,13 +295,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 margin: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(color: TwitterTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, size: 14, color: TwitterTheme.blue),
+                    Icon(Icons.auto_awesome, size: 14, color: SisapaTheme.blue),
                     SizedBox(width: 6),
-                    Flexible(child: Text("Suggested: ...$_predictedText", style: TextStyle(color: TwitterTheme.blue, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Flexible(child: Text("Suggested: ...$_predictedText", style: TextStyle(color: SisapaTheme.blue, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ],
                 ),
               ),
@@ -325,11 +327,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              IconButton(onPressed: () => _pickMedia(ImageSource.gallery), icon: Icon(Icons.add_photo_alternate_outlined, color: TwitterTheme.blue), padding: EdgeInsets.zero, constraints: BoxConstraints(minWidth: 40, minHeight: 40)),
+              IconButton(onPressed: () => _pickMedia(ImageSource.gallery), icon: Icon(Icons.add_photo_alternate_outlined, color: SisapaTheme.blue), padding: EdgeInsets.zero, constraints: BoxConstraints(minWidth: 40, minHeight: 40)),
               Expanded(
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: theme.brightness == Brightness.dark ? TwitterTheme.darkGrey.withOpacity(0.2) : TwitterTheme.extraLightGrey, borderRadius: BorderRadius.circular(24)),
+                  decoration: BoxDecoration(color: theme.brightness == Brightness.dark ? SisapaTheme.darkGrey.withOpacity(0.2) : SisapaTheme.extraLightGrey, borderRadius: BorderRadius.circular(24)),
                   child: TextField(
                     controller: _commentController,
                     onChanged: _onCommentChanged, 
@@ -342,7 +344,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               _isSending 
                 ? Padding(padding: const EdgeInsets.all(10.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
                 : Container(
-                    decoration: BoxDecoration(color: TwitterTheme.blue, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: SisapaTheme.blue, shape: BoxShape.circle),
                     child: IconButton(onPressed: _postComment, icon: Icon(Icons.send_rounded, size: 20, color: Colors.white), padding: EdgeInsets.all(10), constraints: BoxConstraints()),
                   ),
             ],

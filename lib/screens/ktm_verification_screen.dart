@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/cloudinary_service.dart';
 import '../services/overlay_service.dart';
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class KtmVerificationScreen extends StatefulWidget {
   const KtmVerificationScreen({super.key});
@@ -74,7 +76,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.verified, size: 64, color: TwitterTheme.blue),
+            const Icon(Icons.verified, size: 64, color: SisapaTheme.blue),
             const SizedBox(height: 16),
             const Text(
               "Verify your Student Status",
@@ -133,7 +135,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
               child: ElevatedButton(
                 onPressed: _isUploading ? null : _submitVerification,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: TwitterTheme.blue,
+                  backgroundColor: SisapaTheme.blue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

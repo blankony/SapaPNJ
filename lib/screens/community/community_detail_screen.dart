@@ -8,6 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../../widgets/blog_post_card.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import 'community_settings_screen.dart'; 
 import 'community_members_screen.dart'; 
 import '../create_post_screen.dart'; 
@@ -181,12 +183,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     showModalBottomSheet(context: context, shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))), builder: (ctx) {
       return SafeArea(child: Wrap(children: [
         if (url != null) ListTile(
-          leading: Icon(Icons.visibility_outlined, color: TwitterTheme.blue), 
+          leading: Icon(Icons.visibility_outlined, color: SisapaTheme.blue), 
           title: Text(isBanner ? t.translate('profile_view_banner') : t.translate('profile_view_photo')), 
           onTap: () { Navigator.pop(ctx); _openFullImage(context, url, isBanner ? 'community_banner' : 'community_icon'); }
         ),
         if (hasControl) ListTile(
-          leading: Icon(Icons.photo_library_outlined, color: TwitterTheme.blue), 
+          leading: Icon(Icons.photo_library_outlined, color: SisapaTheme.blue), 
           title: Text(isBanner ? t.translate('profile_change_banner') : t.translate('profile_change_photo')), 
           onTap: () { Navigator.pop(ctx); _pickAndUploadImage(isBanner: isBanner); }
         ),
@@ -279,12 +281,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             children: [
                               GestureDetector(
                                 onTap: () => _showImageOptions(context, avatarUrl, false, hasFullControl),
-                                child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: TwitterTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
+                                child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: SisapaTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
                               ),
                               SizedBox(width: 12),
                               Expanded(
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                  Row(children: [Flexible(child: Text(name, style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)), if (isVerified) ...[SizedBox(width: 4), Icon(Icons.verified, size: 18, color: TwitterTheme.blue)]]),
+                                  Row(children: [Flexible(child: Text(name, style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)), if (isVerified) ...[SizedBox(width: 4), Icon(Icons.verified, size: 18, color: SisapaTheme.blue)]]),
                                   Text(data['category'] == 'pnj_official' ? "Official Channel" : t.translate('general_community'), style: TextStyle(color: Colors.white70, fontSize: 12)),
                                 ]),
                               ),
@@ -311,13 +313,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             ),
                             Spacer(),
                             if (!canPost)
-                              ElevatedButton(onPressed: () => _handleFollowAction(isFollower, t), style: ElevatedButton.styleFrom(backgroundColor: isFollower ? theme.cardColor : TwitterTheme.blue, foregroundColor: isFollower ? theme.textTheme.bodyLarge?.color : Colors.white, elevation: 0, side: isFollower ? BorderSide(color: theme.dividerColor) : null, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(isFollower ? t.translate('community_following') : t.translate('community_follow')))
+                              ElevatedButton(onPressed: () => _handleFollowAction(isFollower, t), style: ElevatedButton.styleFrom(backgroundColor: isFollower ? theme.cardColor : SisapaTheme.blue, foregroundColor: isFollower ? theme.textTheme.bodyLarge?.color : Colors.white, elevation: 0, side: isFollower ? BorderSide(color: theme.dividerColor) : null, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(isFollower ? t.translate('community_following') : t.translate('community_follow')))
                             else
                               ElevatedButton.icon(
                                 onPressed: () => Navigator.push(context, _createSlideUpRoute(CreatePostScreen(initialData: {'communityId': widget.communityId, 'communityName': name, 'communityIcon': avatarUrl}))), 
                                 icon: Icon(Icons.campaign, size: 18), 
                                 label: Text(t.translate('post_create_new')), // "Buat Postingan Baru"
-                                style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
+                                style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
                               ),
                           ],
                         ),

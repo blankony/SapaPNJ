@@ -11,6 +11,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../services/overlay_service.dart';
 import '../../services/cloudinary_service.dart'; 
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 
 class CommunitySettingsScreen extends StatefulWidget {
   final String communityId;
@@ -112,7 +114,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: isBanner ? 'Crop Banner' : 'Crop Icon',
-            toolbarColor: TwitterTheme.blue,
+            toolbarColor: SisapaTheme.blue,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: isBanner ? CropAspectRatioPreset.ratio3x2 : CropAspectRatioPreset.square,
             lockAspectRatio: true,
@@ -153,7 +155,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
               SizedBox(height: 16),
               ListTile(
-                leading: Icon(Icons.camera_alt, color: TwitterTheme.blue),
+                leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
                 title: Text("Take Photo"),
                 onTap: () {
                   Navigator.pop(context);
@@ -161,7 +163,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                 },
               ),
               ListTile(
-                leading: Icon(Icons.photo_library, color: TwitterTheme.blue),
+                leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
                 title: Text("Choose from Gallery"),
                 onTap: () {
                   Navigator.pop(context);
@@ -435,7 +437,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
 
               TabBar(
                 controller: _tabController,
-                labelColor: TwitterTheme.blue,
+                labelColor: SisapaTheme.blue,
                 unselectedLabelColor: Colors.grey,
                 tabs: const [Tab(text: "General"), Tab(text: "Members & Roles")],
               ),
@@ -479,7 +481,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                             child: ElevatedButton(
                               onPressed: _isSavingInfo ? null : _saveInfo,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: TwitterTheme.blue,
+                                backgroundColor: SisapaTheme.blue,
                                 foregroundColor: Colors.white,
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

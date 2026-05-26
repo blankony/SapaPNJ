@@ -18,6 +18,8 @@ import 'profile_tab_page.dart';
 import '../create_post_screen.dart';
 import '../community/community_list_tab.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../widgets/notification_sheet.dart';
 import '../../services/overlay_service.dart';
 import '../../services/notification_prefs_service.dart';
@@ -416,12 +418,12 @@ class _HomeDashboardState extends State<HomeDashboard>
 
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: TwitterTheme.blue.withOpacity(0.1),
+                            backgroundColor: SisapaTheme.blue.withOpacity(0.1),
                             backgroundImage: icon != null
                                 ? CachedNetworkImageProvider(icon)
                                 : null,
                             child: icon == null
-                                ? Icon(Icons.groups, color: TwitterTheme.blue)
+                                ? Icon(Icons.groups, color: SisapaTheme.blue)
                                 : null,
                           ),
                           title: Text(name),
@@ -531,7 +533,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       padding: const EdgeInsets.only(bottom: 20.0),
       child: FloatingActionButton(
         onPressed: _handleFabTap,
-        backgroundColor: TwitterTheme.blue,
+        backgroundColor: SisapaTheme.blue,
         elevation: 4,
         child: const Icon(Icons.edit_outlined, color: Colors.white),
       ),
@@ -591,7 +593,7 @@ class _HomeDashboardState extends State<HomeDashboard>
         : Colors.white.withOpacity(0.85);
     final inactiveIconColor =
         isDarkMode ? Colors.white : const Color.fromARGB(170, 0, 0, 0);
-    final activeIconColor = TwitterTheme.blue;
+    final activeIconColor = SisapaTheme.blue;
 
     return ClipRect(
       child: BackdropFilter(
@@ -764,7 +766,7 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
       icon: Icon(Icons.add, color: Colors.white),
       label: Text("Create New Post", style: TextStyle(fontSize: 16)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: TwitterTheme.blue,
+        backgroundColor: SisapaTheme.blue,
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -836,11 +838,11 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-              color: TwitterTheme.blue.withOpacity(0.1),
+              color: SisapaTheme.blue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8)),
           child: Icon(
               draft.mediaUrls.isNotEmpty ? Icons.image : Icons.text_fields,
-              color: TwitterTheme.blue,
+              color: SisapaTheme.blue,
               size: 20),
         ),
         title: Text(
@@ -958,7 +960,7 @@ class _NotificationButton extends StatelessWidget {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                      color: TwitterTheme.blue, shape: BoxShape.circle),
+                      color: SisapaTheme.blue, shape: BoxShape.circle),
                 ),
               ),
           ],

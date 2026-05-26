@@ -13,6 +13,8 @@ import 'package:path/path.dart' as p;
 import 'package:video_player/video_player.dart'; 
 import 'package:intl/intl.dart'; 
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class ImageViewerScreen extends StatefulWidget {
   final String imageUrl;
@@ -434,7 +436,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                                value: event.expectedTotalBytes != null
                                    ? event.cumulativeBytesLoaded / event.expectedTotalBytes!
                                    : null,
-                               color: TwitterTheme.blue,
+                               color: SisapaTheme.blue,
                              ),
                            );
                         },
@@ -565,15 +567,15 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                                     thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
                                     overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
                                     trackHeight: 2,
-                                    thumbColor: TwitterTheme.blue,
-                                    activeTrackColor: TwitterTheme.blue,
+                                    thumbColor: SisapaTheme.blue,
+                                    activeTrackColor: SisapaTheme.blue,
                                     inactiveTrackColor: Colors.white24,
                                   ),
                                   child: Slider(
                                     value: _currentPosition.inMilliseconds.toDouble().clamp(0.0, _totalDuration.inMilliseconds.toDouble()),
                                     min: 0.0,
                                     max: _totalDuration.inMilliseconds.toDouble(),
-                                    activeColor: TwitterTheme.blue,
+                                    activeColor: SisapaTheme.blue,
                                     inactiveColor: Colors.white24,
                                     onChangeStart: _onSeekStart,
                                     onChanged: _onSeekChanged,
@@ -850,12 +852,12 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
               child: Material(
                 elevation: 4,
                 shape: CircleBorder(),
-                color: _isSuccess ? Colors.green : TwitterTheme.white,
+                color: _isSuccess ? Colors.green : SisapaTheme.white,
                 child: Container(
                   width: 36, height: 36, padding: EdgeInsets.all(8),
                   child: _isSuccess 
                     ? Icon(Icons.check, size: 20, color: Colors.white)
-                    : CircularProgressIndicator(strokeWidth: 3, color: TwitterTheme.blue),
+                    : CircularProgressIndicator(strokeWidth: 3, color: SisapaTheme.blue),
                 ),
               ),
             ),
@@ -880,7 +882,7 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
                 child: Material(
                   elevation: 8,
                   borderRadius: BorderRadius.circular(12),
-                  color: Theme.of(context).brightness == Brightness.dark ? TwitterTheme.darkGrey : Colors.white,
+                  color: Theme.of(context).brightness == Brightness.dark ? SisapaTheme.darkGrey : Colors.white,
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Column(
@@ -889,7 +891,7 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
                         Row(
                           children: [
                             if (_isSuccess)
-                              Icon(Icons.check_circle, color: TwitterTheme.blue)
+                              Icon(Icons.check_circle, color: SisapaTheme.blue)
                             else if (_isError)
                               Icon(Icons.error, color: Colors.red)
                             else
@@ -911,8 +913,8 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
                           Padding(
                             padding: const EdgeInsets.only(top: 10),
                             child: LinearProgressIndicator(
-                              backgroundColor: TwitterTheme.blue.withOpacity(0.1),
-                              valueColor: AlwaysStoppedAnimation(TwitterTheme.blue),
+                              backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+                              valueColor: AlwaysStoppedAnimation(SisapaTheme.blue),
                             ),
                           )
                       ],

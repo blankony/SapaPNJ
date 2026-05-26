@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/blog_post_card.dart';
 import '../widgets/common_error_widget.dart';
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class SavedPostsScreen extends StatelessWidget {
   const SavedPostsScreen({super.key});

@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/blog_post_card.dart';
 import '../../widgets/common_error_widget.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/prediction_service.dart';
 import '../../services/app_localizations.dart';
 
@@ -86,9 +88,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
                     color: theme.scaffoldBackgroundColor.withOpacity(0.85),
                     child: TabBar(
                       controller: _tabController,
-                      labelColor: TwitterTheme.blue,
+                      labelColor: SisapaTheme.blue,
                       unselectedLabelColor: theme.hintColor,
-                      indicatorColor: TwitterTheme.blue,
+                      indicatorColor: SisapaTheme.blue,
                       indicatorSize: TabBarIndicatorSize.label,
                       tabs: [
                         Tab(text: t.translate('home_recent')),

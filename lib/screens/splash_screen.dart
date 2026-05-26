@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart'; // IMPORT SHARED PREFERENCES
 import '../auth_gate.dart'; 
-import '../main.dart'; // For TwitterTheme
+import '../main.dart'; // For SisapaTheme
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import 'language_selection_screen.dart'; // IMPORT LANGUAGE SELECTION SCREEN
 
 class SplashScreen extends StatefulWidget {
@@ -110,7 +112,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
               ),
             ),
           ),
@@ -122,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
               ),
             ),
           ),
@@ -139,10 +141,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: TwitterTheme.blue.withOpacity(0.1),
+                      color: SisapaTheme.blue.withOpacity(0.1),
                       boxShadow: [
                         BoxShadow(
-                          color: TwitterTheme.blue.withOpacity(0.2),
+                          color: SisapaTheme.blue.withOpacity(0.2),
                           blurRadius: 20,
                           spreadRadius: 5,
                         )
@@ -166,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           style: theme.textTheme.displayLarge?.copyWith(
                             fontSize: 48, 
                             fontWeight: FontWeight.w900,
-                            color: TwitterTheme.blue,
+                            color: SisapaTheme.blue,
                             letterSpacing: -1.0,
                             height: 0.9,
                           ),

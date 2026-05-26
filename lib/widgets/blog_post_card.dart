@@ -15,6 +15,8 @@ import '../services/overlay_service.dart';
 import '../services/moderation_service.dart';
 import '../services/app_localizations.dart';
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 // IMPORT COMPONENTS
 import 'blog_post_card/video_player_widget.dart';
@@ -718,9 +720,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Uploading media...", style: TextStyle(color: TwitterTheme.blue, fontWeight: FontWeight.bold)),
+          Text("Uploading media...", style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          LinearProgressIndicator(value: null, backgroundColor: Theme.of(context).dividerColor, valueColor: AlwaysStoppedAnimation<Color>(TwitterTheme.blue)),
+          LinearProgressIndicator(value: null, backgroundColor: Theme.of(context).dividerColor, valueColor: AlwaysStoppedAnimation<Color>(SisapaTheme.blue)),
           const SizedBox(height: 4),
           Text('Processing...', style: Theme.of(context).textTheme.bodySmall),
         ],

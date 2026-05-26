@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import 'community_detail_screen.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
@@ -124,7 +126,7 @@ class BrowseCommunitiesScreen extends StatelessWidget {
                 Color badgeColor = Colors.grey;
                 if (category == 'pnj_official') { 
                   badgeIcon = Icons.account_balance; 
-                  badgeColor = TwitterTheme.blue; 
+                  badgeColor = SisapaTheme.blue; 
                 } else if (category == 'partner_official') { 
                   badgeIcon = Icons.verified; 
                   badgeColor = Colors.blueGrey; 
@@ -146,7 +148,7 @@ class BrowseCommunitiesScreen extends StatelessWidget {
                       title: Row(
                         children: [
                           Expanded(child: Text(name, style: TextStyle(fontWeight: FontWeight.bold))),
-                          if (category == 'pnj_official') Icon(Icons.verified, size: 16, color: TwitterTheme.blue),
+                          if (category == 'pnj_official') Icon(Icons.verified, size: 16, color: SisapaTheme.blue),
                         ],
                       ),
                       subtitle: Row(
@@ -170,7 +172,7 @@ class BrowseCommunitiesScreen extends StatelessWidget {
                         : IconButton(
                             tooltip: "Follow",
                             // Menggunakan icon Add (+) sesuai request
-                            icon: Icon(Icons.add_circle, color: TwitterTheme.blue, size: 28),
+                            icon: Icon(Icons.add_circle, color: SisapaTheme.blue, size: 28),
                             onPressed: () {
                               if (user != null) {
                                 _followCommunity(doc.id, user.uid);

@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
 import '../../screens/dashboard/profile_page.dart'; // Untuk AvatarHelper
 
@@ -84,9 +86,9 @@ class PostHeader extends StatelessWidget {
             onTap: onNavigateToSource,
             child: CircleAvatar(
               radius: 24,
-              backgroundColor: TwitterTheme.blue.withOpacity(0.1),
+              backgroundColor: SisapaTheme.blue.withOpacity(0.1),
               backgroundImage: displayImg != null ? CachedNetworkImageProvider(displayImg) : null,
-              child: displayImg == null ? const Icon(Icons.groups, size: 26, color: TwitterTheme.blue) : null,
+              child: displayImg == null ? const Icon(Icons.groups, size: 26, color: SisapaTheme.blue) : null,
             ),
           );
         },
@@ -164,7 +166,7 @@ class PostHeader extends StatelessWidget {
                         ),
                         if (isVerified) ...[
                           const SizedBox(width: 4),
-                          const Icon(Icons.verified, size: 14, color: TwitterTheme.blue),
+                          const Icon(Icons.verified, size: 14, color: SisapaTheme.blue),
                         ],
                       ],
                     ),

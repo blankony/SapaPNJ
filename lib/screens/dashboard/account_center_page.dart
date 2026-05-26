@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../edit_profile_screen.dart';
 import '../change_password_screen.dart';
 import '../../auth_gate.dart'; 
@@ -141,7 +143,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: TwitterTheme.blue,
+                    backgroundColor: SisapaTheme.blue,
                     foregroundColor: Colors.white,
                   ),
                   child: isVerifying 
@@ -265,7 +267,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   t.translate('account_verif_status'),
-                  style: theme.textTheme.titleMedium?.copyWith(color: TwitterTheme.blue, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(color: SisapaTheme.blue, fontWeight: FontWeight.bold),
                 ),
               ),
 
@@ -461,7 +463,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                         SizedBox(
                           width: 50, 
                           height: 50, 
-                          child: CircularProgressIndicator(strokeWidth: 4, color: TwitterTheme.blue)
+                          child: CircularProgressIndicator(strokeWidth: 4, color: SisapaTheme.blue)
                         ),
                         SizedBox(height: 24),
                         Text(
@@ -527,7 +529,7 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: TwitterTheme.blue,
+              backgroundColor: SisapaTheme.blue,
               foregroundColor: Colors.white,
             ),
             child: Text(t.translate('general_confirm')),

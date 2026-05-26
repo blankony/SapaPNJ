@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../main.dart'; // TwitterTheme
+import '../../main.dart'; // SisapaTheme
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 
 class PostActionBar extends StatelessWidget {
   final String postId;
@@ -54,7 +56,7 @@ class PostActionBar extends StatelessWidget {
             _buildActionButton(context, Icons.repeat, repostCount.toString(), isReposted ? Colors.green : null, onRepostTap, repostAnimation),
             _buildActionButton(context, isLiked ? Icons.favorite : Icons.favorite_border, likeCount.toString(), isLiked ? Colors.pink : null, onLikeTap, likeAnimation),
             _buildBookmarkButton(context),
-            _buildActionButton(context, Icons.share_outlined, 'Share', isSharing ? TwitterTheme.blue : null, onShareTap, shareAnimation),
+            _buildActionButton(context, Icons.share_outlined, 'Share', isSharing ? SisapaTheme.blue : null, onShareTap, shareAnimation),
           ],
         ),
       );
@@ -68,7 +70,7 @@ class PostActionBar extends StatelessWidget {
             _buildActionButton(context, Icons.repeat, repostCount.toString(), isReposted ? Colors.green : null, onRepostTap, repostAnimation),
             _buildActionButton(context, isLiked ? Icons.favorite : Icons.favorite_border, likeCount.toString(), isLiked ? Colors.pink : null, onLikeTap, likeAnimation),
             _buildBookmarkButton(context),
-            _buildActionButton(context, Icons.share_outlined, null, isSharing ? TwitterTheme.blue : null, onShareTap, shareAnimation),
+            _buildActionButton(context, Icons.share_outlined, null, isSharing ? SisapaTheme.blue : null, onShareTap, shareAnimation),
           ],
         ),
       );
@@ -89,7 +91,7 @@ class PostActionBar extends StatelessWidget {
           context,
           isBookmarked ? Icons.bookmark : Icons.bookmark_border,
           null,
-          isBookmarked ? TwitterTheme.blue : null,
+          isBookmarked ? SisapaTheme.blue : null,
           () => onBookmarkTap(isBookmarked),
         );
       },

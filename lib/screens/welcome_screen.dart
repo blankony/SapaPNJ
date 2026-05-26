@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
 import 'register_page.dart';
 import '../main.dart'; 
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../services/app_localizations.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -60,7 +62,7 @@ class WelcomeScreen extends StatelessWidget {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
               ),
             ),
           ),
@@ -72,7 +74,7 @@ class WelcomeScreen extends StatelessWidget {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
               ),
             ),
           ),
@@ -101,7 +103,7 @@ class WelcomeScreen extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: TwitterTheme.blue.withOpacity(0.3)),
+                                  border: Border.all(color: SisapaTheme.blue.withOpacity(0.3)),
                                   borderRadius: BorderRadius.circular(12),
                                   color: theme.cardColor.withOpacity(0.5),
                                 ),
@@ -110,14 +112,14 @@ class WelcomeScreen extends StatelessWidget {
                                   children: [
                                     Icon(
                                       Icons.translate, // CHANGED TO TRANSLATE ICON
-                                      color: TwitterTheme.blue,
+                                      color: SisapaTheme.blue,
                                       size: 24,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       locale.languageCode.toUpperCase(),
                                       style: TextStyle(
-                                        color: TwitterTheme.blue,
+                                        color: SisapaTheme.blue,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 10,
                                       ),
@@ -139,7 +141,7 @@ class WelcomeScreen extends StatelessWidget {
                     style: theme.textTheme.displayLarge?.copyWith(
                       fontSize: 72, 
                       fontWeight: FontWeight.w900,
-                      color: TwitterTheme.blue,
+                      color: SisapaTheme.blue,
                       letterSpacing: -2.0,
                       height: 0.9,
                     ),
@@ -160,7 +162,7 @@ class WelcomeScreen extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.only(left: 4),
                     decoration: BoxDecoration(
-                      border: Border(left: BorderSide(color: TwitterTheme.blue, width: 4))
+                      border: Border(left: BorderSide(color: SisapaTheme.blue, width: 4))
                     ),
                     child: Padding(
                       padding: const EdgeInsets.only(left: 12.0),
@@ -193,7 +195,7 @@ class WelcomeScreen extends StatelessWidget {
                       },
                       child: Text(t.translate('welcome_create_account')), 
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: TwitterTheme.blue,
+                        backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 18),
                         elevation: 0,
@@ -217,7 +219,7 @@ class WelcomeScreen extends StatelessWidget {
                           TextSpan(
                             text: t.translate('auth_login'), 
                             style: TextStyle(
-                              color: TwitterTheme.blue,
+                              color: SisapaTheme.blue,
                               fontWeight: FontWeight.bold,
                             ),
                             recognizer: TapGestureRecognizer()

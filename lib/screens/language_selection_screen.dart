@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart'; // Import for TwitterTheme and languageNotifier
+import '../main.dart'; // Import for SisapaTheme and languageNotifier
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../auth_gate.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
@@ -131,12 +133,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? TwitterTheme.blue.withOpacity(0.1) 
+                                  ? SisapaTheme.blue.withOpacity(0.1) 
                                   : theme.scaffoldBackgroundColor,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected 
-                                    ? TwitterTheme.blue 
+                                    ? SisapaTheme.blue 
                                     : theme.dividerColor,
                                 width: isSelected ? 2 : 1,
                               ),
@@ -148,13 +150,13 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                   lang['name']!,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? TwitterTheme.blue : theme.textTheme.bodyLarge?.color,
+                                    color: isSelected ? SisapaTheme.blue : theme.textTheme.bodyLarge?.color,
                                   ),
                                 ),
                                 if (isSelected)
                                   const Icon(
                                     Icons.check_circle, 
-                                    color: TwitterTheme.blue,
+                                    color: SisapaTheme.blue,
                                     size: 24,
                                   ),
                               ],
@@ -192,10 +194,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: TwitterTheme.blue.withOpacity(0.1),
+                    color: SisapaTheme.blue.withOpacity(0.1),
                     boxShadow: [
                       BoxShadow(
-                        color: TwitterTheme.blue.withOpacity(0.15),
+                        color: SisapaTheme.blue.withOpacity(0.15),
                         blurRadius: 30,
                         spreadRadius: 10,
                       )
@@ -204,7 +206,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   child: Icon(
                     Icons.translate,
                     size: 64,
-                    color: TwitterTheme.blue,
+                    color: SisapaTheme.blue,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -280,7 +282,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           ),
                           child: Icon(
                             Icons.keyboard_arrow_down_rounded,
-                            color: TwitterTheme.blue,
+                            color: SisapaTheme.blue,
                           ),
                         ),
                       ],
@@ -296,14 +298,14 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   child: ElevatedButton(
                     onPressed: () => _continue(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: TwitterTheme.blue,
+                      backgroundColor: SisapaTheme.blue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                       elevation: 10,
-                      shadowColor: TwitterTheme.blue.withOpacity(0.4),
+                      shadowColor: SisapaTheme.blue.withOpacity(0.4),
                     ),
                     child: Text(
                       _continueButtonText, // "Continue" or "Lanjutkan"

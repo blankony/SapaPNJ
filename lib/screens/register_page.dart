@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart'; 
 import 'package:open_filex/open_filex.dart'; 
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import 'login_page.dart'; 
 import 'setup/setup_profile_screen.dart'; 
 import '../services/app_localizations.dart'; // REQUIRED IMPORT
@@ -268,7 +270,7 @@ class _RegisterPageState extends State<RegisterPage> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
               ),
             ),
           ),
@@ -280,7 +282,7 @@ class _RegisterPageState extends State<RegisterPage> {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: TwitterTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
+                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
               ),
             ),
           ),
@@ -310,7 +312,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       // Rebranding Header
                       Row(
                         children: [
-                          Text("SAPA", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, color: TwitterTheme.blue, letterSpacing: -1.0)),
+                          Text("SAPA", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, color: SisapaTheme.blue, letterSpacing: -1.0)),
                           SizedBox(width: 8),
                           Text("PNJ", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1.0)),
                         ],
@@ -433,7 +435,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             width: 24,
                             child: Checkbox(
                               value: _isAgreed,
-                              activeColor: TwitterTheme.blue,
+                              activeColor: SisapaTheme.blue,
                               onChanged: (bool? value) {
                                 setState(() {
                                   _isAgreed = value ?? false;
@@ -457,7 +459,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   TextSpan(
                                     text: t.translate('auth_agree_terms'), // "Terms and Conditions"
                                     style: TextStyle(
-                                      color: TwitterTheme.blue,
+                                      color: SisapaTheme.blue,
                                       fontWeight: FontWeight.bold,
                                       decoration: TextDecoration.underline,
                                     ),
@@ -496,7 +498,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                             : Text(t.translate('auth_signup')), // "Sign up"
                            style: ElevatedButton.styleFrom(
-                            backgroundColor: TwitterTheme.blue,
+                            backgroundColor: SisapaTheme.blue,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 16),
                             elevation: 0,
@@ -520,7 +522,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: Text(
                               t.translate('auth_login'), // "Log in"
                               style: TextStyle(
-                                color: TwitterTheme.blue,
+                                color: SisapaTheme.blue,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../main.dart'; 
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 
 class OverlayService {
   static final OverlayService _instance = OverlayService._internal();
@@ -60,7 +62,7 @@ class OverlayService {
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: TwitterTheme.blue, // Brand color
+                color: SisapaTheme.blue, // Brand color
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
@@ -185,7 +187,7 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget> with Sin
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isDarkMode ? TwitterTheme.darkGrey : Colors.white,
+                    color: isDarkMode ? SisapaTheme.darkGrey : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -197,7 +199,7 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget> with Sin
                   ),
                   child: Row(
                     children: [
-                      Icon(widget.icon, color: widget.iconColor ?? TwitterTheme.blue),
+                      Icon(widget.icon, color: widget.iconColor ?? SisapaTheme.blue),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(

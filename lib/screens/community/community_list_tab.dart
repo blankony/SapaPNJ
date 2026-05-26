@@ -8,6 +8,8 @@ import 'community_detail_screen.dart';
 import 'browse_communities_screen.dart';
 import '../../widgets/blog_post_card.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
 
 class CommunityListTab extends StatefulWidget {
@@ -70,7 +72,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                         context,
                         t.translate('community_discover'), // "Discover"
                         Icons.explore_outlined,
-                        TwitterTheme.blue,
+                        SisapaTheme.blue,
                         () => Navigator.push(context, _createSlideUpRoute(BrowseCommunitiesScreen())),
                       ),
                     ),
@@ -290,14 +292,14 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
               padding: EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: TwitterTheme.blue.withOpacity(0.5), width: 2),
+                border: Border.all(color: SisapaTheme.blue.withOpacity(0.5), width: 2),
                 boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0,2))]
               ),
               child: CircleAvatar(
                 radius: 32,
                 backgroundColor: theme.cardColor,
                 backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
-                child: imageUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: TwitterTheme.blue)) : null,
+                child: imageUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: SisapaTheme.blue)) : null,
               ),
             ),
             SizedBox(height: 8),

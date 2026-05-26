@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart'; 
 import 'package:shared_preferences/shared_preferences.dart'; 
 import '../main.dart';
+import '../theme/app_theme.dart';
+import '../theme/avatar_helper.dart';
 import '../screens/dashboard/account_center_page.dart';
 import '../screens/dashboard/settings_page.dart';
 import '../screens/saved_posts_screen.dart'; 

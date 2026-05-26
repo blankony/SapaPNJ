@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../main.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/avatar_helper.dart';
 import '../../services/overlay_service.dart';
 import '../../services/cloudinary_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
@@ -128,7 +130,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
                   items: [
                     DropdownMenuItem(value: 'casual', child: Row(children: [Icon(Icons.tag_faces, color: Colors.orange), SizedBox(width: 8), Text(t.translate('comm_type_casual'))])),
                     DropdownMenuItem(value: 'partner_official', child: Row(children: [Icon(Icons.verified_outlined, color: Colors.blueGrey), SizedBox(width: 8), Text(t.translate('comm_type_partner'))])),
-                    DropdownMenuItem(value: 'pnj_official', child: Row(children: [Icon(Icons.account_balance, color: TwitterTheme.blue), SizedBox(width: 8), Text(t.translate('comm_type_official'))])),
+                    DropdownMenuItem(value: 'pnj_official', child: Row(children: [Icon(Icons.account_balance, color: SisapaTheme.blue), SizedBox(width: 8), Text(t.translate('comm_type_official'))])),
                   ],
                   onChanged: (val) => setState(() => _selectedCategory = val!),
                 ),
@@ -140,11 +142,11 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               SizedBox(height: 24),
               Container(
                 padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(color: TwitterTheme.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: TwitterTheme.blue.withOpacity(0.3))),
+                decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: SisapaTheme.blue.withOpacity(0.3))),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [Icon(Icons.gpp_good, color: TwitterTheme.blue), SizedBox(width: 8), Text(t.translate('comm_verify_req'), style: TextStyle(fontWeight: FontWeight.bold, color: TwitterTheme.blue))]),
+                    Row(children: [Icon(Icons.gpp_good, color: SisapaTheme.blue), SizedBox(width: 8), Text(t.translate('comm_verify_req'), style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue))]),
                     SizedBox(height: 8),
                     Text(t.translate('comm_verify_desc'), style: TextStyle(fontSize: 13, color: theme.textTheme.bodyMedium?.color)),
                     SizedBox(height: 12),
@@ -193,7 +195,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _create,
-                style: ElevatedButton.styleFrom(backgroundColor: TwitterTheme.blue, foregroundColor: Colors.white, padding: EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, padding: EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
                 child: _isLoading 
                     ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
                     : Text(isOfficial ? t.translate('comm_submit_verify') : t.translate('comm_create_btn')),
