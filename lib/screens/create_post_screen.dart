@@ -57,7 +57,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   bool _canPost = false;
   bool _isProcessing = false; 
-  String _scanStatus = 'none'; // State untuk status scan: 'loading', 'success', 'none'
+  String _scanStatus = 'none'; // State for scan status: 'loading', 'success', 'none'
   bool _isSavingDraft = false; 
 
   String _visibility = 'public'; 

@@ -140,7 +140,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
   }
 
-  // Handle Widget Recycling (PENTING untuk ListView)
+  // Handle Widget Recycling (IMPORTANT for ListView)
   @override
   void didUpdateWidget(covariant BlogPostCard oldWidget) {
     super.didUpdateWidget(oldWidget);

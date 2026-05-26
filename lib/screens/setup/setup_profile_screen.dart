@@ -177,7 +177,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Shortcut untuk localization biar kodenya lebih pendek
+    // Shortcut for localization to keep code concise
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(

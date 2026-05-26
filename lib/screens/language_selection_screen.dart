@@ -13,7 +13,7 @@ class LanguageSelectionScreen extends StatefulWidget {
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
-  // Daftar bahasa yang didukung
+  // List of supported languages
   final List<Map<String, String>> _supportedLanguages = [
     {'code': 'en', 'name': 'English', 'label': 'Continue'},
     {'code': 'id', 'name': 'Bahasa Indonesia', 'label': 'Lanjutkan'},
@@ -32,7 +32,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     }
   }
 
-  // Helper untuk mendapatkan nama bahasa yang sedang dipilih
+  // Helper to get the currently selected language name
   String get _currentLanguageName {
     final lang = _supportedLanguages.firstWhere(
       (element) => element['code'] == _selectedLanguageCode,
@@ -41,7 +41,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     return lang['name']!;
   }
 
-  // Helper untuk teks tombol Continue secara dinamis
+  // Helper for dynamic Continue button text
   String get _continueButtonText {
     final lang = _supportedLanguages.firstWhere(
       (element) => element['code'] == _selectedLanguageCode,
@@ -50,7 +50,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     return lang['label']!;
   }
 
-  // Fungsi untuk mengganti bahasa secara real-time
+  // Function to change language in real-time
   void _updateLanguage(String code) {
     setState(() {
       _selectedLanguageCode = code;

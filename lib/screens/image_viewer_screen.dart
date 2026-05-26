@@ -22,7 +22,7 @@ class ImageViewerScreen extends StatefulWidget {
   final String? postId; 
   final String heroTag;
   final VideoPlayerController? videoController; 
-  // Parameter ini penting untuk transisi mulus dari feed
+  // This parameter is important for smooth transitions from feed
   final String? thumbnailPath; 
 
   const ImageViewerScreen({
@@ -365,7 +365,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                   behavior: HitTestBehavior.opaque,
                   child: Hero(
                     tag: widget.heroTag,
-                    // Menggunakan Material transparan untuk menghindari glitch garis bawah kuning pada teks/icon
+                    // Use transparent Material to avoid yellow underline glitches on text/icons
                     child: Material(
                       color: Colors.transparent, 
                       child: Stack(

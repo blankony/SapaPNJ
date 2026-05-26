@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class BadWordService {
-  // URL Raw GitHub untuk Badwords (Text format, dipisahkan baris baru)
+  // Raw GitHub URL for Badwords (Text format, separated by newlines)
   static const String _enBadWordsUrl = 
       'https://raw.githubusercontent.com/dikako/list_badword/refs/heads/master/en_badwords.txt';
   
@@ -30,7 +30,7 @@ class BadWordService {
     }
   }
 
-  /// Helper untuk mengambil dan memparsing list dari URL text file
+  /// Helper to fetch and parse list from URL text file
   Future<List<String>> _fetchList(String url) async {
     try {
       final response = await http.get(Uri.parse(url));

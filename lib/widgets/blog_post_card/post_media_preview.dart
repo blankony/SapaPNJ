@@ -115,10 +115,10 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
       PageRouteBuilder(
         opaque: false, // Penting agar background feed tetap terlihat samar di awal
         barrierColor: Colors.black, // Warna latar belakang saat transisi selesai
-        transitionDuration: const Duration(milliseconds: 350), // Durasi sedikit diperlambat untuk kehalusan
+        transitionDuration: const Duration(milliseconds: 350), // Duration slightly slowed down for smoothness
         reverseTransitionDuration: const Duration(milliseconds: 300),
         // FadeTransition di sini hanya mempengaruhi opacity background (scrim),
-        // TIDAK mempengaruhi konten Hero yang terbang di atasnya.
+        // DOES NOT affect the Hero content flying above it.
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

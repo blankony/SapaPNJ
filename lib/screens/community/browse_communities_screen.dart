@@ -76,12 +76,12 @@ class BrowseCommunitiesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.translate('comm_explore_title'))), // "Explore Channels"
-      // Menggunakan SafeArea untuk menghindari masalah layout di edge screen saat transisi
+      // Use SafeArea to avoid layout issues on edge screens during transition
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance.collection('communities').snapshots(),
           builder: (context, snapshot) {
-            // Tampilkan loading yang memiliki ukuran pasti, bukan shrink
+            // Show loading that has a definite size, not shrink
             if (!snapshot.hasData) {
               return Center(child: CircularProgressIndicator());
             }
@@ -106,7 +106,7 @@ class BrowseCommunitiesScreen extends StatelessWidget {
               // PENTING: PageStorageKey mencegah list di-rebuild ulang dari nol saat navigasi kembali
               key: const PageStorageKey('browse_communities_list'),
               padding: EdgeInsets.all(16),
-              // Physics memastikan scroll view selalu punya constraints yang valid
+              // Physics ensure scroll view always has valid constraints
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: sortedDocs.length,
               itemBuilder: (context, index) {

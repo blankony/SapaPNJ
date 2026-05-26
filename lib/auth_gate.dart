@@ -21,8 +21,6 @@ class AuthGate extends StatelessWidget {
           return const DecisionGate();
         }
         
-        // PERUBAHAN DI SINI:
-        // Arahkan ke WelcomeScreen, bukan LoginOrRegisterPage
         return const WelcomeScreen();
       },
     );

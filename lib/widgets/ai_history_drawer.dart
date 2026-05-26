@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../main.dart'; // Pastikan path ini benar untuk akses SisapaTheme
+import '../main.dart'; // Ensure this path is correct for SisapaTheme access
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 

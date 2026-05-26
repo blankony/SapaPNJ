@@ -18,7 +18,7 @@ import 'theme/avatar_helper.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // [OPTIMASI 4] Hanya inisialisasi core Firebase, sisanya di background/MyApp
+  // [OPTIMIZATION 4] Only initialize core Firebase, the rest in background/MyApp
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -34,7 +34,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Flag untuk status inisialisasi aset/config non-kritis
+  // Flag for non-critical assets/config initialization status
   bool _isConfigLoaded = false;
 
   @override
@@ -43,7 +43,7 @@ class _MyAppState extends State<MyApp> {
     _loadAppConfig();
   }
 
-  // Load config di background agar UI tidak nge-freeze di splash native
+  // Load config in background so UI doesn't freeze on native splash
   Future<void> _loadAppConfig() async {
     try {
       await dotenv.load(fileName: ".env");
@@ -70,12 +70,12 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Tampilkan Splash Screen sementara config di-load
-    // Ini lebih baik daripada blank screen native
+    // Show Splash Screen while config is loading
+    // This is better than a blank native screen
     if (!_isConfigLoaded) {
       return MaterialApp(
         home: const Scaffold(
-          body: Center(child: CircularProgressIndicator()), // Atau Custom Splash Screen
+          body: Center(child: CircularProgressIndicator()), // Or Custom Splash Screen
         ),
         debugShowCheckedModeBanner: false,
       );
@@ -88,7 +88,7 @@ class _MyAppState extends State<MyApp> {
           valueListenable: themeNotifier,
           builder: (context, currentMode, child) {
             return MaterialApp(
-              // Menggunakan onGenerateTitle agar judul ikut berubah bahasa
+              // Use onGenerateTitle so title changes with language
               onGenerateTitle: (context) => AppLocalizations.of(context)?.translate('app_name') ?? 'Sapa PNJ',
               
               theme: SisapaTheme.lightTheme, 

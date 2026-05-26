@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../main.dart'; // Untuk tema
+import '../main.dart'; // For theme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 

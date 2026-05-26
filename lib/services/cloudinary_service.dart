@@ -19,7 +19,7 @@ class CloudinaryService {
   final String _apiKey = dotenv.env['CLOUDINARY_API_KEY'] ?? '';
   final String _apiSecret = dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
 
-  // Helper lama tetap ada tapi dibungkus untuk backward compatibility
+  // Old helper kept but wrapped for backward compatibility
   Future<String?> uploadFile(File file, String resourceType) async {
     final response = await uploadFileWithDetails(file, resourceType);
     return response.secureUrl;
@@ -28,7 +28,7 @@ class CloudinaryService {
   Future<String?> uploadImage(File file) => uploadFile(file, 'image');
   Future<String?> uploadMedia(File file) => uploadFile(file, 'auto');
 
-  // Method BARU yang mengembalikan detail lengkap (URL + Public ID)
+  // NEW Method that returns full details (URL + Public ID)
   Future<CloudinaryResponse> uploadFileWithDetails(File file, String resourceType) async {
     if (_cloudName.isEmpty || _uploadPreset.isEmpty) {
       return CloudinaryResponse(error: "Cloudinary credentials missing.");
@@ -68,7 +68,7 @@ class CloudinaryService {
     }
   }
 
-  // Method BARU untuk menghapus file di Cloudinary
+  // NEW Method to delete files in Cloudinary
   Future<bool> deleteResource(String publicId, {String resourceType = 'image'}) async {
     if (_apiKey.isEmpty || _apiSecret.isEmpty) {
       debugPrint("WARNING: API Key/Secret missing. Cannot delete from Cloudinary.");

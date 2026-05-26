@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// Timer dan dart:async tidak lagi diperlukan di sini
 import 'screens/user_info_screen.dart'; 
 import 'screens/dashboard/home_dashboard.dart'; 
 
@@ -17,42 +16,39 @@ class DecisionGate extends StatefulWidget {
 }
 
 class _DecisionGateState extends State<DecisionGate> {
-  // Semua state dan fungsi terkait verifikasi email (Timer, _checkEmailVerification, dll.)
-  // telah dihapus dari file ini.
 
   @override
   Widget build(BuildContext context) {
     final User? user = _auth.currentUser;
     
-    // Jika (karena alasan aneh) user null, kembali ke loading
+    // If user is null, return to loading
     if (user == null) {
        return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    // 1. Cek Kelengkapan Profil (Nama & NIM) di Firestore
-    // Blokir 'if (!_isEmailVerified)' telah dihapus.
+    // 1. Check Profile Completeness (Name & NIM) in Firestore
     return FutureBuilder<DocumentSnapshot>(
       future: _firestore.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
-        // Loading cek profil
+        // Loading profile check
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // Error ambil data
+        // Error fetching data
         if (snapshot.hasError) {
           return Scaffold(
             body: Center(child: Text('Error: ${snapshot.error}')),
           );
         }
 
-        // Dokumen tidak ditemukan, atau 'name'/'nim' field-nya null atau kosong
+        // Document not found, or 'name'/'nim' fields are null or empty
         if (!snapshot.hasData || !snapshot.data!.exists) {
-           // Arahkan ke UserInfoScreen untuk membuat/melengkapi data
+           // Navigate to UserInfoScreen to complete profile
           return const UserInfoScreen();
         }
 
@@ -61,12 +57,12 @@ class _DecisionGateState extends State<DecisionGate> {
         final String? nim = data['nim'] as String?;
 
         if (name == null || name.isEmpty || nim == null || nim.isEmpty) {
-           // Arahkan ke UserInfoScreen untuk melengkapi data
+           // Navigate to UserInfoScreen to complete profile
           return const UserInfoScreen();
         }
 
-        // 2. Profil lengkap, arahkan ke dashboard utama
-        // Pengguna sekarang bisa masuk meski email belum diverifikasi.
+        // 2. Profile complete, navigate to main dashboard
+        // Users can now enter even if email is not verified.
         return const HomeDashboard();
       },
     );

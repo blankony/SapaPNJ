@@ -119,7 +119,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
     }
   }
 
-  // Cleanup ghosts (User yang sudah dihapus tapi ID-nya masih nyangkut)
+  // Cleanup ghosts (Users that have been deleted but whose IDs are still stuck)
   void _cleanupDeadUser(String deadUserId, String listType) {
     if (!_isMe) return;
 

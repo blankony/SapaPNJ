@@ -25,5 +25,5 @@ class AiPageEventBus {
   }
 }
 
-// Instance Global yang akan dipakai bersama
+// Global Instance to be shared
 final aiPageEventBus = AiPageEventBus();

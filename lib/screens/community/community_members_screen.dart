@@ -99,7 +99,7 @@ class _FollowersList extends StatelessWidget {
   Widget build(BuildContext context) {
     var t = AppLocalizations.of(context)!;
     
-    // "Tidak ada hasil untuk" + " " + "Pengikut" = "Tidak ada hasil untuk Pengikut" / "No followers yet"
+    // No followers yet
     if (followersList.isEmpty) return Center(child: Text("${t.translate('search_no_results')} ${t.translate('profile_followers')}", style: TextStyle(color: Colors.grey)));
 
     return ListView.builder(
