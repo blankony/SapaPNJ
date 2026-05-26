@@ -6,7 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../data/pnj_data.dart';
 import 'setup_verification_screen.dart';
-import '../../services/overlay_service.dart'; 
+import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart'; // REQUIRED IMPORT
 
 class SetupDepartmentScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
   late Animation<double> _fadeAnimation;
 
   String? _selectedDepartment;
-  Map<String, String>? _selectedProdi; 
+  Map<String, String>? _selectedProdi;
   bool _isLoading = false;
 
   @override
@@ -48,9 +48,9 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
 
     if (_selectedDepartment == null || _selectedProdi == null) {
       OverlayService().showTopNotification(
-        context, 
+        context,
         t.translate('setup_dept_select_error'), // Localized error
-        Icons.warning_amber_rounded, 
+        Icons.warning_amber_rounded,
         (){},
         color: Colors.orange
       );
@@ -65,7 +65,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'department': _selectedDepartment,
         'studyProgram': _selectedProdi!['name'],
-        'departmentCode': _selectedProdi!['code'], 
+        'departmentCode': _selectedProdi!['code'],
       });
 
       if (mounted) {
@@ -81,9 +81,9 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
     } catch (e) {
       if (mounted) {
         OverlayService().showTopNotification(
-          context, 
-          "${t.translate('general_error')}: $e", 
-          Icons.error, 
+          context,
+          "${t.translate('general_error')}: $e",
+          Icons.error,
           (){},
           color: Colors.red
         );
@@ -97,7 +97,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!; // Localization instance
-    
+
     return Scaffold(
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -138,7 +138,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                   onChanged: (val) {
                     setState(() {
                       _selectedDepartment = val;
-                      _selectedProdi = null; 
+                      _selectedProdi = null;
                     });
                   },
                 ),
@@ -153,8 +153,8 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                     fillColor: theme.cardColor,
                   ),
                   value: _selectedProdi,
-                  items: _selectedDepartment == null 
-                    ? [] 
+                  items: _selectedDepartment == null
+                    ? []
                     : PnjData.departments[_selectedDepartment]!.map((Map<String, String> prodi) {
                         return DropdownMenuItem<Map<String, String>>(
                           value: prodi,
@@ -181,7 +181,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    child: _isLoading 
+                    child: _isLoading
                       ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : Text(t.translate('general_next')), // "Next"
                   ),

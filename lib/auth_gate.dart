@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'decision_gate.dart'; 
+import 'decision_gate.dart';
 import 'screens/welcome_screen.dart'; // Impor WelcomeScreen BARU
 
 class AuthGate extends StatelessWidget {
@@ -16,11 +16,11 @@ class AuthGate extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        
+
         if (snapshot.hasData) {
           return const DecisionGate();
         }
-        
+
         return const WelcomeScreen();
       },
     );

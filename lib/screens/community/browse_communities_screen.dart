@@ -44,7 +44,7 @@ class BrowseCommunitiesScreen extends StatelessWidget {
   void _showUnfollowDialog(BuildContext context, String communityId, String communityName, String userId) {
     // LOCALIZATION fallback simple
     // Jika Anda ingin menggunakan t.translate di sini, Anda perlu passing instance 't' ke fungsi ini
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -87,18 +87,18 @@ class BrowseCommunitiesScreen extends StatelessWidget {
             }
 
             final allDocs = snapshot.data!.docs;
-            
+
             // Sorting logic
             final sortedDocs = allDocs.toList()..sort((a, b) {
               final dataA = a.data() as Map<String, dynamic>;
               final dataB = b.data() as Map<String, dynamic>;
-              
+
               final catA = dataA['category'] ?? 'casual';
               final catB = dataB['category'] ?? 'casual';
-              
+
               // Priority Map
               final priority = {'pnj_official': 3, 'partner_official': 2, 'casual': 1};
-              
+
               return (priority[catB] ?? 0).compareTo(priority[catA] ?? 0);
             });
 
@@ -112,23 +112,23 @@ class BrowseCommunitiesScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final doc = sortedDocs[index];
                 final data = doc.data() as Map<String, dynamic>;
-                
+
                 final String name = data['name'] ?? 'Unnamed';
                 final String? imageUrl = data['imageUrl'];
                 final String category = data['category'] ?? 'casual';
                 final List followers = data['followers'] ?? [];
-                
+
                 // Cek status follow
                 final bool isFollowing = user != null && followers.contains(user.uid);
 
                 IconData badgeIcon = Icons.tag_faces;
                 Color badgeColor = Colors.grey;
-                if (category == 'pnj_official') { 
-                  badgeIcon = Icons.account_balance; 
-                  badgeColor = SisapaTheme.blue; 
-                } else if (category == 'partner_official') { 
-                  badgeIcon = Icons.verified; 
-                  badgeColor = Colors.blueGrey; 
+                if (category == 'pnj_official') {
+                  badgeIcon = Icons.account_balance;
+                  badgeColor = SisapaTheme.blue;
+                } else if (category == 'partner_official') {
+                  badgeIcon = Icons.verified;
+                  badgeColor = Colors.blueGrey;
                 }
 
                 // RepaintBoundary mengisolasi render item agar tidak crash saat transisi halaman
@@ -158,7 +158,7 @@ class BrowseCommunitiesScreen extends StatelessWidget {
                         ],
                       ),
                       // --- BAGIAN UTAMA YANG DIMODIFIKASI ---
-                      trailing: isFollowing 
+                      trailing: isFollowing
                         ? IconButton(
                             tooltip: "Unfollow",
                             icon: Icon(Icons.check_circle, color: Colors.green, size: 28),

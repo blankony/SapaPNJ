@@ -14,7 +14,7 @@ class ModerationService {
     String? description,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
-    
+
     final String subject = "SAPA PNJ Report: $targetType ($reason)";
     final String body = "Reporter ID: ${user?.uid ?? 'Anonymous'}\n"
         "Target ID: $targetId\n"

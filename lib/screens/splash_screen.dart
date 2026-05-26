@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart'; // IMPORT SHARED PREFERENCES
-import '../auth_gate.dart'; 
+import '../auth_gate.dart';
 import '../main.dart'; // For SisapaTheme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    
+
     // 1. Setup Animation Controller
     _controller = AnimationController(
       vsync: this,
@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     // Text Fade In
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _controller, 
+        parent: _controller,
         curve: Interval(0.4, 1.0, curve: Curves.easeIn),
       ),
     );
@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     // Text Slide Up
     _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
       CurvedAnimation(
-        parent: _controller, 
+        parent: _controller,
         curve: Interval(0.4, 1.0, curve: Curves.easeOut),
       ),
     );
@@ -152,7 +152,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     child: Image.asset('images/app_icon.png', height: 100, width: 100),
                   ),
                 ),
-                
+
                 SizedBox(height: 40),
 
                 // 2. Animated Text
@@ -163,9 +163,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     child: Column(
                       children: [
                         Text(
-                          "SAPA", 
+                          "SAPA",
                           style: theme.textTheme.displayLarge?.copyWith(
-                            fontSize: 48, 
+                            fontSize: 48,
                             fontWeight: FontWeight.w900,
                             color: SisapaTheme.blue,
                             letterSpacing: -1.0,
@@ -173,9 +173,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                         ),
                         Text(
-                          "PNJ", 
+                          "PNJ",
                           style: theme.textTheme.displayLarge?.copyWith(
-                            fontSize: 48, 
+                            fontSize: 48,
                             fontWeight: FontWeight.w900,
                             color: theme.textTheme.bodyLarge?.color,
                             letterSpacing: -1.0,

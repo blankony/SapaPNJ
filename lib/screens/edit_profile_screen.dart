@@ -1,20 +1,20 @@
-import 'dart:io'; 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart'; 
-import 'package:image_cropper/image_cropper.dart'; 
-import '../main.dart'; 
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
-import 'change_password_screen.dart'; 
-import '../services/cloudinary_service.dart'; 
+import 'change_password_screen.dart';
+import '../services/cloudinary_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../data/pnj_data.dart'; 
-import '../services/overlay_service.dart'; 
-import '../services/app_localizations.dart'; 
+import '../../data/pnj_data.dart';
+import '../services/overlay_service.dart';
+import '../services/app_localizations.dart';
 
-final CloudinaryService _cloudinaryService = CloudinaryService(); 
+final CloudinaryService _cloudinaryService = CloudinaryService();
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -28,14 +28,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   bool _isLoading = false;
-  
+
   int _selectedIconId = 0;
   Color _selectedColor = SisapaTheme.blue;
-  String? _profileImageUrl; 
-  File? _selectedImageFile; 
-  
+  String? _profileImageUrl;
+  File? _selectedImageFile;
+
   String? _bannerImageUrl;
-  File? _selectedBannerFile; 
+  File? _selectedBannerFile;
 
   String? _selectedDepartment;
   Map<String, String>? _selectedProdi;
@@ -57,22 +57,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() {
           _nameController.text = data['name'] ?? '';
           _bioController.text = data['bio'] ?? '';
-          _profileImageUrl = data['profileImageUrl']; 
-          _bannerImageUrl = data['bannerImageUrl']; 
+          _profileImageUrl = data['profileImageUrl'];
+          _bannerImageUrl = data['bannerImageUrl'];
           _selectedIconId = data['avatarIconId'] ?? 0;
           _selectedColor = AvatarHelper.getColor(data['avatarHex']);
           if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
-            _selectedIconId = -1; 
+            _selectedIconId = -1;
           }
 
           _selectedDepartment = data['department'];
           final savedProdiName = data['studyProgram'];
-          
+
           if (_selectedDepartment != null && savedProdiName != null) {
             final prodis = PnjData.departments[_selectedDepartment];
             if (prodis != null) {
               _selectedProdi = prodis.firstWhere(
-                (p) => p['name'] == savedProdiName, 
+                (p) => p['name'] == savedProdiName,
                 orElse: () => prodis.first
               );
             }
@@ -90,10 +90,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final email = _user?.email;
     if (email == null) return;
     var t = AppLocalizations.of(context); // Bisa null saat init, handle di bawah atau biarkan english default di backend logic
-    
+
     final RegExp regex = RegExp(r'\.([a-z]+)\d+@');
     final match = regex.firstMatch(email);
-    
+
     if (match != null) {
       final code = match.group(1);
       if (code != null) {
@@ -101,13 +101,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (detectedDept != null && PnjData.departments.containsKey(detectedDept)) {
           setState(() {
             _selectedDepartment = detectedDept;
-            _selectedProdi = null; 
+            _selectedProdi = null;
           });
           if (mounted && t != null) {
             OverlayService().showTopNotification(
-              context, 
-              "${t.translate('edit_auto_detect')}$detectedDept", 
-              Icons.auto_awesome, 
+              context,
+              "${t.translate('edit_auto_detect')}$detectedDept",
+              Icons.auto_awesome,
               (){}
             );
           }
@@ -121,7 +121,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       case 'te': return 'Teknik Elektro';
       case 'tm': return 'Teknik Mesin';
       case 'ts': return 'Teknik Sipil';
-      case 'ti': 
+      case 'ti':
       case 'tik': return 'Teknik Informatika & Komputer';
       case 'ak': return 'Akuntansi';
       case 'an': return 'Administrasi Niaga';
@@ -130,17 +130,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       default: return null;
     }
   }
-  
+
   Future<File?> _cropImage({required XFile imageFile, required bool isAvatar}) async {
     var t = AppLocalizations.of(context)!;
     try {
       final dynamic cropped = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
-        compressQuality: 60, 
-        maxWidth: 800,       
+        compressQuality: 60,
+        maxWidth: 800,
         maxHeight: 800,
-        aspectRatio: isAvatar 
-            ? CropAspectRatio(ratioX: 1, ratioY: 1) 
+        aspectRatio: isAvatar
+            ? CropAspectRatio(ratioX: 1, ratioY: 1)
             : CropAspectRatio(ratioX: 3, ratioY: 1),
         uiSettings: [
           AndroidUiSettings(
@@ -157,7 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ],
       );
-      
+
       if (cropped != null) {
         if (cropped is File) return cropped;
         try { return File((cropped as dynamic).path); } catch (_) {}
@@ -210,11 +210,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     FocusScope.of(context).unfocus();
     var t = AppLocalizations.of(context)!;
     final picker = ImagePicker();
-    
+
     final pickedFile = await picker.pickImage(
-      source: source, 
+      source: source,
       imageQuality: 70,
-      maxWidth: 1000, 
+      maxWidth: 1000,
       maxHeight: 1000
     );
 
@@ -224,8 +224,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() {
           if (isAvatar) {
             _selectedImageFile = processedFile;
-            _selectedIconId = -1; 
-            _profileImageUrl = null; 
+            _selectedIconId = -1;
+            _profileImageUrl = null;
             OverlayService().showTopNotification(context, t.translate('edit_pic_selected'), Icons.image, (){});
           } else {
             _selectedBannerFile = processedFile;
@@ -253,37 +253,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_selectedImageFile != null) {
       final uploadUrl = await _cloudinaryService.uploadImage(_selectedImageFile!);
       if (uploadUrl == null) {
-        if (mounted) { 
-          setState(() { _isLoading = false; }); 
+        if (mounted) {
+          setState(() { _isLoading = false; });
           OverlayService().showTopNotification(context, t.translate('edit_error_upload'), Icons.error, (){}, color: Colors.red);
         }
         return;
       }
       finalImageUrl = "$uploadUrl?v=${DateTime.now().millisecondsSinceEpoch}";
     }
-    
+
     if (_selectedBannerFile != null) {
       final uploadUrl = await _cloudinaryService.uploadImage(_selectedBannerFile!);
       if (uploadUrl == null) {
-        if (mounted) { 
-          setState(() { _isLoading = false; }); 
+        if (mounted) {
+          setState(() { _isLoading = false; });
           OverlayService().showTopNotification(context, t.translate('edit_error_upload'), Icons.error, (){}, color: Colors.red);
         }
         return;
       }
       finalBannerUrl = "$uploadUrl?v=${DateTime.now().millisecondsSinceEpoch}";
     }
-    
+
     final int finalIconId = finalImageUrl != null ? -1 : _selectedIconId;
 
     try {
       final Map<String, dynamic> userUpdateData = {
         'name': _nameController.text.trim(),
         'bio': _bioController.text.trim(),
-        'avatarIconId': finalIconId, 
-        'avatarHex': finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null, 
-        'profileImageUrl': finalImageUrl, 
-        'bannerImageUrl': finalBannerUrl, 
+        'avatarIconId': finalIconId,
+        'avatarHex': finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null,
+        'profileImageUrl': finalImageUrl,
+        'bannerImageUrl': finalBannerUrl,
       };
 
       if (_selectedDepartment != null) {
@@ -291,28 +291,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       if (_selectedProdi != null) {
         userUpdateData['studyProgram'] = _selectedProdi!['name'];
-        userUpdateData['departmentCode'] = _selectedProdi!['code']; 
+        userUpdateData['departmentCode'] = _selectedProdi!['code'];
       }
 
       await FirebaseFirestore.instance.collection('users').doc(_user!.uid).update(userUpdateData);
 
       await _updateDenormalizedData(
-        _user!.uid, 
-        _nameController.text.trim(), 
-        finalIconId, 
-        finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null, 
+        _user!.uid,
+        _nameController.text.trim(),
+        finalIconId,
+        finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null,
         finalImageUrl
-      ); 
+      );
 
       if (context.mounted) {
         OverlayService().showTopNotification(
-          context, 
-          t.translate('edit_success'), 
-          Icons.check_circle, 
-          (){}, 
+          context,
+          t.translate('edit_success'),
+          Icons.check_circle,
+          (){},
           color: Colors.green
         );
-        Navigator.of(context).pop(true); 
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (context.mounted) {
@@ -326,34 +326,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _updateDenormalizedData(
-    String userId, 
-    String newName, 
-    int iconId, 
-    String? hex, 
+    String userId,
+    String newName,
+    int iconId,
+    String? hex,
     String? imageUrl,
   ) async {
     final Map<String, dynamic> updateData = {
       'userName': newName,
       'avatarIconId': iconId,
       'avatarHex': hex,
-      'profileImageUrl': imageUrl, 
+      'profileImageUrl': imageUrl,
     };
-    
+
     final postsQuery = FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId);
     final postsSnapshot = await postsQuery.get();
-    
+
     final commentsQuery = FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId);
     final commentsSnapshot = await commentsQuery.get();
 
     final allDocs = [...postsSnapshot.docs, ...commentsSnapshot.docs];
-    
+
     if (allDocs.isEmpty) return;
 
     const int batchSize = 500;
     for (var i = 0; i < allDocs.length; i += batchSize) {
       final batch = FirebaseFirestore.instance.batch();
       final end = (i + batchSize < allDocs.length) ? i + batchSize : allDocs.length;
-      
+
       for (var j = i; j < end; j++) {
         batch.update(allDocs[j].reference, updateData);
       }
@@ -364,7 +364,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildProfileAvatar() {
     if (_selectedImageFile != null) {
       return CircleAvatar(
-        radius: 45, 
+        radius: 45,
         backgroundColor: Colors.grey,
         backgroundImage: FileImage(_selectedImageFile!),
       );
@@ -394,7 +394,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
-    
+
     final bool isCustomImageSet = _selectedImageFile != null || (_profileImageUrl != null && _profileImageUrl!.isNotEmpty);
     final bool isCustomBannerSet = _selectedBannerFile != null || (_bannerImageUrl != null && _bannerImageUrl!.isNotEmpty);
 
@@ -402,7 +402,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(t.translate('edit_profile_title'), style: TextStyle(fontWeight: FontWeight.bold)), 
+          title: Text(t.translate('edit_profile_title'), style: TextStyle(fontWeight: FontWeight.bold)),
           centerTitle: true,
           elevation: 0,
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -412,13 +412,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: TextButton(
                 onPressed: _isLoading ? null : _saveChanges,
                 style: TextButton.styleFrom(
-                  backgroundColor: SisapaTheme.blue, 
-                  shape: StadiumBorder(), 
+                  backgroundColor: SisapaTheme.blue,
+                  shape: StadiumBorder(),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
                 ),
-                child: _isLoading 
+                child: _isLoading
                     ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(t.translate('edit_save'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), 
+                    : Text(t.translate('edit_save'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -427,7 +427,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             children: [
               SizedBox(
-                height: 180, 
+                height: 180,
                 child: Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
@@ -451,7 +451,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 errorWidget: (context, url, error) => Icon(Icons.error_outline, color: Colors.grey),
                               ),
                             Container(
-                              color: Colors.black26, 
+                              color: Colors.black26,
                               child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -466,7 +466,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ),
                     ),
-                    
+
                     if (isCustomBannerSet)
                       Positioned(
                         top: 10, right: 10,
@@ -490,7 +490,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               padding: EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: theme.scaffoldBackgroundColor, 
+                                color: theme.scaffoldBackgroundColor,
                               ),
                               child: _buildProfileAvatar(),
                             ),
@@ -521,7 +521,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(t.translate('edit_avatar_preset'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.hintColor)), 
+                      Text(t.translate('edit_avatar_preset'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.hintColor)),
                       SizedBox(height: 12),
                       SizedBox(
                         height: 60,
@@ -545,7 +545,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   border: isSelected ? Border.all(color: theme.primaryColor, width: 2) : Border.all(color: theme.dividerColor),
                                 ),
                                 child: Icon(
-                                  AvatarHelper.getIcon(index), 
+                                  AvatarHelper.getIcon(index),
                                   color: isSelected ? theme.primaryColor : theme.hintColor,
                                   size: 24
                                 ),
@@ -599,7 +599,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                         child: GestureDetector(
                           onTap: () => setState(() { _selectedImageFile = null; _profileImageUrl = null; _selectedIconId = 0; }),
-                          child: Text(t.translate('edit_remove_photo'), style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 13)), 
+                          child: Text(t.translate('edit_remove_photo'), style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 13)),
                         ),
                       ),
 
@@ -607,8 +607,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       controller: _nameController,
                       autofocus: false,
                       decoration: InputDecoration(
-                        labelText: t.translate('edit_display_name'), 
-                        hintText: t.translate('edit_name_hint'), 
+                        labelText: t.translate('edit_display_name'),
+                        hintText: t.translate('edit_name_hint'),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
@@ -619,8 +619,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       autofocus: false,
                       maxLength: 200,
                       decoration: InputDecoration(
-                        labelText: t.translate('edit_bio_label'), 
-                        hintText: t.translate('edit_bio_hint'), 
+                        labelText: t.translate('edit_bio_label'),
+                        hintText: t.translate('edit_bio_hint'),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         alignLabelWithHint: true,
@@ -628,15 +628,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       maxLines: 4,
                       minLines: 1,
                     ),
-                    
+
                     SizedBox(height: 30),
 
-                    Text(t.translate('edit_academic_info'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)), 
+                    Text(t.translate('edit_academic_info'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     SizedBox(height: 16),
-                    
+
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(
-                        labelText: t.translate('edit_dept_label'), 
+                        labelText: t.translate('edit_dept_label'),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         filled: true,
@@ -650,15 +650,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       onChanged: (val) {
                         setState(() {
                           _selectedDepartment = val;
-                          _selectedProdi = null; 
+                          _selectedProdi = null;
                         });
                       },
                     ),
                     SizedBox(height: 16),
-                    
+
                     DropdownButtonFormField<Map<String, String>>(
                       decoration: InputDecoration(
-                        labelText: t.translate('edit_prodi_label'), 
+                        labelText: t.translate('edit_prodi_label'),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         filled: true,
@@ -666,8 +666,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       value: _selectedProdi,
                       isExpanded: true,
-                      items: _selectedDepartment == null 
-                        ? [] 
+                      items: _selectedDepartment == null
+                        ? []
                         : PnjData.departments[_selectedDepartment]!.map((Map<String, String> prodi) {
                             return DropdownMenuItem<Map<String, String>>(
                               value: prodi,
@@ -683,7 +683,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                     SizedBox(height: 30),
                     Divider(),
-                    
+
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Container(
@@ -691,7 +691,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(8)),
                         child: Icon(Icons.lock_outline, color: theme.primaryColor),
                       ),
-                      title: Text(t.translate('edit_change_password')), 
+                      title: Text(t.translate('edit_change_password')),
                       trailing: Icon(Icons.arrow_forward_ios, size: 14, color: theme.hintColor),
                       onTap: () {
                         Navigator.of(context).push(

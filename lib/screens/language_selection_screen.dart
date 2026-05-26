@@ -63,9 +63,9 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     // Simpan preferensi bahasa
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', _selectedLanguageCode);
-    
+
     // Set flag first run ke false
-    await prefs.setBool('is_first_run_v1', false); 
+    await prefs.setBool('is_first_run_v1', false);
 
     if (context.mounted) {
       // Navigasi ke AuthGate
@@ -84,7 +84,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   // CUSTOM POP-UP DIALOG
   void _showCustomLanguageDialog(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -120,7 +120,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // List Bahasa
                     ..._supportedLanguages.map((lang) {
                       final isSelected = lang['code'] == _selectedLanguageCode;
@@ -132,13 +132,13 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             decoration: BoxDecoration(
-                              color: isSelected 
-                                  ? SisapaTheme.blue.withOpacity(0.1) 
+                              color: isSelected
+                                  ? SisapaTheme.blue.withOpacity(0.1)
                                   : theme.scaffoldBackgroundColor,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isSelected 
-                                    ? SisapaTheme.blue 
+                                color: isSelected
+                                    ? SisapaTheme.blue
                                     : theme.dividerColor,
                                 width: isSelected ? 2 : 1,
                               ),
@@ -155,7 +155,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                 ),
                                 if (isSelected)
                                   const Icon(
-                                    Icons.check_circle, 
+                                    Icons.check_circle,
                                     color: SisapaTheme.blue,
                                     size: 24,
                                   ),
@@ -221,8 +221,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _selectedLanguageCode == 'id' 
-                      ? "Pilih bahasa untuk melanjutkan" 
+                  _selectedLanguageCode == 'id'
+                      ? "Pilih bahasa untuk melanjutkan"
                       : "Choose your language to continue",
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(

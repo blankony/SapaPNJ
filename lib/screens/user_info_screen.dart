@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../auth_gate.dart'; 
+import '../auth_gate.dart';
 import '../services/overlay_service.dart'; // REQUIRED
-
 
 class UserInfoScreen extends StatefulWidget {
   const UserInfoScreen({super.key});
@@ -14,15 +13,15 @@ class UserInfoScreen extends StatefulWidget {
 
 class _UserInfoScreenState extends State<UserInfoScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _nimController = TextEditingController(); 
+  final TextEditingController _nimController = TextEditingController();
   bool _isLoading = false;
 
   Future<void> _saveProfile() async {
-    if (_nameController.text.isEmpty || _nimController.text.isEmpty) { 
+    if (_nameController.text.isEmpty || _nimController.text.isEmpty) {
        OverlayService().showTopNotification(
-         context, 
-         "Please fill in your name and NIM.", 
-         Icons.warning_amber_rounded, 
+         context,
+         "Please fill in your name and NIM.",
+         Icons.warning_amber_rounded,
          (){},
          color: Colors.orange
        );
@@ -37,17 +36,17 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': _nameController.text.trim(),
-        'nim': _nimController.text.trim(), 
-        'bio': 'About me...', 
-        'following': [], 
-        'followers': [], 
+        'nim': _nimController.text.trim(),
+        'bio': 'About me...',
+        'following': [],
+        'followers': [],
       }, SetOptions(merge: true));
 
       if (mounted) {
         OverlayService().showTopNotification(
-          context, 
-          "Profile saved.", 
-          Icons.check_circle, 
+          context,
+          "Profile saved.",
+          Icons.check_circle,
           (){},
           color: Colors.green
         );
@@ -60,9 +59,9 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     } catch (e) {
       if(mounted) {
          OverlayService().showTopNotification(
-           context, 
-           "Failed to save profile: $e", 
-           Icons.error, 
+           context,
+           "Failed to save profile: $e",
+           Icons.error,
            (){},
            color: Colors.red
          );
@@ -94,7 +93,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               decoration: const InputDecoration(labelText: 'Full Name'),
             ),
             const SizedBox(height: 10),
-             TextField( 
+             TextField(
               controller: _nimController,
               decoration: const InputDecoration(labelText: 'NIM'),
             ),
@@ -109,4 +108,4 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       ),
     );
   }
-} 
+}

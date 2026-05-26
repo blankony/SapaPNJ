@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../main.dart'; 
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 
@@ -84,8 +84,8 @@ class OverlayService {
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    width: 1, 
-                    height: 20, 
+                    width: 1,
+                    height: 20,
                     color: Colors.white.withOpacity(0.3)
                   ),
                   IconButton(
@@ -212,7 +212,7 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget> with Sin
                       ),
                       // Visual cue for dismissal
                       Container(
-                        width: 4, 
+                        width: 4,
                         height: 24,
                         decoration: BoxDecoration(
                           color: Theme.of(context).dividerColor,

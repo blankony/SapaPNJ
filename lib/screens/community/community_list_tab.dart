@@ -26,7 +26,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0); 
+        const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
         const curve = Curves.easeOutQuart;
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -40,14 +40,14 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
     super.build(context);
     final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
     if (user == null) return Center(child: Text(t.translate('login_required'))); // "Login required"
 
     // Calculate tighter top padding
-    final double topPadding = MediaQuery.of(context).padding.top + kToolbarHeight - 10; 
+    final double topPadding = MediaQuery.of(context).padding.top + kToolbarHeight - 10;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -124,7 +124,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                         itemBuilder: (context, index) {
                           final doc = myCommunities[index];
                           final data = doc.data() as Map<String, dynamic>;
-                          
+
                           // Manual Staggered Animation (Without external package)
                           return TweenAnimationBuilder<Offset>(
                             tween: Tween(begin: Offset(100, 0), end: Offset.zero),
@@ -163,9 +163,9 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
             stream: FirebaseFirestore.instance.collection('communities').where('followers', arrayContains: user.uid).snapshots(),
             builder: (context, communitySnap) {
               if (!communitySnap.hasData) return SliverToBoxAdapter(child: SizedBox(height: 200, child: Center(child: CircularProgressIndicator())));
-              
+
               final followedCommunityIds = communitySnap.data!.docs.map((doc) => doc.id).toList();
-              
+
               if (followedCommunityIds.isEmpty) {
                 return SliverToBoxAdapter(
                   child: Container(
@@ -186,11 +186,11 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('posts')
                     .orderBy('timestamp', descending: true)
-                    .limit(50) 
+                    .limit(50)
                     .snapshots(),
                 builder: (context, postSnap) {
                   if (postSnap.connectionState == ConnectionState.waiting) return SliverToBoxAdapter(child: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())));
-                  
+
                   final allPosts = postSnap.data?.docs ?? [];
                   final communityPosts = allPosts.where((doc) {
                     final data = doc.data() as Map<String, dynamic>;
@@ -200,7 +200,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                   if (communityPosts.isEmpty) {
                     return SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.all(40), 
+                        padding: EdgeInsets.all(40),
                         child: Center(child: Text(t.translate('community_no_broadcasts'), // "No recent broadcasts."
                             style: TextStyle(color: theme.hintColor)))
                       )
@@ -212,7 +212,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                       (context, index) {
                         final post = communityPosts[index];
                         final pData = post.data() as Map<String, dynamic>;
-                        
+
                         // Entrance Animation for Feed
                         return TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.0, end: 1.0),
@@ -222,7 +222,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                           child: BlogPostCard(
                             postId: post.id,
                             postData: pData,
-                            isOwner: pData['userId'] == user.uid, 
+                            isOwner: pData['userId'] == user.uid,
                             heroContextId: 'community_feed',
                           ),
                         );
@@ -234,7 +234,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
               );
             },
           ),
-          
+
           SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -305,9 +305,9 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
             SizedBox(
               width: 75,
               child: Text(
-                name, 
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), 
-                overflow: TextOverflow.ellipsis, 
+                name,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 maxLines: 1,
               ),

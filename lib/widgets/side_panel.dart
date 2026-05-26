@@ -2,27 +2,26 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart'; 
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../screens/dashboard/account_center_page.dart';
 import '../screens/dashboard/settings_page.dart';
-import '../screens/saved_posts_screen.dart'; 
-import '../screens/webview_screen.dart'; 
-import '../screens/drafts_screen.dart'; 
-import '../services/app_localizations.dart'; 
-
+import '../screens/saved_posts_screen.dart';
+import '../screens/webview_screen.dart';
+import '../screens/drafts_screen.dart';
+import '../services/app_localizations.dart';
 
 class SidePanel extends StatefulWidget {
   final VoidCallback onProfileSelected;
-  final VoidCallback onCommunitySelected; 
+  final VoidCallback onCommunitySelected;
 
   const SidePanel({
     super.key,
     required this.onProfileSelected,
-    required this.onCommunitySelected, 
+    required this.onCommunitySelected,
   });
 
   @override
@@ -34,12 +33,12 @@ class _SidePanelState extends State<SidePanel> {
 
   Future<void> _signOut() async {
     var t = AppLocalizations.of(context)!;
-    
+
     final didConfirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t.translate('settings_logout')), 
-        content: Text(t.translate('settings_logout_confirm')), 
+        title: Text(t.translate('settings_logout')),
+        content: Text(t.translate('settings_logout_confirm')),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(t.translate('general_cancel'))),
           TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(t.translate('settings_logout'), style: TextStyle(color: Colors.red))),
@@ -59,8 +58,8 @@ class _SidePanelState extends State<SidePanel> {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0); 
-        const end = Offset.zero;       
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
         return SlideTransition(position: animation.drive(tween), child: child);
@@ -69,7 +68,7 @@ class _SidePanelState extends State<SidePanel> {
   }
 
   void _openWebService(String title, String url) {
-    Navigator.pop(context); 
+    Navigator.pop(context);
     Navigator.of(context).push(
       _createSlideUpRoute(WebViewScreen(url: url, title: title)),
     );
@@ -85,7 +84,7 @@ class _SidePanelState extends State<SidePanel> {
 
   void _showLanguageDialog() {
     var t = AppLocalizations.of(context)!;
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -99,8 +98,8 @@ class _SidePanelState extends State<SidePanel> {
               ListTile(
                 leading: Text("🇺🇸", style: TextStyle(fontSize: 24)),
                 title: Text("English"),
-                trailing: languageNotifier.value.languageCode == 'en' 
-                    ? Icon(Icons.check, color: Colors.blue) 
+                trailing: languageNotifier.value.languageCode == 'en'
+                    ? Icon(Icons.check, color: Colors.blue)
                     : null,
                 onTap: () async {
                   await _changeLanguage('en');
@@ -110,8 +109,8 @@ class _SidePanelState extends State<SidePanel> {
               ListTile(
                 leading: Text("🇮🇩", style: TextStyle(fontSize: 24)),
                 title: Text("Bahasa Indonesia"),
-                trailing: languageNotifier.value.languageCode == 'id' 
-                    ? Icon(Icons.check, color: Colors.blue) 
+                trailing: languageNotifier.value.languageCode == 'id'
+                    ? Icon(Icons.check, color: Colors.blue)
                     : null,
                 onTap: () async {
                   await _changeLanguage('id');
@@ -181,8 +180,8 @@ class _SidePanelState extends State<SidePanel> {
           String handle = "@user";
           int iconId = 0;
           String? colorHex;
-          String? profileImageUrl; 
-          String? bannerImageUrl; 
+          String? profileImageUrl;
+          String? bannerImageUrl;
 
           if (snapshot.hasData && snapshot.data!.exists) {
             final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -192,15 +191,15 @@ class _SidePanelState extends State<SidePanel> {
             iconId = data['avatarIconId'] ?? 0;
             colorHex = data['avatarHex'];
             profileImageUrl = data['profileImageUrl'];
-            bannerImageUrl = data['bannerImageUrl']; 
+            bannerImageUrl = data['bannerImageUrl'];
           }
 
           Widget avatarWidget = CircleAvatar(
-            radius: 30, 
+            radius: 30,
             backgroundColor: profileImageUrl != null ? Colors.transparent : (Colors.blue),
             backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
             child: profileImageUrl == null ?
-              Icon(Icons.person, size: 30, color: Colors.white) 
+              Icon(Icons.person, size: 30, color: Colors.white)
               : null,
           );
 
@@ -222,7 +221,7 @@ class _SidePanelState extends State<SidePanel> {
             children: [
               // --- MODERN HEADER (Height Increased to 220 to fix Overflow) ---
               SizedBox(
-                height: 220, 
+                height: 220,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -299,16 +298,16 @@ class _SidePanelState extends State<SidePanel> {
                                   mainAxisSize: MainAxisSize.min, // Agar tidak makan tempat vertikal berlebih
                                   children: [
                                     Text(
-                                      name, 
+                                      name,
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                                      maxLines: 1, 
+                                      maxLines: 1,
                                       overflow: TextOverflow.ellipsis, // Potong jika kepanjangan
                                     ),
                                     SizedBox(height: 2), // Sedikit jarak
                                     Text(
-                                      handle, 
+                                      handle,
                                       style: TextStyle(fontSize: 14, color: Colors.white70),
-                                      maxLines: 1, 
+                                      maxLines: 1,
                                       overflow: TextOverflow.ellipsis, // Potong email panjang jadi ...
                                     ),
                                   ],
@@ -322,19 +321,19 @@ class _SidePanelState extends State<SidePanel> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 12),
 
               // --- MENU LIST ---
               Expanded(
                 child: ListView(
-                  padding: EdgeInsets.zero, 
+                  padding: EdgeInsets.zero,
                   children: [
                     _buildMenuItem(
                       icon: Icons.account_circle_outlined,
                       title: t.translate('settings_account'),
                       onTap: () {
-                        Navigator.pop(context); 
+                        Navigator.pop(context);
                         Navigator.of(context).push(_createSlideUpRoute(AccountCenterPage()));
                       }
                     ),
@@ -355,9 +354,9 @@ class _SidePanelState extends State<SidePanel> {
                         child: ExpansionTile(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                          leading: Icon(Icons.school_outlined, color: Colors.blue), 
+                          leading: Icon(Icons.school_outlined, color: Colors.blue),
                           title: Text(
-                            t.translate('side_services'), 
+                            t.translate('side_services'),
                             style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
                           ),
                           childrenPadding: EdgeInsets.only(left: 12),
@@ -397,7 +396,7 @@ class _SidePanelState extends State<SidePanel> {
                       icon: Icons.bookmark_border_rounded,
                       title: t.translate('side_saved'),
                       onTap: () {
-                        Navigator.pop(context); 
+                        Navigator.pop(context);
                         Navigator.of(context).push(_createSlideUpRoute(SavedPostsScreen()));
                       }
                     ),
@@ -405,7 +404,7 @@ class _SidePanelState extends State<SidePanel> {
                       icon: Icons.settings_outlined,
                       title: t.translate('settings_title'),
                       onTap: () {
-                        Navigator.pop(context); 
+                        Navigator.pop(context);
                         Navigator.of(context).push(_createSlideUpRoute(SettingsPage()));
                       }
                     ),
@@ -459,16 +458,16 @@ class _SidePanelState extends State<SidePanel> {
                           ),
                         ],
                       ),
-                      
+
                       SizedBox(height: 12),
-                      
+
                       SizedBox(
                         width: double.infinity,
                         child: TextButton.icon(
                           onPressed: _signOut,
                           icon: Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
                           label: Text(
-                            t.translate('settings_logout'), 
+                            t.translate('settings_logout'),
                             style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)
                           ),
                           style: TextButton.styleFrom(

@@ -4,7 +4,6 @@ import '../main.dart'; // For theme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 
-
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -28,7 +27,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() { _errorMessage = 'New passwords do not match.'; });
       return;
     }
-    
+
     setState(() { _isLoading = true; _errorMessage = ''; });
 
     final user = FirebaseAuth.instance.currentUser;

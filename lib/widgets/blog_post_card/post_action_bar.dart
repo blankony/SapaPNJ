@@ -19,7 +19,7 @@ class PostActionBar extends StatelessWidget {
   final VoidCallback onLikeTap;
   final VoidCallback onShareTap;
   final Function(bool isBookmarked) onBookmarkTap;
-  
+
   // Animation Controllers passed from parent to keep state centralized
   final Animation<double> likeAnimation;
   final Animation<double> repostAnimation;
@@ -99,17 +99,17 @@ class PostActionBar extends StatelessWidget {
   }
 
   Widget _buildActionButton(
-    BuildContext context, 
-    IconData icon, 
-    String? text, 
-    Color? color, 
-    VoidCallback onTap, 
+    BuildContext context,
+    IconData icon,
+    String? text,
+    Color? color,
+    VoidCallback onTap,
     [Animation<double>? animation]
   ) {
     final theme = Theme.of(context);
     final iconColor = color ?? theme.textTheme.bodySmall?.color ?? Colors.grey;
     Widget iconWidget = Icon(icon, size: 20, color: iconColor);
-    
+
     if (animation != null) {
       iconWidget = ScaleTransition(scale: animation, child: iconWidget);
     }

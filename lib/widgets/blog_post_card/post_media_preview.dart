@@ -108,9 +108,9 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
   void _navigateToViewer(BuildContext context, String url) {
     // Pause video di feed agar tidak bersuara ganda
     widget.videoController?.pause();
-    
+
     final String heroTag = '${widget.heroContextId}_${widget.postId}_$url';
-    
+
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false, // Penting agar background feed tetap terlihat samar di awal
@@ -129,7 +129,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
           postId: widget.postId,
           heroTag: heroTag,
           videoController: widget.videoController,
-          thumbnailPath: _cachedThumbnailPath, 
+          thumbnailPath: _cachedThumbnailPath,
         ),
       ),
     );

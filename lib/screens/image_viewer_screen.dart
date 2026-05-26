@@ -7,10 +7,10 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:path_provider/path_provider.dart'; 
+import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:video_player/video_player.dart'; 
-import 'package:intl/intl.dart'; 
+import 'package:video_player/video_player.dart';
+import 'package:intl/intl.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
@@ -19,11 +19,11 @@ class ImageViewerScreen extends StatefulWidget {
   final String imageUrl;
   final String? mediaType;
   final Map<String, dynamic>? postData;
-  final String? postId; 
+  final String? postId;
   final String heroTag;
-  final VideoPlayerController? videoController; 
+  final VideoPlayerController? videoController;
   // This parameter is important for smooth transitions from feed
-  final String? thumbnailPath; 
+  final String? thumbnailPath;
 
   const ImageViewerScreen({
     super.key,
@@ -42,8 +42,8 @@ class ImageViewerScreen extends StatefulWidget {
 
 class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProviderStateMixin {
   // Set false agar kontrol tidak muncul saat animasi Hero sedang berlangsung
-  bool _showOverlays = false; 
-  Timer? _hideTimer; 
+  bool _showOverlays = false;
+  Timer? _hideTimer;
 
   late AnimationController _menuController;
   late Animation<Offset> _menuAnimation;
@@ -53,19 +53,19 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
   int _likeCount = 0;
   bool _isReposted = false;
   int _repostCount = 0;
-  
+
   // Photo View State
   late PhotoViewScaleStateController _scaleStateController;
-  bool _isZoomed = false; 
+  bool _isZoomed = false;
 
   // Video Player State
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isPlaying = false;
   bool _isBuffering = false;
-  bool _isExternalController = false; 
+  bool _isExternalController = false;
   double _currentVolume = 1.0;
-  
+
   // Seekbar State
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
@@ -78,7 +78,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
   void initState() {
     super.initState();
     _initStats();
-    
+
     _menuController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -96,7 +96,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     if (_isVideo) {
       _initVideo();
     }
-    
+
     // Deteksi kapan animasi halaman (transisi Hero) selesai baru munculkan overlay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final route = ModalRoute.of(context);
@@ -127,7 +127,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
       _isPlaying = _videoController!.value.isPlaying;
       _totalDuration = _videoController!.value.duration;
       _videoController!.addListener(_videoListener);
-      
+
       // Auto play saat masuk fullscreen jika belum play
       if (!_isPlaying) {
         _videoController!.play();
@@ -152,7 +152,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
 
   void _videoListener() {
     if (_videoController == null || !mounted) return;
-    
+
     final bool isBuffering = _videoController!.value.isBuffering;
     if (isBuffering != _isBuffering) {
       setState(() {
@@ -203,7 +203,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     _menuController.dispose();
     _videoController?.removeListener(_videoListener);
     _scaleStateController.dispose();
-    
+
     if (!_isExternalController) {
       _videoController?.dispose();
     }
@@ -229,7 +229,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     setState(() {
       _showOverlays = !_showOverlays;
     });
-    
+
     if (_showOverlays) {
       _resetHideTimer();
     } else {
@@ -241,10 +241,10 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
   void _resetHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 4), () {
-      if (mounted && _isPlaying && !_isDraggingSlider) { 
+      if (mounted && _isPlaying && !_isDraggingSlider) {
         setState(() {
           _showOverlays = false;
-          _isMenuOpen = false; 
+          _isMenuOpen = false;
         });
         _menuController.reverse();
       }
@@ -256,7 +256,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
       _isMenuOpen = true;
     });
     _menuController.forward();
-    _resetHideTimer(); 
+    _resetHideTimer();
   }
 
   void _closeMenu() {
@@ -275,19 +275,19 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
       if (_videoController!.value.isPlaying) {
         _videoController!.pause();
         _isPlaying = false;
-        _showOverlays = true; 
-        _hideTimer?.cancel(); 
+        _showOverlays = true;
+        _hideTimer?.cancel();
       } else {
         _videoController!.play();
         _isPlaying = true;
-        _resetHideTimer(); 
+        _resetHideTimer();
       }
     });
   }
 
   void _changeSpeed(double speed) {
     _videoController?.setPlaybackSpeed(speed);
-    Navigator.pop(context); 
+    Navigator.pop(context);
     _resetHideTimer();
   }
 
@@ -341,7 +341,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      
+
       body: Dismissible(
         key: const Key('media_viewer_dismiss'),
         direction: enableDismiss ? DismissDirection.vertical : DismissDirection.none,
@@ -355,7 +355,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
           child: Stack(
-            fit: StackFit.expand, 
+            fit: StackFit.expand,
             alignment: Alignment.center,
             children: [
               // --- 1. CONTENT (VIDEO or IMAGE) ---
@@ -367,7 +367,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                     tag: widget.heroTag,
                     // Use transparent Material to avoid yellow underline glitches on text/icons
                     child: Material(
-                      color: Colors.transparent, 
+                      color: Colors.transparent,
                       child: Stack(
                         fit: StackFit.expand,
                         alignment: Alignment.center,
@@ -403,7 +403,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                      // 1. Placeholder Thumbnail (Low Res/Lokal)
                      if (widget.thumbnailPath != null)
                        Center(child: Image.file(File(widget.thumbnailPath!), fit: BoxFit.contain)),
-                     
+
                      // 2. PhotoView Utama (High Res/Network)
                      PhotoView(
                         imageProvider: CachedNetworkImageProvider(widget.imageUrl),
@@ -457,11 +457,11 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                 ),
 
               // --- 3. CENTER PLAY BUTTON ---
-              // Hanya muncul jika video dipause DAN overlay tidak sedang tampil (opsional) 
+              // Hanya muncul jika video dipause DAN overlay tidak sedang tampil (opsional)
               // atau saat inisialisasi selesai tapi belum play.
               if (_isVideo && !_isPlaying && _isVideoInitialized && !_showOverlays)
                  Center(
-                  child: IgnorePointer( 
+                  child: IgnorePointer(
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.black45,
@@ -542,7 +542,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                   duration: Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                   // Geser ke bawah layar jika overlay disembunyikan
-                  bottom: _showOverlays ? (_isPostContent ? 80 : 20) : -150, 
+                  bottom: _showOverlays ? (_isPostContent ? 80 : 20) : -150,
                   left: 16,
                   right: 16,
                   child: AnimatedOpacity(
@@ -790,7 +790,7 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
 
   double get _targetTop => MediaQuery.of(context).padding.top + 10;
   double get _targetRight => 12.0;
-  double get _miniRight => 60.0; 
+  double get _miniRight => 60.0;
 
   @override
   void dispose() {
@@ -854,7 +854,7 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
                 color: _isSuccess ? Colors.green : SisapaTheme.white,
                 child: Container(
                   width: 36, height: 36, padding: EdgeInsets.all(8),
-                  child: _isSuccess 
+                  child: _isSuccess
                     ? Icon(Icons.check, size: 20, color: Colors.white)
                     : CircularProgressIndicator(strokeWidth: 3, color: SisapaTheme.blue),
                 ),
@@ -862,7 +862,7 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
             ),
           ),
         ),
-        
+
         AnimatedPositioned(
           duration: Duration(milliseconds: 500),
           curve: Curves.easeInOutBack,

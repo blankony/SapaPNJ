@@ -12,7 +12,6 @@ import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
-
 class NotificationSheet extends StatefulWidget {
   final ScrollController scrollController;
   const NotificationSheet({super.key, required this.scrollController});
@@ -69,7 +68,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
     if (_currentUser == null) {
       return Center(child: Text("Please log in."));
     }
-    
+
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
 
@@ -81,7 +80,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10), 
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -97,7 +96,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
               ],
             ),
           ),
-          
+
           Divider(height: 1),
 
           Expanded(
@@ -114,7 +113,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
                   return Center(child: CircularProgressIndicator());
                 }
                 final docs = snapshot.data!.docs;
-                
+
                 if (docs.isEmpty) {
                   return Center(
                     child: Column(
@@ -134,7 +133,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
                 for (var doc in docs) {
                   final data = doc.data() as Map<String, dynamic>;
                   final Timestamp? timestamp = data['timestamp'];
-                  
+
                   if (timestamp != null) {
                     // Pass localization instance to helper
                     String group = _getGroupLabel(timestamp, t);
@@ -146,7 +145,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
                           child: Text(
                             group,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold, 
+                              fontWeight: FontWeight.bold,
                               color: theme.primaryColor
                             ),
                           ),
@@ -156,7 +155,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
                   }
 
                   final bool isRead = data['isRead'] ?? true;
-                  
+
                   if (data['type'] == 'follow_request') {
                     listItems.add(_FollowRequestTile(
                       notificationId: doc.id,
@@ -203,20 +202,20 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
 
     try {
       final batch = FirebaseFirestore.instance.batch();
-      
+
       final requestRef = FirebaseFirestore.instance.collection('users').doc(myUid).collection('follow_requests').doc(senderId);
       batch.delete(requestRef);
 
       if (isAccepted) {
         final myDoc = FirebaseFirestore.instance.collection('users').doc(myUid);
         final senderDoc = FirebaseFirestore.instance.collection('users').doc(senderId);
-        
+
         batch.update(myDoc, {'followers': FieldValue.arrayUnion([senderId])});
         batch.update(senderDoc, {'following': FieldValue.arrayUnion([myUid])});
-        
+
         final newNotif = FirebaseFirestore.instance.collection('users').doc(senderId).collection('notifications').doc();
         batch.set(newNotif, {
-          'type': 'request_accepted', 
+          'type': 'request_accepted',
           'senderId': myUid,
           'postTextSnippet': 'You can now see their posts.',
           'timestamp': FieldValue.serverTimestamp(),
@@ -228,7 +227,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
       batch.delete(thisNotifRef);
 
       await batch.commit();
-      
+
       if(isAccepted && mounted) OverlayService().showTopNotification(context, t.translate('notif_req_accepted'), Icons.person_add, (){}, color: Colors.green);
     } catch (e) {
       if(mounted) OverlayService().showTopNotification(context, t.translate('notif_req_error'), Icons.error, (){}, color: Colors.red);
@@ -247,7 +246,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
       builder: (context, snapshot) {
         String name = "Someone";
         String? profileUrl;
-        
+
         if (snapshot.hasData && snapshot.data!.exists) {
           final userData = snapshot.data!.data() as Map<String, dynamic>;
           name = userData['name'] ?? "Unknown";
@@ -289,7 +288,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
                     SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                   else ...[
                     OutlinedButton(
-                      onPressed: () => _handleRequest(false), 
+                      onPressed: () => _handleRequest(false),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                         side: BorderSide(color: Colors.red.withOpacity(0.5))
@@ -334,7 +333,7 @@ class _NotificationTile extends StatelessWidget {
     final String? postId = notificationData['postId'];
     final String senderId = notificationData['senderId'];
 
-    Navigator.of(context).pop(); 
+    Navigator.of(context).pop();
 
     if (type == 'follow' || type == 'request_accepted') {
       Navigator.of(context).push(MaterialPageRoute(
@@ -352,7 +351,7 @@ class _NotificationTile extends StatelessWidget {
     final theme = Theme.of(context);
     final String senderId = notificationData['senderId'];
     var t = AppLocalizations.of(context)!;
-    
+
     if (senderId == 'system') {
       return _buildSystemTile(context, theme, t);
     }
@@ -362,7 +361,7 @@ class _NotificationTile extends StatelessWidget {
       builder: (context, snapshot) {
         String name = "Someone";
         String? profileUrl;
-        
+
         if (snapshot.hasData && snapshot.data!.exists) {
           final userData = snapshot.data!.data() as Map<String, dynamic>;
           name = userData['name'] ?? "Unknown";
@@ -378,7 +377,7 @@ class _NotificationTile extends StatelessWidget {
     final String type = notificationData['type'];
     final String text = notificationData['postTextSnippet'] ?? '';
     final Timestamp? timestamp = notificationData['timestamp'];
-    
+
     IconData icon = Icons.info;
     Color color = theme.primaryColor;
     String title = t.translate('notif_sys_title'); // "System Notification"
@@ -447,8 +446,8 @@ class _NotificationTile extends StatelessWidget {
         badgeColor = Colors.purple;
         actionText = t.translate('action_followed');
         break;
-      case 'request_accepted': 
-        badgeIcon = Icons.check_circle; 
+      case 'request_accepted':
+        badgeIcon = Icons.check_circle;
         badgeColor = Colors.teal;
         actionText = t.translate('action_accepted');
         break;
@@ -490,9 +489,9 @@ class _NotificationTile extends StatelessWidget {
                 )
               ],
             ),
-            
+
             SizedBox(width: 16),
-            
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -45,7 +45,7 @@ class BlockedUsersPage extends StatelessWidget {
                 future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
                 builder: (context, userSnapshot) {
                   if (!userSnapshot.hasData) return SizedBox.shrink();
-                  
+
                   final data = userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
                   final name = data['name'] ?? 'Unknown User';
                   final email = data['email'] ?? '';

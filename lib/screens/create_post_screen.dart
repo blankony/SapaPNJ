@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data'; 
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,17 +9,17 @@ import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:badword_guard/badword_guard.dart'; 
-import 'package:google_generative_ai/google_generative_ai.dart'; 
-import 'package:image_cropper/image_cropper.dart'; 
+import 'package:badword_guard/badword_guard.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:image_cropper/image_cropper.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/prediction_service.dart';
 import '../services/cloudinary_service.dart';
 import '../services/overlay_service.dart';
-import '../services/draft_service.dart'; 
-import '../services/bad_word_service.dart'; 
+import '../services/draft_service.dart';
+import '../services/bad_word_service.dart';
 import 'video_trimmer_screen.dart';
 import '../services/app_localizations.dart';
 
@@ -44,47 +44,47 @@ class CreatePostScreen extends StatefulWidget {
 class _CreatePostScreenState extends State<CreatePostScreen> {
   final TextEditingController _postController = TextEditingController();
   final PredictionService _predictionService = PredictionService();
-  final DraftService _draftService = DraftService(); 
+  final DraftService _draftService = DraftService();
   final FocusNode _postFocusNode = FocusNode();
-  
-  final LanguageChecker _badwordGuard = LanguageChecker();
-  final BadWordService _badWordService = BadWordService(); 
 
-  List<String> _customBadWords = []; 
+  final LanguageChecker _badwordGuard = LanguageChecker();
+  final BadWordService _badWordService = BadWordService();
+
+  List<String> _customBadWords = [];
   bool _isLoadingBadWords = true;
 
   bool _canPost = false;
-  bool _isProcessing = false; 
+  bool _isProcessing = false;
   String _scanStatus = 'none'; // State for scan status: 'loading', 'success', 'none'
-  bool _isSavingDraft = false; 
+  bool _isSavingDraft = false;
 
-  String _visibility = 'public'; 
-  bool _isAccountPrivate = false; 
+  String _visibility = 'public';
+  bool _isAccountPrivate = false;
 
   String _myUserName = 'Anonymous';
   String _myUserEmail = '';
   String? _myAvatarUrl;
   int _myAvatarIconId = 0;
   String _myAvatarHex = '';
-  
+
   String? _communityId;
   String? _communityName;
   String? _communityIcon;
   bool _communityVerified = false;
-  
-  bool _isCommunityContext = false; 
-  bool _hasOfficialAuthority = false; 
-  bool _postAsCommunity = false; 
-  bool _isRestricted = false; 
+
+  bool _isCommunityContext = false;
+  bool _hasOfficialAuthority = false;
+  bool _postAsCommunity = false;
+  bool _isRestricted = false;
 
   String? _predictedText;
   Timer? _debounce;
 
-  List<File> _selectedMediaFiles = []; 
-  List<String> _existingMediaUrls = []; 
-  List<String> _existingPublicIds = []; 
-  String? _mediaType; 
-  
+  List<File> _selectedMediaFiles = [];
+  List<String> _existingMediaUrls = [];
+  List<String> _existingPublicIds = [];
+  String? _mediaType;
+
   String? _currentDraftId;
   String _initialText = '';
   List<String> _initialMediaUrls = [];
@@ -94,10 +94,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
-    _checkEmailVerification(); 
-    _loadIdentity(); 
+    _checkEmailVerification();
+    _loadIdentity();
     _trainAiModel();
-    _loadBadWords(); 
+    _loadBadWords();
 
     if (widget.initialData != null && _isEditing) {
       _initFromPublishedPost();
@@ -129,7 +129,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     _postController.text = widget.initialData!['text'] ?? '';
     _mediaType = widget.initialData!['mediaType'];
     _visibility = widget.initialData!['visibility'] ?? 'public';
-    
+
     if (widget.initialData!['mediaUrls'] != null) {
       _existingMediaUrls = List<String>.from(widget.initialData!['mediaUrls']);
     } else if (widget.initialData!['mediaUrl'] != null) {
@@ -147,7 +147,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     _existingPublicIds = List<String>.from(draft.publicIds);
     _initialText = draft.text;
     _initialMediaUrls = List<String>.from(draft.mediaUrls);
-    
+
     if (draft.communityId != null) {
       _communityId = draft.communityId;
       _communityName = draft.communityName;
@@ -159,7 +159,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   bool _hasChanges() {
     bool textChanged = _postController.text.trim() != _initialText.trim();
-    bool mediaChanged = _selectedMediaFiles.isNotEmpty || 
+    bool mediaChanged = _selectedMediaFiles.isNotEmpty ||
                         _existingMediaUrls.length != _initialMediaUrls.length;
     return textChanged || mediaChanged;
   }
@@ -179,12 +179,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               content: Text(t.translate('verify_email_msg')),
               actions: [
                 TextButton(
-                  onPressed: () { 
-                    user.sendEmailVerification(); 
-                    Navigator.pop(context); 
-                    Navigator.pop(context); 
-                    OverlayService().showTopNotification(context, t.translate('post_verify_sent'), Icons.check, (){}); 
-                  }, 
+                  onPressed: () {
+                    user.sendEmailVerification();
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                    OverlayService().showTopNotification(context, t.translate('post_verify_sent'), Icons.check, (){});
+                  },
                   child: Text(t.translate('verify_resend'))
                 ),
                 ElevatedButton(onPressed: () { Navigator.pop(context); Navigator.pop(context); }, child: Text(t.translate('general_close'))),
@@ -219,7 +219,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     if (_communityId != null) {
       _isCommunityContext = true;
-      _visibility = 'public'; 
+      _visibility = 'public';
       try {
         final comDoc = await FirebaseFirestore.instance.collection('communities').doc(_communityId).get();
         if (comDoc.exists) {
@@ -230,11 +230,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           final List admins = data['admins'] ?? [];
           final List editors = data['editors'] ?? [];
           final bool isStaff = ownerId == user.uid || admins.contains(user.uid) || editors.contains(user.uid);
-          
+
           if (mounted) {
             setState(() {
               _hasOfficialAuthority = isStaff;
-              _postAsCommunity = isStaff; 
+              _postAsCommunity = isStaff;
               _communityName = data['name'];
               _communityIcon = data['imageUrl'];
             });
@@ -274,13 +274,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   // --- CEK IMAGE SAFETY (UPDATED) ---
   Future<bool> _checkImageSafety() async {
     if (_mediaType != 'image' || _selectedMediaFiles.isEmpty) return true;
-    
+
     // START LOADING
     setState(() {
       _isProcessing = true;
       _scanStatus = 'loading';
     });
-    
+
     var t = AppLocalizations.of(context)!;
 
     try {
@@ -292,7 +292,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       }
 
       final model = GenerativeModel(
-        model: 'gemini-2.5-flash', 
+        model: 'gemini-2.5-flash',
         apiKey: apiKey,
         safetySettings: [
           SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
@@ -303,11 +303,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
 
       int limit = _selectedMediaFiles.length > 3 ? 3 : _selectedMediaFiles.length;
-      
+
       for (int i = 0; i < limit; i++) {
         final File imageFile = _selectedMediaFiles[i];
         final Uint8List imageBytes = await imageFile.readAsBytes();
-        
+
         String mimeType = 'image/jpeg';
         if (imageFile.path.toLowerCase().endsWith('.png')) {
           mimeType = 'image/png';
@@ -316,7 +316,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         }
 
         final promptText = "Deskripsikan objek utama gambar ini dengan sangat singkat (max 1 kalimat).";
-        
+
         final content = [
           Content.multi([
             TextPart(promptText),
@@ -326,7 +326,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
         try {
           final response = await model.generateContent(content);
-          
+
           if (response.text != null && response.text!.isNotEmpty) {
              continue; // Safe
           } else {
@@ -352,20 +352,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (mounted) {
         setState(() => _scanStatus = 'success');
       }
-      
+
       // Delay agar user melihat checkmark
       await Future.delayed(const Duration(milliseconds: 1200));
-      
+
       if (mounted) {
         setState(() => _isProcessing = false);
       }
-      return true; 
+      return true;
 
     } catch (e) {
       debugPrint("System Error in Image Check: $e");
       // System error (network etc) -> Fail open (allow) or closed? Usually fail open for user exp.
       if (mounted) setState(() => _isProcessing = false);
-      return true; 
+      return true;
     }
   }
 
@@ -384,11 +384,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       final cleanWord = badWord.trim();
       if (cleanWord.isEmpty) continue;
 
-      if (lowerText == cleanWord || 
-          lowerText.contains(" $cleanWord ") || 
-          lowerText.startsWith("$cleanWord ") || 
+      if (lowerText == cleanWord ||
+          lowerText.contains(" $cleanWord ") ||
+          lowerText.startsWith("$cleanWord ") ||
           lowerText.endsWith(" $cleanWord")) {
-        
+
         if (!silent) {
            var t = AppLocalizations.of(context)!;
           _showRejectDialog("${t.translate('post_bad_words')} ($cleanWord)");
@@ -474,12 +474,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         if (pickedFile != null && mounted) {
           final result = await Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoTrimmerScreen(file: File(pickedFile.path))));
           if (result != null && result['file'] is File) {
-            setState(() { 
-              _mediaType = 'video'; 
-              _selectedMediaFiles = [result['file']]; 
-              _existingMediaUrls = []; 
+            setState(() {
+              _mediaType = 'video';
+              _selectedMediaFiles = [result['file']];
+              _existingMediaUrls = [];
               _existingPublicIds = [];
-              _checkCanPost(); 
+              _checkCanPost();
             });
           }
         }
@@ -489,28 +489,28 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           if (pickedFiles.isNotEmpty) {
             List<File> croppedFiles = [];
             for (var xfile in pickedFiles) {
-              File? cropped = await _cropImage(File(xfile.path)); 
+              File? cropped = await _cropImage(File(xfile.path));
               if (cropped != null) croppedFiles.add(cropped);
             }
             if (croppedFiles.isNotEmpty) {
-              setState(() { 
-                if (_mediaType == 'video') { _selectedMediaFiles = []; _existingMediaUrls = []; _existingPublicIds = []; } 
-                _mediaType = 'image'; 
-                _selectedMediaFiles.addAll(croppedFiles); 
-                _checkCanPost(); 
+              setState(() {
+                if (_mediaType == 'video') { _selectedMediaFiles = []; _existingMediaUrls = []; _existingPublicIds = []; }
+                _mediaType = 'image';
+                _selectedMediaFiles.addAll(croppedFiles);
+                _checkCanPost();
               });
             }
           }
         } else {
           final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 80);
           if (pickedFile != null) {
-             File? cropped = await _cropImage(File(pickedFile.path)); 
+             File? cropped = await _cropImage(File(pickedFile.path));
              if (cropped != null) {
-                setState(() { 
-                  if (_mediaType == 'video') { _selectedMediaFiles = []; _existingMediaUrls = []; _existingPublicIds = []; } 
-                  _mediaType = 'image'; 
-                  _selectedMediaFiles.add(cropped); 
-                  _checkCanPost(); 
+                setState(() {
+                  if (_mediaType == 'video') { _selectedMediaFiles = []; _existingMediaUrls = []; _existingPublicIds = []; }
+                  _mediaType = 'image';
+                  _selectedMediaFiles.add(cropped);
+                  _checkCanPost();
                 });
              }
           }
@@ -524,17 +524,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   void _removeExistingUrl(int index) {
-    setState(() { 
+    setState(() {
       _existingMediaUrls.removeAt(index);
-      if (_existingPublicIds.length > index) _existingPublicIds.removeAt(index); 
-      _checkCanPost(); 
-      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty) _mediaType = null; 
+      if (_existingPublicIds.length > index) _existingPublicIds.removeAt(index);
+      _checkCanPost();
+      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty) _mediaType = null;
     });
   }
 
   void _showVisibilityPicker() {
     var t = AppLocalizations.of(context)!;
-    FocusScope.of(context).unfocus(); 
+    FocusScope.of(context).unfocus();
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -547,7 +547,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(t.translate('post_visibility_title'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), 
+                child: Text(t.translate('post_visibility_title'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               if (_isAccountPrivate) ...[
                  ListTile(
@@ -564,13 +564,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   leading: const Icon(Icons.public, color: Colors.grey),
                   title: Text(t.translate('post_vis_public')),
                   subtitle: Text(t.translate('post_vis_private_warn')),
-                  enabled: false, 
+                  enabled: false,
                 ),
               ] else ...[
                 ListTile(
                   leading: const Icon(Icons.public, color: SisapaTheme.blue),
-                  title: Text(t.translate('post_vis_public')), 
-                  subtitle: Text(t.translate('post_vis_public_desc')), 
+                  title: Text(t.translate('post_vis_public')),
+                  subtitle: Text(t.translate('post_vis_public_desc')),
                   trailing: _visibility == 'public' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
                   onTap: () {
                     setState(() => _visibility = 'public');
@@ -580,7 +580,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ],
               ListTile(
                 leading: const Icon(Icons.lock, color: Colors.red),
-                title: Text(t.translate('post_vis_me')), 
+                title: Text(t.translate('post_vis_me')),
                 trailing: _visibility == 'private' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
                 onTap: () {
                   setState(() => _visibility = 'private');
@@ -603,14 +603,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     if (_visibility == 'private') {
       icon = Icons.lock;
-      label = t.translate('post_vis_me'); 
+      label = t.translate('post_vis_me');
       color = Colors.red;
     } else if (_visibility == 'followers') {
       icon = Icons.people;
-      label = t.translate('profile_followers'); 
+      label = t.translate('profile_followers');
     } else {
       icon = Icons.public;
-      label = t.translate('post_vis_public'); 
+      label = t.translate('post_vis_public');
     }
 
     return Row(
@@ -634,16 +634,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(t.translate('post_discard_title')), 
-          content: Text(t.translate('post_discard_desc')), 
+          title: Text(t.translate('post_discard_title')),
+          content: Text(t.translate('post_discard_desc')),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(t.translate('post_keep_editing')), 
+              child: Text(t.translate('post_keep_editing')),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(t.translate('post_discard'), style: TextStyle(color: Colors.red)), 
+              child: Text(t.translate('post_discard'), style: TextStyle(color: Colors.red)),
             ),
           ],
         ),
@@ -679,11 +679,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     if (result == 'save') {
       await _saveToDrafts();
-      return true; 
+      return true;
     } else if (result == 'discard') {
       return true;
     }
-    return false; 
+    return false;
   }
 
   Future<void> _saveToDrafts() async {
@@ -735,48 +735,48 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _submitPost() async {
     if (!_canPost) return;
-    
+
     var t = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     final text = _postController.text;
-    
+
     // --- 1. FILTER TEKS (Caption) ---
     if (_checkTextForBadWords(text)) {
-      return; 
+      return;
     }
 
     // --- 2. FILTER GAMBAR (Visual Detector AI) ---
     final isImageSafe = await _checkImageSafety();
-    if (!isImageSafe) return; 
+    if (!isImageSafe) return;
 
     FocusScope.of(context).unfocus();
     Navigator.of(context).pop();
 
     final OverlayState? overlayState = Overlay.maybeOf(context);
-    
+
     final Map<String, String> localizedStrings = {
-      'uploading': t.translate('post_uploading_count'), 
+      'uploading': t.translate('post_uploading_count'),
       'no_content': t.translate('post_no_content'),
       'posted': t.translate('post_success'),
       'failed': t.translate('post_failed'),
     };
 
-    final String communityNameSafe = _communityName ?? t.translate('general_community'); 
+    final String communityNameSafe = _communityName ?? t.translate('general_community');
     final String myUserNameSafe = _myUserName == 'Anonymous' ? t.translate('general_anonymous') : _myUserName;
 
     if (overlayState != null) {
       _BackgroundUploader.startUploadSequence(
         overlayState: overlayState,
         text: _postController.text,
-        filesToUpload: _selectedMediaFiles, 
-        existingMediaUrls: _existingMediaUrls, 
+        filesToUpload: _selectedMediaFiles,
+        existingMediaUrls: _existingMediaUrls,
         mediaType: _mediaType,
         visibility: _visibility,
         isEditing: _isEditing,
         postId: widget.postId,
-        uid: user.uid, 
+        uid: user.uid,
         userName: _postAsCommunity ? communityNameSafe : myUserNameSafe,
         userEmail: _myUserEmail,
         avatarIconId: _postAsCommunity ? 0 : _myAvatarIconId,
@@ -788,7 +788,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         communityVerified: _communityVerified,
         isCommunityIdentity: _postAsCommunity,
         draftIdToDelete: _currentDraftId,
-        localizedStrings: localizedStrings, 
+        localizedStrings: localizedStrings,
       );
     }
   }
@@ -803,14 +803,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isRestricted) return const SizedBox.shrink(); 
+    if (_isRestricted) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     var t = AppLocalizations.of(context)!;
 
     final String? currentAvatarUrl = _postAsCommunity ? _communityIcon : _myAvatarUrl;
-    final String currentDisplayName = _postAsCommunity 
-        ? (_communityName ?? t.translate('general_community')) 
+    final String currentDisplayName = _postAsCommunity
+        ? (_communityName ?? t.translate('general_community'))
         : (_myUserName == 'Anonymous' ? t.translate('general_anonymous') : _myUserName);
 
     return WillPopScope(
@@ -833,7 +833,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     const SizedBox(width: 8),
                     Flexible(child: Text(_communityName ?? t.translate('general_community'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
                   ],
-                ) 
+                )
               : Text(_isEditing ? t.translate('post_edit_title') : t.translate('post_create_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
           centerTitle: false,
           actions: [
@@ -846,7 +846,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   foregroundColor: Colors.white,
                   shape: const StadiumBorder()
                 ),
-                child: Text(t.translate('post_button')), 
+                child: Text(t.translate('post_button')),
               ),
             )
           ],
@@ -873,14 +873,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             Text(t.translate('post_identity_label'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             const Spacer(),
                             ChoiceChip(
-                              label: Text(t.translate('post_identity_me')), 
+                              label: Text(t.translate('post_identity_me')),
                               selected: !_postAsCommunity,
                               onSelected: (val) => setState(() => _postAsCommunity = false),
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: 8),
                             ChoiceChip(
-                              label: Text(t.translate('nav_community')), 
+                              label: Text(t.translate('nav_community')),
                               selected: _postAsCommunity,
                               onSelected: (val) => setState(() => _postAsCommunity = true),
                               selectedColor: SisapaTheme.blue.withOpacity(0.2),
@@ -898,10 +898,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           radius: 24,
                           backgroundColor: currentAvatarUrl != null ? Colors.transparent : AvatarHelper.getColor(_myAvatarHex),
                           backgroundImage: currentAvatarUrl != null ? CachedNetworkImageProvider(currentAvatarUrl) : null,
-                          child: currentAvatarUrl == null 
-                              ? (_postAsCommunity 
-                                  ? const Icon(Icons.groups, color: Colors.white) 
-                                  : Icon(AvatarHelper.getIcon(_myAvatarIconId), color: Colors.white)) 
+                          child: currentAvatarUrl == null
+                              ? (_postAsCommunity
+                                  ? const Icon(Icons.groups, color: Colors.white)
+                                  : Icon(AvatarHelper.getIcon(_myAvatarIconId), color: Colors.white))
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -910,21 +910,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                currentDisplayName, 
+                                currentDisplayName,
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold, 
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                   color: _postAsCommunity ? SisapaTheme.blue : null
                                 )
                               ),
                               if (_isCommunityContext)
                                 Text(
-                                  _postAsCommunity 
+                                  _postAsCommunity
                                     ? t.translate('post_as_comm_id')
                                     : "${t.translate('post_in_comm')} $_communityName",
                                   style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)
                                 ),
-                            
+
                               TextField(
                                 controller: _postController,
                                 focusNode: _postFocusNode,
@@ -937,7 +937,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   border: InputBorder.none,
                                 ),
                               ),
-                              
+
                               if (_existingMediaUrls.isNotEmpty || _selectedMediaFiles.isNotEmpty)
                                 Container(
                                   height: 100,
@@ -950,7 +950,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                     ],
                                   ),
                                 ),
-                            
+
                               if (_predictedText != null)
                                 GestureDetector(
                                   onTap: _acceptPrediction,
@@ -970,7 +970,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 ),
               ),
             ),
-            
+
             Positioned(
               left: 0, right: 0, bottom: bottomInset,
               child: Container(
@@ -980,7 +980,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   children: [
                     IconButton(icon: const Icon(Icons.image, color: SisapaTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: false)),
                     IconButton(icon: const Icon(Icons.videocam, color: SisapaTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: true)),
-                    
+
                     if (!_isCommunityContext)
                       InkWell(
                         onTap: _showVisibilityPicker,
@@ -1015,7 +1015,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 const Icon(Icons.check_circle, color: Colors.green, size: 60),
                                 const SizedBox(height: 16),
                                 Text(
-                                  t.translate('general_success'), 
+                                  t.translate('general_success'),
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
                                 ),
                               ],
@@ -1027,7 +1027,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 const CircularProgressIndicator(color: Colors.white),
                                 const SizedBox(height: 16),
                                 Text(
-                                  t.translate('post_scan_images'), 
+                                  t.translate('post_scan_images'),
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
                                 ),
                               ],
@@ -1079,7 +1079,7 @@ class _BackgroundUploader {
     bool? communityVerified,
     bool isCommunityIdentity = false,
     String? draftIdToDelete,
-    required Map<String, String> localizedStrings, 
+    required Map<String, String> localizedStrings,
   }) {
     final GlobalKey<_PostUploadOverlayState> overlayKey = GlobalKey();
     late OverlayEntry overlayEntry;
@@ -1090,7 +1090,7 @@ class _BackgroundUploader {
         onDismissRequest: () {
           overlayKey.currentState?.dismissToIcon();
         },
-        initialMessage: localizedStrings['uploading'] ?? "Uploading...", 
+        initialMessage: localizedStrings['uploading'] ?? "Uploading...",
       ),
     );
 
@@ -1127,7 +1127,7 @@ class _BackgroundUploader {
         for (var file in files) {
           String msg = locStrings['uploading'] ?? "Uploading...";
           onProgress("$msg ($count/${files.length})");
-          
+
           File fileToUp = file;
           if (type == 'video') {
              try {
@@ -1146,9 +1146,9 @@ class _BackgroundUploader {
       final Map<String, dynamic> postData = {
         'text': text,
         'mediaType': type,
-        'visibility': vis, 
+        'visibility': vis,
         'isUploading': false,
-        'mediaUrls': finalUrls, 
+        'mediaUrls': finalUrls,
         'mediaUrl': finalUrls.isNotEmpty ? finalUrls.first : null,
       };
 
@@ -1174,11 +1174,11 @@ class _BackgroundUploader {
           postData['communityName'] = comName;
           postData['communityIcon'] = comIcon;
           postData['communityVerified'] = comVerified;
-          postData['isCommunityPost'] = isCommunityIdentity; 
+          postData['isCommunityPost'] = isCommunityIdentity;
         }
 
         await FirebaseFirestore.instance.collection('posts').add(postData);
-        
+
         if (draftId != null) {
           await DraftService().discardDraftAfterPosting(draftId);
         }
@@ -1194,7 +1194,7 @@ class _BackgroundUploader {
 
 class _PostUploadOverlay extends StatefulWidget {
   final VoidCallback onDismissRequest;
-  final String initialMessage; 
+  final String initialMessage;
   const _PostUploadOverlay({super.key, required this.onDismissRequest, required this.initialMessage});
   @override State<_PostUploadOverlay> createState() => _PostUploadOverlayState();
 }
@@ -1204,8 +1204,8 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
   bool _isMiniVisible = false;
   bool _isSuccess = false;
   bool _isError = false;
-  bool _dismissedBySwipe = false; 
-  late String _message; 
+  bool _dismissedBySwipe = false;
+  late String _message;
   Timer? _autoDismissTimer;
 
   @override
@@ -1216,18 +1216,18 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
 
   double get _targetTop => MediaQuery.of(context).padding.top + 10;
   double get _targetRight => 12.0;
-  double get _miniRight => 60.0; 
+  double get _miniRight => 60.0;
 
   @override void dispose() { _autoDismissTimer?.cancel(); super.dispose(); }
   void updateStatus(String status) { if (!mounted) return; setState(() => _message = status); }
   void dismissToIcon() { setState(() => _isCardVisible = false); Future.delayed(const Duration(milliseconds: 400), () { if (mounted) setState(() => _isMiniVisible = true); }); }
-  
+
   void _expandToCard() {
     setState(() { _isMiniVisible = false; });
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
-        setState(() { 
-            _isCardVisible = true; 
+        setState(() {
+            _isCardVisible = true;
             _dismissedBySwipe = false;
         });
         _autoDismissTimer?.cancel();
@@ -1247,10 +1247,10 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
       children: [
         AnimatedPositioned(
           duration: const Duration(milliseconds: 400), curve: Curves.easeOutQuart,
-          top: _targetTop, right: _isMiniVisible ? _miniRight : _targetRight, 
+          top: _targetTop, right: _isMiniVisible ? _miniRight : _targetRight,
           child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 300), 
-            opacity: _isMiniVisible ? 1.0 : 0.0, 
+            duration: const Duration(milliseconds: 300),
+            opacity: _isMiniVisible ? 1.0 : 0.0,
             child: GestureDetector(
               onTap: _expandToCard,
               child: Material(
@@ -1259,7 +1259,7 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
                 color: _isSuccess ? Colors.green : theme.cardColor,
                 child: Container(
                   width: 36, height: 36, padding: const EdgeInsets.all(8),
-                  child: _isSuccess 
+                  child: _isSuccess
                     ? const Icon(Icons.check, size: 20, color: Colors.white)
                     : const CircularProgressIndicator(strokeWidth: 3, color: SisapaTheme.blue),
                 ),
@@ -1269,16 +1269,16 @@ class _PostUploadOverlayState extends State<_PostUploadOverlay> {
         ),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 500), curve: Curves.easeInOutBack,
-          top: _isCardVisible ? _targetTop : -100, left: 16, right: _targetRight, 
+          top: _isCardVisible ? _targetTop : -100, left: 16, right: _targetRight,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 300), opacity: _isCardVisible ? 1.0 : 0.0,
-            child: _dismissedBySwipe 
-                ? const SizedBox.shrink() 
+            child: _dismissedBySwipe
+                ? const SizedBox.shrink()
                 : Dismissible(
                     key: const ValueKey('upload_card_dismiss'),
                     direction: DismissDirection.horizontal,
                     onDismissed: (_) {
-                        setState(() => _dismissedBySwipe = true); 
+                        setState(() => _dismissedBySwipe = true);
                         widget.onDismissRequest();
                     },
                     child: Material(

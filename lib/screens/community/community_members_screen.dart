@@ -13,7 +13,7 @@ import 'dart:math';
 class CommunityMembersScreen extends StatefulWidget {
   final String communityId;
   final Map<String, dynamic> communityData;
-  final bool isStaff; 
+  final bool isStaff;
 
   const CommunityMembersScreen({
     super.key,
@@ -45,7 +45,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
@@ -68,7 +68,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
         children: [
            // Blobs for vibe
            Positioned(top: 50, right: -50, child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.05 : 0.03)))),
-           
+
            TabBarView(
             controller: _tabController,
             children: [
@@ -98,7 +98,7 @@ class _FollowersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var t = AppLocalizations.of(context)!;
-    
+
     // No followers yet
     if (followersList.isEmpty) return Center(child: Text("${t.translate('search_no_results')} ${t.translate('profile_followers')}", style: TextStyle(color: Colors.grey)));
 
@@ -212,7 +212,7 @@ class _AdminsListState extends State<_AdminsList> {
     // Note: since this is async, check mounted or context
     if (!mounted) return;
     var t = AppLocalizations.of(context)!;
-    
+
     try {
       final hex = '0x${color.value.toRadixString(16).toUpperCase()}';
       await FirebaseFirestore.instance.collection('communities').doc(widget.communityId).set({
@@ -231,7 +231,7 @@ class _AdminsListState extends State<_AdminsList> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
         final data = snapshot.data!.data() as Map<String, dynamic>;
-        
+
         final String ownerId = data['ownerId'];
         final List admins = data['admins'] ?? [];
         final Map<String, dynamic> roles = data['adminRoles'] ?? {};

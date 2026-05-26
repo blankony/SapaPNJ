@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; 
-import 'firebase_options.dart'; 
-import 'screens/splash_screen.dart'; 
-import 'services/app_localizations.dart'; 
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
+import 'services/app_localizations.dart';
 
 // Notifiers Global
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
@@ -17,12 +17,12 @@ import 'theme/avatar_helper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // [OPTIMIZATION 4] Only initialize core Firebase, the rest in background/MyApp
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
   runApp(const MyApp());
 }
 
@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    
+
     final bool isDark = prefs.getBool('is_dark_mode') ?? false;
     themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
 
@@ -60,7 +60,7 @@ class _MyAppState extends State<MyApp> {
     if (savedLang != null) {
       languageNotifier.value = Locale(savedLang);
     }
-    
+
     if (mounted) {
       setState(() {
         _isConfigLoaded = true;
@@ -90,11 +90,11 @@ class _MyAppState extends State<MyApp> {
             return MaterialApp(
               // Use onGenerateTitle so title changes with language
               onGenerateTitle: (context) => AppLocalizations.of(context)?.translate('app_name') ?? 'Sapa PNJ',
-              
-              theme: SisapaTheme.lightTheme, 
-              darkTheme: SisapaTheme.darkTheme, 
-              themeMode: currentMode, 
-              
+
+              theme: SisapaTheme.lightTheme,
+              darkTheme: SisapaTheme.darkTheme,
+              themeMode: currentMode,
+
               locale: currentLocale,
               supportedLocales: const [
                 Locale('en', 'US'),
@@ -115,7 +115,7 @@ class _MyAppState extends State<MyApp> {
                 return supportedLocales.first;
               },
               home: const SplashScreen(),
-              debugShowCheckedModeBanner: false, 
+              debugShowCheckedModeBanner: false,
             );
           },
         );

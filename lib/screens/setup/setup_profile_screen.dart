@@ -24,13 +24,13 @@ class SetupProfileScreen extends StatefulWidget {
 class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-  
+
   bool _isLoading = false;
   File? _avatarFile;
   File? _bannerFile;
-  
+
   // --- NEW: Privacy Preference ---
-  bool _isPrivateAccount = false; 
+  bool _isPrivateAccount = false;
 
   @override
   void initState() {
@@ -58,8 +58,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
         compressQuality: 70,
         maxWidth: 1080,
         maxHeight: 1080,
-        aspectRatio: isAvatar 
-            ? CropAspectRatio(ratioX: 1, ratioY: 1) 
+        aspectRatio: isAvatar
+            ? CropAspectRatio(ratioX: 1, ratioY: 1)
             : CropAspectRatio(ratioX: 3, ratioY: 1),
         uiSettings: [
           AndroidUiSettings(
@@ -124,7 +124,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
       final Map<String, dynamic> updateData = {
         'isPrivate': _isPrivateAccount, // Save Privacy Setting
       };
-      
+
       if (avatarUrl != null) updateData['profileImageUrl'] = avatarUrl;
       if (bannerUrl != null) updateData['bannerImageUrl'] = bannerUrl;
 
@@ -143,9 +143,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
     } catch (e) {
       if (mounted) {
         OverlayService().showTopNotification(
-          context, 
-          "Error: $e", 
-          Icons.error, 
+          context,
+          "Error: $e",
+          Icons.error,
           (){},
           color: Colors.red
         );
@@ -177,14 +177,14 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
     final theme = Theme.of(context);
     // Shortcut for localization to keep code concise
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: SingleChildScrollView( 
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -215,7 +215,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                     style: theme.textTheme.bodyLarge,
                   ),
                   SizedBox(height: 30),
-            
+
                   Center(
                     child: Stack(
                       clipBehavior: Clip.none,
@@ -230,11 +230,11 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                               color: theme.cardColor,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: theme.dividerColor),
-                              image: _bannerFile != null 
+                              image: _bannerFile != null
                                 ? DecorationImage(image: FileImage(_bannerFile!), fit: BoxFit.cover)
                                 : null,
                             ),
-                            child: _bannerFile == null 
+                            child: _bannerFile == null
                               ? Center(child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -246,7 +246,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                               : null,
                           ),
                         ),
-                        
+
                         Positioned(
                           bottom: -40,
                           child: GestureDetector(
@@ -262,7 +262,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                                   ? DecorationImage(image: FileImage(_avatarFile!), fit: BoxFit.cover)
                                   : null,
                               ),
-                              child: _avatarFile == null 
+                              child: _avatarFile == null
                                 ? Icon(Icons.add_a_photo, color: SisapaTheme.blue, size: 30)
                                 : null,
                             ),
@@ -271,9 +271,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                       ],
                     ),
                   ),
-            
+
                   SizedBox(height: 60),
-                  
+
                   // --- NEW: Privacy Toggle ---
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -294,8 +294,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                               Text(l10n.translate('private_account'), style: TextStyle(fontWeight: FontWeight.bold)),
                               Text(
                                 // Localization: Description based on toggle
-                                _isPrivateAccount 
-                                    ? l10n.translate('private_account_desc') 
+                                _isPrivateAccount
+                                    ? l10n.translate('private_account_desc')
                                     : l10n.translate('public_account_desc'),
                                 style: TextStyle(fontSize: 12, color: theme.hintColor),
                               ),
@@ -309,9 +309,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                       ],
                     ),
                   ),
-                  
+
                   SizedBox(height: 30),
-            
+
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -322,7 +322,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       ),
-                      child: _isLoading 
+                      child: _isLoading
                         ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         // Localization: Next
                         : Text(l10n.translate('next')),

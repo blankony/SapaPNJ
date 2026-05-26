@@ -4,7 +4,6 @@ import '../main.dart'; // Import for SisapaTheme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 
-
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 

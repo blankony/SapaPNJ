@@ -10,7 +10,7 @@ class DraftPost {
   final String? mediaType;
   final String visibility;
   final int timestamp;
-  
+
   final String? communityId;
   final String? communityName;
   final String? communityIcon;
@@ -78,13 +78,13 @@ class DraftService {
   Future<void> saveDraft(DraftPost draft) async {
     final prefs = await SharedPreferences.getInstance();
     List<DraftPost> drafts = await getDrafts();
-    
+
     // 1. Check if updating existing or adding new
     final index = drafts.indexWhere((d) => d.id == draft.id);
     if (index != -1) {
-      drafts[index] = draft; 
+      drafts[index] = draft;
     } else {
-      drafts.insert(0, draft); 
+      drafts.insert(0, draft);
     }
 
     // 2. Re-sort to ensure Newest is top
@@ -93,7 +93,7 @@ class DraftService {
     // 3. FIFO LIMIT: If more than 3, delete the oldest (last)
     if (drafts.length > 3) {
       DraftPost oldestDraft = drafts.last;
-      
+
       // Cleanup Cloudinary resources for the deleted draft
       if (oldestDraft.publicIds.isNotEmpty) {
         String resourceType = oldestDraft.mediaType == 'video' ? 'video' : 'image';
@@ -101,7 +101,7 @@ class DraftService {
           _cloudinaryService.deleteResource(pubId, resourceType: resourceType);
         }
       }
-      
+
       // Remove from list
       drafts.removeLast();
     }
@@ -113,7 +113,7 @@ class DraftService {
   Future<void> deleteDraft(String draftId) async {
     final prefs = await SharedPreferences.getInstance();
     List<DraftPost> drafts = await getDrafts();
-    
+
     final index = drafts.indexWhere((d) => d.id == draftId);
     if (index != -1) {
       final draft = drafts[index];

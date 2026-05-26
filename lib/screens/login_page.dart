@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'forgot_password_screen.dart';
-import 'register_page.dart'; 
-import '../main.dart'; 
+import 'register_page.dart';
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart'; // Import Localization
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,11 +18,11 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   final FocusNode _passwordFocusNode = FocusNode();
 
   String _errorMessage = '';
-  bool _isLoading = false; 
+  bool _isLoading = false;
   bool _isPasswordObscured = true;
 
   Route _createSlideUpRoute(Widget page) {
@@ -40,15 +39,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _signIn() async {
-    if (_isLoading) return; 
+    if (_isLoading) return;
 
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() { 
-      _isLoading = true; 
-      _errorMessage = ''; 
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
     });
 
     final t = AppLocalizations.of(context)!; //
@@ -58,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      
+
       if (context.mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
@@ -117,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
     final t = AppLocalizations.of(context)!;
 
     return Scaffold(
-      extendBodyBehindAppBar: true, 
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -175,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         children: [
                           Text(
-                            "SAPA", 
+                            "SAPA",
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w900,
                               color: SisapaTheme.blue,
@@ -184,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            "PNJ", 
+                            "PNJ",
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w900,
                               letterSpacing: -1.0,
@@ -199,12 +198,12 @@ class _LoginPageState extends State<LoginPage> {
                         style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 32),
-                      
-                      TextFormField( 
+
+                      TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(labelText: t.translate('auth_enter_email')), //
                         keyboardType: TextInputType.emailAddress,
-                        
+
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) {
                           FocusScope.of(context).requestFocus(_passwordFocusNode);
@@ -214,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       SizedBox(height: 16),
-                      
+
                       TextFormField(
                         controller: _passwordController,
                         focusNode: _passwordFocusNode,
@@ -232,7 +231,7 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                         ),
-                        
+
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) {
                           _signIn();
@@ -284,9 +283,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      
+
                       SizedBox(height: 24),
-                      
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

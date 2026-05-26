@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
-import '../../auth_gate.dart'; 
-import '../../services/overlay_service.dart'; 
+import '../../auth_gate.dart';
+import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart';
 
 class SetupVerificationScreen extends StatefulWidget {
@@ -42,16 +42,16 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
     final user = FirebaseAuth.instance.currentUser;
     // Localization
     var t = AppLocalizations.of(context)!;
-    
+
     try {
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
         setState(() { _isEmailSent = true; });
         if (mounted) {
           OverlayService().showTopNotification(
-            context, 
+            context,
             t.translate('verify_email_sent_toast'), // "Verification email sent!"
-            Icons.mark_email_read, 
+            Icons.mark_email_read,
             (){},
             color: Colors.green
           );
@@ -59,9 +59,9 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
       } else {
          if (mounted) {
            OverlayService().showTopNotification(
-             context, 
+             context,
              t.translate('verify_already_verified'), // "Already verified..."
-             Icons.info, 
+             Icons.info,
              (){},
              color: SisapaTheme.blue
            );
@@ -70,9 +70,9 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
     } catch (e) {
       if (mounted) {
         OverlayService().showTopNotification(
-          context, 
-          "${t.translate('general_error')}: $e", 
-          Icons.error, 
+          context,
+          "${t.translate('general_error')}: $e",
+          Icons.error,
           (){},
           color: Colors.red
         );
@@ -94,7 +94,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
     final theme = Theme.of(context);
     // Localization
     var t = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -140,7 +140,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                       side: BorderSide(color: SisapaTheme.blue, width: 2),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    child: _isLoading 
+                    child: _isLoading
                       ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : Text(t.translate('verify_send_btn'), style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)),
                   ),

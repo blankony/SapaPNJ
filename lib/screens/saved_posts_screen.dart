@@ -62,15 +62,15 @@ class SavedPostsScreen extends StatelessWidget {
                    if (postSnapshot.connectionState == ConnectionState.waiting) {
                      return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
                    }
-                   
+
                    if (!postSnapshot.hasData || !postSnapshot.data!.exists) {
-                     // Post might be deleted. 
+                     // Post might be deleted.
                      // Optional: Auto-remove bookmark here if desired, but for now just hide it.
                      return const SizedBox.shrink();
                    }
 
                    final postData = postSnapshot.data!.data() as Map<String, dynamic>;
-                   
+
                    return BlogPostCard(
                      postId: postId,
                      postData: postData,

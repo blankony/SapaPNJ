@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 import 'dart:math';
-import 'dart:io'; 
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; 
+import 'package:flutter/services.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -11,14 +11,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:share_plus/share_plus.dart'; 
+import 'package:share_plus/share_plus.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/ai_event_bus.dart';
 import '../../widgets/common_error_widget.dart';
 import '../../services/overlay_service.dart';
-import '../../services/voice_service.dart'; 
+import '../../services/voice_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
 // --- ENHANCED LANGUAGE DETECTOR ---
@@ -54,30 +54,30 @@ class LanguageDetector {
     final cleanText = text.toLowerCase().trim();
     int idScore = 0;
     int enScore = 0;
-    
+
     if (RegExp(r'\b(meng|peng|ber|ter|ke|se)\w+').hasMatch(cleanText)) idScore += 3;
     if (RegExp(r'\w+nya\b').hasMatch(cleanText)) idScore += 3;
-    if (RegExp(r'\bdi\s+\w+').hasMatch(cleanText)) idScore += 2; 
-    
+    if (RegExp(r'\bdi\s+\w+').hasMatch(cleanText)) idScore += 2;
+
     final words = cleanText
         .replaceAll(RegExp(r'[^\w\s]'), ' ')
         .split(RegExp(r'\s+'))
-        .where((w) => w.length > 1) 
+        .where((w) => w.length > 1)
         .toList();
-    
+
     for (var word in words) {
       if (_idWords.contains(word)) idScore += 2;
       if (_enWords.contains(word)) enScore += 2;
     }
-    
-    if (RegExp(r'[bcdfghjklmnpqrstvwxyz]{4,}').hasMatch(cleanText)) enScore += 1; 
-    
+
+    if (RegExp(r'[bcdfghjklmnpqrstvwxyz]{4,}').hasMatch(cleanText)) enScore += 1;
+
     if (idScore > enScore) return 'id-ID';
     else if (enScore > idScore) return 'en-US';
-    
+
     if (RegExp(r'\b(yang|nya|di|ke|dari|untuk|dan)\b').hasMatch(cleanText)) return 'id-ID';
-    
-    return 'en-US'; 
+
+    return 'en-US';
   }
 }
 
@@ -86,7 +86,7 @@ class TTSManager {
   final FlutterTts _tts = FlutterTts();
   bool _isInitialized = false;
   Map<String, dynamic>? _availableVoices;
-  
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     try {
@@ -98,18 +98,18 @@ class TTSManager {
 
       _tts.setCompletionHandler(() => OverlayService().hideAudioPlayer());
       _tts.setCancelHandler(() => OverlayService().hideAudioPlayer());
-      
+
       _isInitialized = true;
     } catch (e) {
       debugPrint("TTS Initialization Error: $e");
     }
   }
-  
+
   Future<Map<String, dynamic>> _getAvailableVoices() async {
     try {
       final voices = await _tts.getVoices;
       final Map<String, dynamic> voiceMap = {'id-ID': [], 'en-US': [], 'en-GB': []};
-      
+
       if (voices != null && voices is List) {
         for (var voice in voices) {
           if (voice is Map) {
@@ -130,35 +130,35 @@ class TTSManager {
       return {};
     }
   }
-  
+
   Future<void> speak(BuildContext context, String text) async {
     if (!_isInitialized) await initialize();
     if (text.trim().isEmpty) return;
-    
+
     try {
       await _tts.stop();
       final detectedLang = LanguageDetector.detect(text);
       bool success = await _setLanguageWithFallback(detectedLang);
-      
+
       if (!success) await _tts.setLanguage(detectedLang);
-      
+
       final cleanText = text
           .replaceAll(RegExp(r'[*#_`~\[\]()]'), '')
           .replaceAll(RegExp(r'\n+'), '. ')
           .trim();
-      
+
       if (cleanText.isEmpty) return;
-      
+
       OverlayService().showAudioPlayer(context, () async {
         await _tts.stop();
       });
-      
+
       await _tts.speak(cleanText);
     } catch (e) {
       OverlayService().hideAudioPlayer();
     }
   }
-  
+
   Future<bool> _setLanguageWithFallback(String targetLang) async {
     final fallbackChain = [targetLang, if (targetLang != 'en-US') 'en-US', 'en-GB'];
     for (String lang in fallbackChain) {
@@ -178,12 +178,12 @@ class TTSManager {
     }
     return false;
   }
-  
+
   Future<void> stop() async {
     await _tts.stop();
     OverlayService().hideAudioPlayer();
   }
-  
+
   void dispose() {
     _tts.stop();
     OverlayService().hideAudioPlayer();
@@ -202,13 +202,13 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
-  
+
   bool _isTyping = false;
   bool _isLoadingHistory = false;
   bool _hasConnectionError = false;
-  
+
   // --- VOICE STATE ---
-  bool _isRecording = false; 
+  bool _isRecording = false;
   late AnimationController _micScaleController;
 
   String? _currentSessionId;
@@ -217,7 +217,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
   final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
   late GenerativeModel _model;
   late ChatSession _chatSession;
-  
+
   late AnimationController _typingController;
   late TTSManager _ttsManager;
 
@@ -249,10 +249,10 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     _ttsManager = TTSManager();
     _ttsManager.initialize();
     voiceService.initialize();
-    
+
     _allSuggestions.shuffle();
     _activeSuggestions = _allSuggestions.take(3).toList();
-    
+
     _typingController = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 1000),
     )..repeat();
@@ -261,7 +261,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       vsync: this,
       duration: const Duration(milliseconds: 150),
       lowerBound: 1.0,
-      upperBound: 1.25, 
+      upperBound: 1.25,
     );
 
     _eventBusSubscription = aiPageEventBus.stream.listen((event) {
@@ -288,7 +288,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
   Future<void> _speak(String text) async {
     await _ttsManager.speak(context, text);
   }
-  
+
   // --- VOICE INPUT HELPERS ---
   void _startRecording() {
     _ttsManager.stop();
@@ -408,7 +408,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
   Future<void> _handleSubmitted(String text) async {
     _textController.clear();
     if (text.trim().isEmpty) return;
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
@@ -487,7 +487,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
@@ -496,7 +496,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       return Scaffold(
         body: CommonErrorWidget(
           message: t.translate('ai_error_connect_spirit'), // "Unable to connect..."
-          isConnectionError: true, 
+          isConnectionError: true,
           onRetry: () => _startNewChat()
         ),
       );
@@ -532,12 +532,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
   Widget _buildEmptyState(ThemeData theme, bool isDark, AppLocalizations t) {
     return SingleChildScrollView(
       child: Container(
-        height: MediaQuery.of(context).size.height, 
+        height: MediaQuery.of(context).size.height,
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: kToolbarHeight + 40), 
+            SizedBox(height: kToolbarHeight + 40),
             Container(
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -654,7 +654,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                 textCapitalization: TextCapitalization.sentences,
                 style: TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  hintText: _isRecording 
+                  hintText: _isRecording
                       ? t.translate('ai_listening') // "Listening..."
                       : t.translate('ai_hint'),     // "Ask Spirit AI..."
                   hintStyle: TextStyle(
@@ -669,12 +669,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
             ),
           ),
           const SizedBox(width: 8),
-          
+
           // --- DYNAMIC BUTTON (Mic or Send) ---
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-            child: showMic 
+            child: showMic
                 ? Listener(
                     key: const ValueKey('mic_btn'),
                     onPointerDown: (_) => _startRecording(),
@@ -693,8 +693,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                           ] : [],
                         ),
                         child: Icon(
-                          _isRecording ? Icons.mic : Icons.mic_none_rounded, 
-                          color: _isRecording ? Colors.white : theme.primaryColor, 
+                          _isRecording ? Icons.mic : Icons.mic_none_rounded,
+                          color: _isRecording ? Colors.white : theme.primaryColor,
                           size: 24
                         ),
                       ),
@@ -743,10 +743,10 @@ class _ChatBubble extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isUser = message.isUser;
-    
+
     final textColor = isUser ? Colors.white : (theme.textTheme.bodyLarge?.color ?? Colors.black);
     final bgColor = isUser ? SisapaTheme.blue : theme.cardColor;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(

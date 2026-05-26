@@ -15,7 +15,6 @@ import '../../services/overlay_service.dart';
 import '../../services/voice_service.dart';
 import '../../services/app_localizations.dart';
 
-
 class SearchPage extends StatefulWidget {
   final bool isSearching;
   final VoidCallback onSearchPressed;
@@ -36,26 +35,26 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final PredictionService _predictionService = PredictionService();
-  
+
   bool _isListening = false;
-  
+
   late TabController _tabController;
-  late AnimationController _micAnimController; 
-  
+  late AnimationController _micAnimController;
+
   String _searchText = '';
   String? _searchSuggestion;
   Timer? _debounce;
-  
+
   // State for Show More Toggles
   bool _showAllTrending = false;
   bool _showAllDiscover = false;
-  bool _showAllPeople = false; 
+  bool _showAllPeople = false;
 
   // Optimization: Cache User Data
   List<String> _blockedUserIds = [];
   List<String> _followingIds = [];
   bool _userDataLoaded = false;
-  
+
   // Optimization: Cache Futures
   Future<List<Map<String, dynamic>>>? _trendingFuture;
   Future<List<DocumentSnapshot>>? _discoverFuture;
@@ -70,9 +69,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 200),
       lowerBound: 1.0,
-      upperBound: 1.3, 
+      upperBound: 1.3,
     );
-    
+
     voiceService.initialize();
     _fetchUserDataAndInitFutures();
   }
@@ -85,7 +84,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         if (userDoc.exists) {
             final data = userDoc.data()!;
             _followingIds = List<String>.from(data['following'] ?? []);
-            
+
             final blockDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).collection('moderation').doc('blocked').get();
             if (blockDoc.exists) {
                 _blockedUserIds = List<String>.from(blockDoc.data()?['ids'] ?? []);
@@ -95,7 +94,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         debugPrint("Error fetching user cache: $e");
       }
     }
-    
+
     if (mounted) {
       setState(() {
         _userDataLoaded = true;
@@ -119,20 +118,20 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
      try {
        final snapshot = await FirebaseFirestore.instance.collection('posts')
            .orderBy('timestamp', descending: true)
-           .limit(50) 
+           .limit(50)
            .get();
-           
+
        final allPosts = snapshot.docs.where((doc) {
           final data = doc.data();
           return (data['visibility'] ?? 'public') == 'public';
        }).toList();
-       
+
        return _predictionService.analyzeTrendingTopics(allPosts);
      } catch (e) {
        return [];
      }
   }
-  
+
   Future<List<DocumentSnapshot>> _fetchDiscoverContent() async {
      try {
        // INCREASED LIMIT: Fetches 100 instead of 40.
@@ -141,12 +140,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
        // Increasing this limit ensures enough "new" content survives the filter.
        final snapshot = await FirebaseFirestore.instance.collection('posts')
            .orderBy('timestamp', descending: true)
-           .limit(100) 
+           .limit(100)
            .get();
-           
+
         final publicPosts = snapshot.docs.where((doc) {
           final data = doc.data();
-          return (data['visibility'] ?? 'public') == 'public' && 
+          return (data['visibility'] ?? 'public') == 'public' &&
                  !_blockedUserIds.contains(data['userId']);
         }).toList();
 
@@ -191,7 +190,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
            }
         }
       }
-      
+
       List<DocumentSnapshot> allSuggestions = [];
 
       // 2. Fetch Priority Users (Friends of Friends)
@@ -201,23 +200,23 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           if (userDoc.exists) allSuggestions.add(userDoc);
         }
       }
-      
+
       // 3. Always fetch Random Users to fill the list
       // This ensures we always have enough users to show the "Show More" button if needed
       final allUsersSnapshot = await FirebaseFirestore.instance.collection('users').limit(50).get();
       final randomUsers = allUsersSnapshot.docs.where((doc) {
-        return doc.id != currentUserId && 
+        return doc.id != currentUserId &&
                !following.contains(doc.id) &&
                !priorityUserIds.contains(doc.id); // Don't duplicate priority users
       }).toList();
-      
+
       randomUsers.shuffle();
       allSuggestions.addAll(randomUsers);
 
       // Return ALL found users. The UI will handle showing 5 and hiding the rest.
       return allSuggestions;
-    } catch (e) { 
-      return []; 
+    } catch (e) {
+      return [];
     }
   }
 
@@ -230,13 +229,13 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         if(mounted && widget.isSearching) FocusScope.of(context).requestFocus(_searchFocusNode);
       });
     }
-    
+
     if (oldWidget.isSearching && !widget.isSearching) {
       _searchController.clear();
       _searchText = '';
       _searchSuggestion = null;
       _stopListening();
-      FocusScope.of(context).unfocus(); 
+      FocusScope.of(context).unfocus();
     }
   }
 
@@ -273,20 +272,20 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       onListeningStateChanged: (isListening) {},
       onResult: (text) {
         if (!mounted) return;
-        
+
         String finalQuery = text;
         String lowerQuery = finalQuery.toLowerCase();
-        
+
         if (lowerQuery.startsWith("cari ")) finalQuery = finalQuery.substring(5);
         else if (lowerQuery.startsWith("search for ")) finalQuery = finalQuery.substring(11);
         else if (lowerQuery.startsWith("buka ")) finalQuery = finalQuery.substring(5);
 
         if (lowerQuery.contains("profil") || lowerQuery.contains("user")) {
-          _tabController.animateTo(1); 
+          _tabController.animateTo(1);
         } else if (lowerQuery.contains("komunitas") || lowerQuery.contains("community")) {
-          _tabController.animateTo(2); 
+          _tabController.animateTo(2);
         } else {
-          _tabController.animateTo(0); 
+          _tabController.animateTo(0);
         }
 
         _searchController.text = finalQuery;
@@ -307,16 +306,16 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   void _onSearchChanged(String value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    _debounce = Timer(const Duration(milliseconds: 400), () async { 
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
-      
+
       setState(() {
         _searchText = value.toLowerCase().trim();
         _searchSuggestion = null;
       });
-      
+
       if (value.trim().isEmpty) return;
-      
+
       final suggestion = await _predictionService.getLocalPrediction(value);
       if (mounted && suggestion != null && suggestion.toLowerCase() != _searchText) {
         setState(() { _searchSuggestion = suggestion; });
@@ -357,7 +356,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     var t = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final theme = Theme.of(context);
-    
+
     final double searchBarBaseHeight = 70.0;
     final double suggestionHeight = _searchSuggestion != null ? 30.0 : 0.0;
     final double currentSearchBarHeight = widget.isSearching ? (searchBarBaseHeight + suggestionHeight) : 0.0;
@@ -368,9 +367,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       onWillPop: () async {
         if (widget.isSearching) {
           _clearSearch();
-          return false; 
+          return false;
         }
-        return true; 
+        return true;
       },
       child: Stack(
         children: [
@@ -396,7 +395,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20)),
                   child: Container(
                     color: theme.scaffoldBackgroundColor,
-                    child: widget.isSearching 
+                    child: widget.isSearching
                         ? SingleChildScrollView(
                             physics: const NeverScrollableScrollPhysics(),
                             child: Column(
@@ -408,12 +407,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                     child: TextField(
                                       controller: _searchController,
                                       focusNode: _searchFocusNode,
-                                      autofocus: false, 
-                                      readOnly: _isListening, 
+                                      autofocus: false,
+                                      readOnly: _isListening,
                                       decoration: InputDecoration(
-                                        hintText: _isListening 
-                                            ? t.translate('search_listening') 
-                                            : t.translate('search_hint'), 
+                                        hintText: _isListening
+                                            ? t.translate('search_listening')
+                                            : t.translate('search_hint'),
                                         hintStyle: TextStyle(
                                           color: _isListening ? SisapaTheme.blue : theme.hintColor,
                                           fontStyle: _isListening ? FontStyle.italic : FontStyle.normal,
@@ -425,7 +424,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                           children: [
                                             if (_searchController.text.isNotEmpty)
                                               IconButton(icon: Icon(Icons.clear), onPressed: _clearSearch),
-                                            
+
                                             Listener(
                                               onPointerDown: (details) => _startListening(),
                                               onPointerUp: (details) => _stopListening(),
@@ -476,7 +475,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                               text: TextSpan(
                                                 style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 13),
                                                 children: [
-                                                  TextSpan(text: t.translate('search_suggestion_prefix')), 
+                                                  TextSpan(text: t.translate('search_suggestion_prefix')),
                                                   TextSpan(text: _searchSuggestion, style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)),
                                                 ],
                                               ),
@@ -510,8 +509,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         await Future.delayed(Duration(seconds: 1));
       },
       child: SingleChildScrollView(
-        physics: _isListening 
-            ? NeverScrollableScrollPhysics() 
+        physics: _isListening
+            ? NeverScrollableScrollPhysics()
             : AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(bottom: 100),
         child: Column(
@@ -528,7 +527,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            
+
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _trendingFuture,
               builder: (context, snapshot) {
@@ -561,7 +560,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                         final count = displayedTrends[index]['count'];
                         final isHashtag = tag.toString().startsWith('#');
                         final isTopTrending = index == 0;
-                        
+
                         return ListTile(
                           dense: false,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -587,7 +586,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                           child: Row(
                             children: [
                               Text(
-                                _showAllTrending ? t.translate('general_show_less') : t.translate('general_show_more'), 
+                                _showAllTrending ? t.translate('general_show_less') : t.translate('general_show_more'),
                                 style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)
                               ),
                               Icon(_showAllTrending ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: SisapaTheme.blue, size: 16)
@@ -619,7 +618,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               builder: (context, snapshot) {
                  if (snapshot.connectionState == ConnectionState.waiting) return SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
                  if (snapshot.hasError) return Padding(padding: EdgeInsets.all(16), child: Text(t.translate('search_communities_error')));
-                 
+
                  final recommended = snapshot.data ?? [];
 
                  if (recommended.isEmpty) {
@@ -700,7 +699,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) return SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
                 if (snapshot.hasError) return Padding(padding: EdgeInsets.all(16), child: CommonErrorWidget(message: t.translate('search_discover_error'), isConnectionError: true));
-                
+
                 final allPosts = snapshot.data ?? [];
 
                 if (allPosts.isEmpty) {
@@ -714,7 +713,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 final int initialCount = 5;
                 final bool showAll = _showAllDiscover;
                 final int totalCount = allPosts.length;
-                
+
                 final int visibleCount = showAll ? totalCount : (totalCount > initialCount ? initialCount : totalCount);
                 final displayedPosts = allPosts.take(visibleCount).toList();
                 final bool canExpand = totalCount > initialCount;
@@ -729,7 +728,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                         postData: data,
                         isOwner: false,
                         heroContextId: 'discover',
-                        blockedUserIds: _blockedUserIds, 
+                        blockedUserIds: _blockedUserIds,
                       );
                     }).toList(),
 
@@ -772,16 +771,16 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) return Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
                 if (snapshot.hasError) return Padding(padding: EdgeInsets.all(16), child: Text(t.translate('search_people_error')));
-                
+
                 final allUsers = snapshot.data ?? [];
-                
+
                 if (allUsers.isEmpty) return Padding(padding: const EdgeInsets.all(16.0), child: Text(t.translate('search_people_empty')));
 
                 // --- SHOW MORE LOGIC FOR PEOPLE ---
                 final int initialCount = 5;
                 final bool showAll = _showAllPeople;
                 final int totalCount = allUsers.length;
-                
+
                 final int visibleCount = showAll ? totalCount : (totalCount > initialCount ? initialCount : totalCount);
                 final displayedUsers = allUsers.take(visibleCount).toList();
                 final bool canExpand = totalCount > initialCount;
@@ -792,7 +791,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                       final data = doc.data() as Map<String, dynamic>;
                       return _UserSearchTile(userId: doc.id, userData: data, currentUserId: FirebaseAuth.instance.currentUser?.uid);
                     }).toList(),
-                    
+
                     if (canExpand)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -832,13 +831,13 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               Tab(text: t.translate('search_tab_posts')),
               Tab(text: t.translate('search_tab_users')),
               Tab(text: t.translate('search_tab_communities')),
-            ], 
+            ],
           ),
         ),
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: [_buildPostResults(t), _buildUserResults(t), _buildCommunityResults(t)], 
+            children: [_buildPostResults(t), _buildUserResults(t), _buildCommunityResults(t)],
           ),
         ),
       ],
@@ -852,7 +851,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_failed'), isConnectionError: true);
         if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator());
-        
+
         if (_searchText.isEmpty) return SizedBox();
 
         final docs = snapshot.data?.docs.where((doc) {
@@ -860,7 +859,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           final text = (data['text'] ?? '').toString().toLowerCase();
           final visibility = data['visibility'] ?? 'public';
           final ownerId = data['userId'];
-          
+
           if (_blockedUserIds.contains(ownerId)) return false;
 
           bool isVisible = false;
@@ -872,9 +871,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           }
           return isVisible && text.contains(_searchText);
         }).toList() ?? [];
-        
+
         if (docs.isEmpty) return Center(child: Text('${t.translate('search_no_results')} "$_searchText"'));
-        
+
         return ListView.builder(
           padding: EdgeInsets.only(bottom: 100),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -882,9 +881,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           itemBuilder: (context, index) {
             final data = docs[index].data() as Map<String, dynamic>;
             return BlogPostCard(
-                postId: docs[index].id, 
-                postData: data, 
-                isOwner: data['userId'] == currentUserId, 
+                postId: docs[index].id,
+                postData: data,
+                isOwner: data['userId'] == currentUserId,
                 heroContextId: 'search_results',
                 blockedUserIds: _blockedUserIds
             );
@@ -901,16 +900,16 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_user_failed'), isConnectionError: true);
         if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator());
-        
+
         final docs = snapshot.data?.docs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
           final name = (data['name'] ?? '').toString().toLowerCase();
           final email = (data['email'] ?? '').toString().toLowerCase();
           return name.contains(_searchText) || email.contains(_searchText);
         }).toList() ?? [];
-        
+
         if (docs.isEmpty) return Center(child: Text('${t.translate('search_no_results')} "$_searchText"'));
-        
+
         return ListView.builder(
           padding: EdgeInsets.only(bottom: 100),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -985,23 +984,23 @@ class _UserSearchTile extends StatefulWidget {
 
 class _UserSearchTileState extends State<_UserSearchTile> {
   bool _isFollowing = false;
-  
+
   @override void initState() { super.initState(); _checkFollowStatus(); }
-  
+
   @override void didUpdateWidget(covariant _UserSearchTile oldWidget) { super.didUpdateWidget(oldWidget); if (widget.userData != oldWidget.userData) _checkFollowStatus(); }
-  
+
   void _checkFollowStatus() {
     if (widget.currentUserId == null) return;
     final followers = List<dynamic>.from(widget.userData['followers'] ?? []);
     setState(() { _isFollowing = followers.contains(widget.currentUserId); });
   }
-  
+
   Future<void> _toggleFollow() async {
     if (widget.currentUserId == null) return;
     final myDocRef = FirebaseFirestore.instance.collection('users').doc(widget.currentUserId);
     final targetDocRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
     final batch = FirebaseFirestore.instance.batch();
-    
+
     if (_isFollowing) {
       batch.update(myDocRef, {'following': FieldValue.arrayRemove([widget.userId])});
       batch.update(targetDocRef, {'followers': FieldValue.arrayRemove([widget.currentUserId])});
@@ -1016,10 +1015,10 @@ class _UserSearchTileState extends State<_UserSearchTile> {
     }
     try { await batch.commit(); } catch (e) { _checkFollowStatus(); if (mounted) OverlayService().showTopNotification(context, "Action failed: $e", Icons.error, (){}, color: Colors.red); }
   }
-  
+
   @override Widget build(BuildContext context) {
     var t = AppLocalizations.of(context)!;
-    
+
     final theme = Theme.of(context);
     final name = widget.userData['name'] ?? 'User';
     final email = widget.userData['email'] ?? '';
@@ -1037,9 +1036,9 @@ class _UserSearchTileState extends State<_UserSearchTile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-                radius: 24, 
-                backgroundColor: profileImageUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex), 
-                backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null, 
+                radius: 24,
+                backgroundColor: profileImageUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
+                backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
                 child: profileImageUrl == null ? Icon(AvatarHelper.getIcon(iconId), size: 24, color: Colors.white) : null
             ),
             SizedBox(width: 12),
@@ -1051,14 +1050,14 @@ class _UserSearchTileState extends State<_UserSearchTile> {
             SizedBox(width: 8),
             _isFollowing
               ? OutlinedButton(
-                  onPressed: _toggleFollow, 
-                  style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 16), side: BorderSide(color: theme.dividerColor), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), 
-                  child: Text(t.translate('community_following'), style: TextStyle(color: theme.textTheme.bodyMedium?.color)) 
+                  onPressed: _toggleFollow,
+                  style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 16), side: BorderSide(color: theme.dividerColor), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+                  child: Text(t.translate('community_following'), style: TextStyle(color: theme.textTheme.bodyMedium?.color))
                 )
               : ElevatedButton(
-                  onPressed: _toggleFollow, 
-                  style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, elevation: 0, padding: EdgeInsets.symmetric(horizontal: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), 
-                  child: Text(t.translate('community_follow')) 
+                  onPressed: _toggleFollow,
+                  style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, elevation: 0, padding: EdgeInsets.symmetric(horizontal: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+                  child: Text(t.translate('community_follow'))
                 )
           ],
         ),

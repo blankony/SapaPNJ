@@ -33,26 +33,26 @@ class CloudinaryService {
     if (_cloudName.isEmpty || _uploadPreset.isEmpty) {
       return CloudinaryResponse(error: "Cloudinary credentials missing.");
     }
-    
+
     final uploadUrl = 'https://api.cloudinary.com/v1_1/$_cloudName/$resourceType/upload';
 
     try {
       var request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
-      
+
       request.files.add(
         await http.MultipartFile.fromPath(
-          'file', 
+          'file',
           file.path,
           filename: file.path.split('/').last,
         ),
       );
-      
+
       request.fields['upload_preset'] = _uploadPreset;
-      
+
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       final data = json.decode(responseBody);
-      
+
       if (response.statusCode == 200) {
         return CloudinaryResponse(
           secureUrl: data['secure_url'],
@@ -76,7 +76,7 @@ class CloudinaryService {
     }
 
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    
+
     // Cloudinary signature generation
     final String paramsToSign = 'public_id=$publicId&timestamp=$timestamp';
     final List<int> bytes = utf8.encode(paramsToSign + _apiSecret);

@@ -316,7 +316,7 @@ class AboutPage extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12),
-          
+
           // Name
           Text(
             name,
@@ -328,11 +328,11 @@ class AboutPage extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          
+
           // --- KUNCI UTAMA DI SINI ---
           // Spacer ini akan menekan widget di bawahnya (NIM) mentok ke bawah container
-          Spacer(), 
-          
+          Spacer(),
+
           // NIM
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),

@@ -1,18 +1,17 @@
-import 'dart:io'; 
-import 'package:flutter/gestures.dart'; 
+import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart'; 
-import 'package:open_filex/open_filex.dart'; 
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
-import 'login_page.dart'; 
-import 'setup/setup_profile_screen.dart'; 
+import 'login_page.dart';
+import 'setup/setup_profile_screen.dart';
 import '../services/app_localizations.dart'; // REQUIRED IMPORT
-
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -26,9 +25,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  final TextEditingController _namaController = TextEditingController(); 
-  final TextEditingController _nimController = TextEditingController(); 
-  
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _nimController = TextEditingController();
+
   final FocusNode _nimFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _passwordFocus = FocusNode();
@@ -38,8 +37,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
-  bool _isLoading = false; 
-  
+  bool _isLoading = false;
+
   bool _isAgreed = false;
 
   Route _createSlideUpRoute(Widget page) {
@@ -92,9 +91,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
     // VALIDASI PERSETUJUAN
     if (!_isAgreed) {
-      setState(() { 
-        _isLoading = false; 
-        _errorMessage = t.translate('auth_agree_error'); 
+      setState(() {
+        _isLoading = false;
+        _errorMessage = t.translate('auth_agree_error');
       });
       return;
     }
@@ -122,7 +121,7 @@ class _RegisterPageState extends State<RegisterPage> {
         if (nimQuery.docs.isNotEmpty) {
           await userCredential.user!.delete();
           throw FirebaseAuthException(
-            code: 'nim-already-in-use', 
+            code: 'nim-already-in-use',
             message: t.translate('error_nim_registered')
           );
         }
@@ -130,16 +129,16 @@ class _RegisterPageState extends State<RegisterPage> {
         await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
           'uid': userCredential.user!.uid,
           'email': _emailController.text.trim(),
-          'name': _namaController.text.trim(), 
+          'name': _namaController.text.trim(),
           'nim': idNumber, // Stores NIM or NIP
-          'bio': 'Member of PNJ', 
+          'bio': 'Member of PNJ',
           'createdAt': FieldValue.serverTimestamp(),
           'following': [],
           'followers': [],
           'agreedToTerms': true,
           'agreedAt': FieldValue.serverTimestamp(),
         });
-        
+
         if (mounted) {
            Navigator.of(context).pushAndRemoveUntil(
              MaterialPageRoute(builder: (context) => const SetupProfileScreen()),
@@ -148,7 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      setState(() { 
+      setState(() {
         // Handle specific firebase auth errors if needed, otherwise general
         if (e.code == 'email-already-in-use') {
            _errorMessage = 'Email already in use.'; // You can add this to json too
@@ -166,7 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // --- VALIDATORS ---
-  
+
   String? _validateName(String? value) {
     var t = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) return t.translate('val_name_empty');
@@ -176,7 +175,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validateIDNumber(String? value) {
     var t = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) return t.translate('val_nim_empty');
-    
+
     // Allow 10 digits (NIM) or 18 digits (NIP)
     if (value.length != 10 && value.length != 18) return t.translate('val_nim_length');
     return null;
@@ -185,10 +184,10 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validateEmail(String? value) {
     var t = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) return t.translate('val_email_empty');
-    
+
     String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     RegExp regex = RegExp(pattern);
-    
+
     if (!regex.hasMatch(value)) {
         return t.translate('val_email_invalid');
     }
@@ -234,7 +233,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _confirmPasswordController.dispose();
     _namaController.dispose();
     _nimController.dispose();
-    
+
     _nimFocus.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
@@ -246,9 +245,9 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     var t = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -302,7 +301,7 @@ class _RegisterPageState extends State<RegisterPage> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                 child: Form(
-                  key: _formKey, 
+                  key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -321,9 +320,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 32),
-                      
+
                       // NAME
-                      TextFormField( 
+                      TextFormField(
                         controller: _namaController,
                         decoration: InputDecoration(labelText: t.translate('auth_name')), // "Name"
                         textInputAction: TextInputAction.next,
@@ -332,26 +331,26 @@ class _RegisterPageState extends State<RegisterPage> {
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       SizedBox(height: 16),
-                      
+
                       // NIM / NIP
-                      TextFormField( 
+                      TextFormField(
                         controller: _nimController,
                         focusNode: _nimFocus,
                         decoration: InputDecoration(labelText: t.translate('auth_nim')), // "NIM/NIP"
-                        keyboardType: TextInputType.number, 
+                        keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_emailFocus),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(18), // Supports NIP (18 chars)
                         ],
-                        validator: _validateIDNumber, 
+                        validator: _validateIDNumber,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       SizedBox(height: 16),
-                      
+
                       // EMAIL
-                      TextFormField( 
+                      TextFormField(
                         controller: _emailController,
                         focusNode: _emailFocus,
                         decoration: InputDecoration(labelText: t.translate('auth_email_hint')), // "Enter PNJ email..."
@@ -362,17 +361,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       SizedBox(height: 16),
-                      
+
                       // PASSWORD
-                      TextFormField( 
+                      TextFormField(
                         controller: _passwordController,
                         focusNode: _passwordFocus,
                         obscureText: _isPasswordObscured,
                         decoration: InputDecoration(
                           labelText: t.translate('auth_pass_hint'), // "Enter password"
                           suffixIcon: Tooltip(
-                            message: _isPasswordObscured 
-                                ? t.translate('auth_show_password') 
+                            message: _isPasswordObscured
+                                ? t.translate('auth_show_password')
                                 : t.translate('auth_hide_password'),
                             child: IconButton(
                               icon: Icon(
@@ -392,17 +391,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                        SizedBox(height: 16),
-                      
+
                       // CONFIRM PASSWORD
-                      TextFormField( 
+                      TextFormField(
                         controller: _confirmPasswordController,
                         focusNode: _confirmPasswordFocus,
                         obscureText: _isConfirmPasswordObscured,
                         decoration: InputDecoration(
                           labelText: t.translate('auth_confirm_pass_hint'), // "Confirm password"
                           suffixIcon: Tooltip(
-                            message: _isConfirmPasswordObscured 
-                                ? t.translate('auth_show_password') 
+                            message: _isConfirmPasswordObscured
+                                ? t.translate('auth_show_password')
                                 : t.translate('auth_hide_password'),
                             child: IconButton(
                               icon: Icon(
@@ -474,7 +473,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ],
                       ),
                       SizedBox(height: 24),
-                      
+
                        if (_errorMessage.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -486,12 +485,12 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                         ),
-                        
+
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _signUp, 
-                          child: _isLoading 
+                          onPressed: _isLoading ? null : _signUp,
+                          child: _isLoading
                             ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                             : Text(t.translate('auth_signup')), // "Sign up"
                            style: ElevatedButton.styleFrom(
@@ -505,9 +504,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                       ),
-                      
+
                       SizedBox(height: 24),
-                      
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

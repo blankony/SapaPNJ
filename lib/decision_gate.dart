@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'screens/user_info_screen.dart'; 
-import 'screens/dashboard/home_dashboard.dart'; 
+import 'screens/user_info_screen.dart';
+import 'screens/dashboard/home_dashboard.dart';
 
 // Instances
 
@@ -18,7 +18,7 @@ class _DecisionGateState extends State<DecisionGate> {
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
-    
+
     // If user is null, return to loading
     if (user == null) {
        return const Scaffold(

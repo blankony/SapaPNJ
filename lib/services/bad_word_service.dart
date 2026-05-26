@@ -3,10 +3,10 @@ import 'package:flutter/foundation.dart';
 
 class BadWordService {
   // Raw GitHub URL for Badwords (Text format, separated by newlines)
-  static const String _enBadWordsUrl = 
+  static const String _enBadWordsUrl =
       'https://raw.githubusercontent.com/dikako/list_badword/refs/heads/master/en_badwords.txt';
-  
-  static const String _idBadWordsUrl = 
+
+  static const String _idBadWordsUrl =
       'https://raw.githubusercontent.com/dikako/list_badword/refs/heads/master/id_badwords.txt';
 
   /// Mengambil daftar badwords dari kedua sumber (EN & ID) dan menggabungkannya
@@ -20,10 +20,10 @@ class BadWordService {
 
       // Gabungkan hasil: results[0] (EN) + results[1] (ID)
       final allWords = [...results[0], ...results[1]];
-      
+
       // Hapus duplikat (jika ada) menggunakan Set
       return allWords.toSet().toList();
-      
+
     } catch (e) {
       debugPrint('Error fetching badwords: $e');
       return [];

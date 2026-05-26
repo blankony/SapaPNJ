@@ -23,7 +23,6 @@ import 'blog_post_card/post_media_preview.dart';
 import 'blog_post_card/post_header.dart';
 import 'blog_post_card/post_action_bar.dart';
 
-
 class BlogPostCard extends StatefulWidget {
   final String postId;
   final Map<String, dynamic> postData;
@@ -51,8 +50,8 @@ class BlogPostCard extends StatefulWidget {
     this.isPinned = false,
     this.onPinToggle,
     this.currentProfileUserId,
-    this.isCommunityAdmin = false, 
-    this.blockedUserIds = const [], 
+    this.isCommunityAdmin = false,
+    this.blockedUserIds = const [],
   });
 
   @override
@@ -78,7 +77,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
   VideoPlayerController? _videoController;
   bool _isVideoOwner = false;
-  bool _isVideoInitialized = false; 
+  bool _isVideoInitialized = false;
   bool _isVideoLoading = false;
 
   // [REPOST FEATURE] State Variables
@@ -91,7 +90,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   void initState() {
     super.initState();
     _localIsPinned = widget.isPinned;
-    
+
     // Setup Controllers
     _likeController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
     _likeAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _likeController, curve: Curves.easeInOut));
@@ -142,7 +141,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   @override
   void didUpdateWidget(covariant BlogPostCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Jika ID berubah, berarti kartu ini sekarang menampilkan postingan berbeda
     if (oldWidget.postId != widget.postId) {
       _initializePostData();
@@ -202,7 +201,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
   Future<void> _initializeVideo() async {
     if (_isVideoInitialized || _videoController != null || _isVideoLoading) return;
-    
+
     final data = effectivePostData;
     final String? singleUrl = data['mediaUrl'];
     final List<dynamic> urls = data['mediaUrls'] ?? [];
@@ -210,12 +209,12 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     if (videoUrl != null) {
       setState(() => _isVideoLoading = true);
-      
+
       try {
         final controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
         await controller.initialize();
         controller.setLooping(true);
-        
+
         if (mounted) {
           setState(() {
             _videoController = controller;
@@ -269,9 +268,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (currentUser == null) return;
     _likeController.forward().then((_) => _likeController.reverse());
     if (hapticNotifier.value) HapticFeedback.lightImpact();
-    
+
     final docRef = FirebaseFirestore.instance.collection('posts').doc(effectivePostId);
-    
+
     setState(() {
       _isLiked = !_isLiked;
       if (_isLiked) {
@@ -280,11 +279,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         _likeCount--;
       }
     });
-    
+
     try {
       final notificationId = 'like_${effectivePostId}_${currentUser.uid}';
       final notificationRef = FirebaseFirestore.instance.collection('users').doc(effectivePostData['userId']).collection('notifications').doc(notificationId);
-      
+
       if (_isLiked) {
         await docRef.update({'likes.${currentUser.uid}': true});
         if (effectivePostData['userId'] != currentUser.uid) {
@@ -309,7 +308,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   void _toggleRepost() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-    
+
     _repostController.forward().then((_) => _repostController.reverse());
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
@@ -419,7 +418,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     var t = AppLocalizations.of(context)!;
-    
+
     final currentVis = effectivePostData['visibility'] ?? 'public';
     String newVis;
 
@@ -467,7 +466,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     });
     final text = effectivePostData['text'] ?? '';
     final name = effectivePostData['userName'] ?? 'User';
-    
+
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) setState(() {
         _isSharing = false;
@@ -493,7 +492,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (confirm) {
       try {
         await FirebaseFirestore.instance.collection('posts').doc(widget.postId).delete();
-        
+
         if (_isRepostWrapper && widget.postData['originalPostId'] != null) {
              await FirebaseFirestore.instance.collection('posts').doc(widget.postData['originalPostId']).update({
                 'repostedBy': FieldValue.arrayRemove([FirebaseAuth.instance.currentUser?.uid])
@@ -570,7 +569,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         _createSlideLeftRoute(
           CommunityDetailScreen(
             communityId: communityId,
-            communityData: const {}, 
+            communityData: const {},
           ),
         ),
       );
@@ -579,7 +578,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     final postUserId = effectivePostData['userId'];
     if (postUserId == null) return;
-    
+
     if (effectiveIsOwner) {
       final scaffold = Scaffold.maybeOf(context);
       if (scaffold != null && scaffold.hasDrawer) {
@@ -700,7 +699,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                   content: Text(t.translate('block_user_confirm')),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t.translate('general_cancel'))),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text(t.translate('general_delete'), style: TextStyle(color: Colors.red))), 
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text(t.translate('general_delete'), style: TextStyle(color: Colors.red))),
                   ],
                 )) ??
         false;
@@ -819,7 +818,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
           ),
         );
       }
-      
+
       // [FIXED LOGIC]: Jika data asli hilang atau error, kembalikan SizedBox.shrink()
       // Ini akan membuat postingan "menghilang" dari feed alih-alih menampilkan error ghost post.
       if (_resolvedPostData == null || _originalError.isNotEmpty) {
@@ -867,8 +866,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
           children: [
             if (widget.isDetailView && commentCount > 0)
               Positioned(
-                left: 32, 
-                top: 36, 
+                left: 32,
+                top: 36,
                 bottom: 0,
                 child: Container(
                   width: 2,
@@ -883,16 +882,16 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                   _buildRepostHeader(context),
 
                   PostHeader(
-                    postData: effectivePostData, 
+                    postData: effectivePostData,
                     isOwner: effectiveIsOwner,
                     isCommunityAdmin: widget.isCommunityAdmin,
                     isPinned: _localIsPinned,
                     onNavigateToSource: _navigateToSource,
                     onMenuAction: _onMenuAction,
                   ),
-                  
+
                   Padding(
-                    padding: const EdgeInsets.only(left: 60.0), 
+                    padding: const EdgeInsets.only(left: 60.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -926,12 +925,12 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                                             postData: effectivePostData,
                                             postId: effectivePostId,
                                             heroContextId: widget.heroContextId,
-                                            videoController: null, 
+                                            videoController: null,
                                           ),
                                           Container(
                                             color: Colors.black26,
                                             child: Center(
-                                              child: _isVideoLoading 
+                                              child: _isVideoLoading
                                                 ? const CircularProgressIndicator(color: Colors.white)
                                                 : const Icon(Icons.play_circle_fill, size: 64, color: Colors.white70),
                                             ),
@@ -940,7 +939,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                                       ),
                                     );
                                 }
-                                
+
                                 return PostMediaPreview(
                                   mediaUrls: mediaUrls,
                                   mediaType: mediaType,

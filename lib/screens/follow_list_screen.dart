@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../main.dart'; 
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
-import 'dashboard/profile_page.dart'; 
-import '../widgets/common_error_widget.dart'; 
-import '../services/overlay_service.dart'; 
+import 'dashboard/profile_page.dart';
+import '../widgets/common_error_widget.dart';
+import '../services/overlay_service.dart';
 import '../services/app_localizations.dart';
-
 
 class FollowListScreen extends StatefulWidget {
   final String userId;
@@ -70,19 +69,19 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   // --- REMOVE FOLLOWER LOGIC ---
   Future<void> _removeFollower(String followerId) async {
     var t = AppLocalizations.of(context)!;
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(t.translate('follow_remove_title')), 
-        content: Text(t.translate('follow_remove_content')), 
+        title: Text(t.translate('follow_remove_title')),
+        content: Text(t.translate('follow_remove_content')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false), 
+            onPressed: () => Navigator.pop(ctx, false),
             child: Text(t.translate('general_cancel'))
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true), 
+            onPressed: () => Navigator.pop(ctx, true),
             child: Text(t.translate('follow_remove_btn'), style: TextStyle(color: Colors.red))
           ),
         ],
@@ -97,7 +96,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
       });
 
       final batch = FirebaseFirestore.instance.batch();
-      
+
       // 1. Remove from my 'followers'
       final myRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       batch.update(myRef, {'followers': FieldValue.arrayRemove([followerId])});
@@ -107,12 +106,12 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
       batch.update(followerRef, {'following': FieldValue.arrayRemove([widget.userId])});
 
       await batch.commit();
-      
+
       if(mounted) OverlayService().showTopNotification(context, t.translate('follow_removed_msg'), Icons.person_remove, (){});
 
     } catch (e) {
       // Revert if failed
-      _fetchLists(); 
+      _fetchLists();
       if(mounted) OverlayService().showTopNotification(context, t.translate('follow_remove_fail'), Icons.error, (){}, color: Colors.red);
     }
   }
@@ -122,7 +121,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
     if (!_isMe) return;
 
     final docRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
-    
+
     if (listType == 'following') {
       docRef.update({'following': FieldValue.arrayRemove([deadUserId])});
     } else if (listType == 'followers') {
@@ -167,29 +166,29 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _hasError 
+          : _hasError
             ? CommonErrorWidget(
-                message: t.translate('follow_error'), 
-                isConnectionError: true, 
+                message: t.translate('follow_error'),
+                isConnectionError: true,
                 onRetry: _fetchLists
               )
             : TabBarView(
               controller: _tabController,
               children: [
                 _UserList(
-                  userIds: _mutualsIds, 
+                  userIds: _mutualsIds,
                   emptyMessage: t.translate('follow_no_mutuals'),
                   listType: 'mutuals',
-                  onDeadUserFound: (id) {}, 
+                  onDeadUserFound: (id) {},
                 ),
                 _UserList(
-                  userIds: _followingIds, 
+                  userIds: _followingIds,
                   emptyMessage: t.translate('follow_no_following'),
                   listType: 'following',
                   onDeadUserFound: (id) => _cleanupDeadUser(id, 'following'),
                 ),
                 _UserList(
-                  userIds: _followersIds, 
+                  userIds: _followersIds,
                   emptyMessage: t.translate('follow_no_followers'),
                   listType: 'followers',
                   onDeadUserFound: (id) => _cleanupDeadUser(id, 'followers'),
@@ -209,7 +208,7 @@ class _UserList extends StatelessWidget {
   final Function(String)? onRemoveAction;
 
   const _UserList({
-    required this.userIds, 
+    required this.userIds,
     required this.emptyMessage,
     required this.listType,
     required this.onDeadUserFound,
@@ -235,7 +234,7 @@ class _UserList extends StatelessWidget {
       itemCount: userIds.length,
       itemBuilder: (context, index) {
         return _UserTile(
-          userId: userIds[index], 
+          userId: userIds[index],
           onDeadUser: () => onDeadUserFound(userIds[index]),
           onRemove: onRemoveAction != null ? () => onRemoveAction!(userIds[index]) : null,
         );
@@ -250,7 +249,7 @@ class _UserTile extends StatelessWidget {
   final VoidCallback? onRemove; // Optional remove button
 
   const _UserTile({
-    required this.userId, 
+    required this.userId,
     required this.onDeadUser,
     this.onRemove,
   });
@@ -266,7 +265,7 @@ class _UserTile extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(height: 60, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
         }
-        
+
         if (!snapshot.hasData || !snapshot.data!.exists) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             onDeadUser();
@@ -287,7 +286,7 @@ class _UserTile extends StatelessWidget {
         return InkWell(
           onTap: () {
             Navigator.push(
-              context, 
+              context,
               MaterialPageRoute(
                 builder: (_) => ProfilePage(userId: userId, includeScaffold: true)
               )

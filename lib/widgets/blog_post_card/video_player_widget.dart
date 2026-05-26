@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import '../../main.dart'; 
+import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 
@@ -33,13 +33,13 @@ class VideoPlayerWidget extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       child: Stack(
-        fit: StackFit.expand, 
+        fit: StackFit.expand,
         children: [
           // Layer 1: Thumbnail (Selalu ada di bawah)
           if (thumbnailPath != null)
             Image.file(
               File(thumbnailPath!),
-              fit: BoxFit.cover, 
+              fit: BoxFit.cover,
               errorBuilder: (context, error, stack) => Container(color: Colors.black),
             ),
 

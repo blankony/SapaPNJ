@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:share_plus/share_plus.dart'; 
-import 'package:flutter_cache_manager/flutter_cache_manager.dart'; 
-import '../screens/post_detail_screen.dart'; 
-import '../screens/dashboard/profile_page.dart'; 
-import '../screens/image_viewer_screen.dart'; 
-import 'package:timeago/timeago.dart' as timeago; 
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import '../screens/post_detail_screen.dart';
+import '../screens/dashboard/profile_page.dart';
+import '../screens/image_viewer_screen.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
-import 'package:cached_network_image/cached_network_image.dart'; 
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/overlay_service.dart';
-
 
 class CommentTile extends StatefulWidget {
   final String commentId;
   final Map<String, dynamic> commentData;
-  final String postId; 
+  final String postId;
   final bool isOwner;
-  final bool showPostContext; 
-  final String heroContextId; 
-  
+  final bool showPostContext;
+  final String heroContextId;
+
   // NEW: To prevent loop when on profile page
   final String? currentProfileUserId;
-  
+
   // NEW: Determines if the thread line should terminate at this tile
   final bool isLast;
 
@@ -34,8 +33,8 @@ class CommentTile extends StatefulWidget {
     required this.commentData,
     required this.postId,
     required this.isOwner,
-    this.showPostContext = false, 
-    this.heroContextId = 'comment', 
+    this.showPostContext = false,
+    this.heroContextId = 'comment',
     this.currentProfileUserId,
     this.isLast = true, // Default to true so isolated comments (e.g. Profile) don't have dangling lines
   });
@@ -46,12 +45,12 @@ class CommentTile extends StatefulWidget {
 
 class _CommentTileState extends State<CommentTile> with SingleTickerProviderStateMixin {
   final TextEditingController _editController = TextEditingController();
-  
+
   late bool _isLiked;
   late int _likeCount;
-  late bool _isReposted; 
-  late int _repostCount; 
-  
+  late bool _isReposted;
+  late int _repostCount;
+
   late AnimationController _likeController;
   late Animation<double> _likeAnimation;
 
@@ -74,14 +73,14 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   void _syncStatsState() {
     final currentUser = FirebaseAuth.instance.currentUser;
     final likes = widget.commentData['likes'] as Map<String, dynamic>? ?? {};
-    final reposts = widget.commentData['repostedBy'] as List? ?? []; 
-    
+    final reposts = widget.commentData['repostedBy'] as List? ?? [];
+
     if (mounted) {
       setState(() {
         _isLiked = currentUser != null && likes.containsKey(currentUser.uid);
         _likeCount = likes.length;
-        _isReposted = currentUser != null && reposts.contains(currentUser.uid); 
-        _repostCount = reposts.length; 
+        _isReposted = currentUser != null && reposts.contains(currentUser.uid);
+        _repostCount = reposts.length;
       });
     }
   }
@@ -110,7 +109,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         await commentRef.update({'likes.${user.uid}': FieldValue.delete()});
       }
     } catch (e) {
-      _syncStatsState(); 
+      _syncStatsState();
     }
   }
 
@@ -136,7 +135,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         await commentRef.update({'repostedBy': FieldValue.arrayRemove([user.uid])});
       }
     } catch (e) {
-      debugPrint("Repost Error: $e"); 
+      debugPrint("Repost Error: $e");
       _syncStatsState();
     }
   }
@@ -185,7 +184,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         'commentCount': FieldValue.increment(-1),
       });
       await writeBatch.commit();
-      
+
       if(mounted) OverlayService().showTopNotification(context, "Reply deleted", Icons.delete_outline, (){});
     } catch (e) {
       if (mounted) {
@@ -233,19 +232,19 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         'text': _editController.text,
       });
       if(mounted) {
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop();
         OverlayService().showTopNotification(context, "Reply updated", Icons.check_circle, (){});
       }
     } catch (e) {
       if(mounted) {
         OverlayService().showTopNotification(context, "Failed to update", Icons.error, (){}, color: Colors.red);
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop();
       }
     }
   }
 
   void _navigateToOriginalPost() {
-    if (!widget.showPostContext) return; 
+    if (!widget.showPostContext) return;
     FirebaseFirestore.instance.collection('posts').doc(widget.postId).get().then((doc) {
       if (doc.exists && mounted) {
         Navigator.of(context).push(
@@ -264,13 +263,13 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     final commentUserId = widget.commentData['userId'];
     if (commentUserId == null) return;
     if (commentUserId == FirebaseAuth.instance.currentUser?.uid) return;
-    
+
     // NEW: Check loop prevention
     if (widget.currentProfileUserId != null && commentUserId == widget.currentProfileUserId) return;
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ProfilePage(userId: commentUserId, includeScaffold: true), 
+        builder: (context) => ProfilePage(userId: commentUserId, includeScaffold: true),
       ),
     );
   }
@@ -280,12 +279,12 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
 
     Navigator.of(context).push(
       PageRouteBuilder(
-        opaque: false, 
+        opaque: false,
         barrierColor: Colors.black,
         pageBuilder: (_, __, ___) => ImageViewerScreen(
           imageUrl: url,
           mediaType: type,
-          heroTag: heroTag, 
+          heroTag: heroTag,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
@@ -309,18 +308,18 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final String? profileImageUrl = widget.commentData['profileImageUrl'];
-    
+
     if (widget.showPostContext) {
       return FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance.collection('posts').doc(widget.postId).get(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return SizedBox.shrink(); 
+          if (!snapshot.hasData) return SizedBox.shrink();
           if (!snapshot.data!.exists) {
              // Use default isLast behavior if parent doesn't exist (likely standalone)
-             return _buildReplyTile(context, isThreaded: false, profileImageUrl: profileImageUrl); 
+             return _buildReplyTile(context, isThreaded: false, profileImageUrl: profileImageUrl);
           }
           final parentData = snapshot.data!.data() as Map<String, dynamic>;
-          
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -348,13 +347,13 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     Widget parentAvatarWidget;
     if (parentProfileImageUrl != null && parentProfileImageUrl.isNotEmpty) {
       parentAvatarWidget = CircleAvatar(
-        radius: 16, 
+        radius: 16,
         backgroundColor: Colors.transparent,
         backgroundImage: CachedNetworkImageProvider(parentProfileImageUrl),
       );
     } else {
       parentAvatarWidget = CircleAvatar(
-        radius: 16, 
+        radius: 16,
         backgroundColor: parentAvatarBg,
         child: Icon(AvatarHelper.getIcon(parentIconId), size: 16, color: Colors.white),
       );
@@ -365,7 +364,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
       child: Container(
         color: theme.cardColor,
         // Removed bottom padding to make line connect better
-        padding: EdgeInsets.fromLTRB(12, 12, 16, 0), 
+        padding: EdgeInsets.fromLTRB(12, 12, 16, 0),
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -392,9 +391,9 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                     Text("$parentName • Original Post", style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
                     SizedBox(height: 2),
                     Text(
-                      parentText, 
+                      parentText,
                       style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-                      maxLines: 2, 
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis
                     ),
                     SizedBox(height: 8),
@@ -414,7 +413,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     final String userName = data['userName'] ?? 'Anonymous';
     final String text = data['text'] ?? '';
     final Timestamp? timestamp = data['timestamp'] as Timestamp?;
-    
+
     final String? mediaUrl = data['mediaUrl'];
     final String? mediaType = data['mediaType'];
 
@@ -425,13 +424,13 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     Widget avatarWidget;
     if (profileImageUrl != null && profileImageUrl.isNotEmpty) {
       avatarWidget = CircleAvatar(
-        radius: 18, 
+        radius: 18,
         backgroundColor: Colors.transparent,
-        backgroundImage: CachedNetworkImageProvider(profileImageUrl), 
+        backgroundImage: CachedNetworkImageProvider(profileImageUrl),
       );
     } else {
       avatarWidget = CircleAvatar(
-        radius: 18, 
+        radius: 18,
         backgroundColor: avatarBg,
         child: Icon(AvatarHelper.getIcon(iconId), size: 20, color: Colors.white),
       );
@@ -444,13 +443,13 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         child: IntrinsicHeight(
           child: Row(
             // CHANGED: stretch to make the thread line fill the height
-            crossAxisAlignment: CrossAxisAlignment.stretch, 
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
                 width: 48,
                 color: Colors.transparent,
                 // Using CustomPaint for precise, connected lines
-                child: isThreaded 
+                child: isThreaded
                   ? CustomPaint(
                       painter: ThreadLinePainter(
                         context: context,
@@ -464,10 +463,10 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
               Align(
                 alignment: Alignment.topCenter,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0), 
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: GestureDetector(
                     onTap: _navigateToUserProfile,
-                    child: avatarWidget, 
+                    child: avatarWidget,
                   ),
                 ),
               ),
@@ -476,7 +475,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
 
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0), 
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -505,7 +504,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                       SizedBox(height: 2),
                       if (text.isNotEmpty)
                         Text(text, style: theme.textTheme.bodyLarge),
-                        
+
                       if (mediaUrl != null && mediaUrl.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
@@ -514,7 +513,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
-                                height: 150, 
+                                height: 150,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: Colors.black,
@@ -535,7 +534,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                             ),
                           ),
                         ),
-                      
+
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                         child: Row(
@@ -547,8 +546,8 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                               color: _isReposted ? Colors.green : null,
                               onTap: _toggleRepost
                             ),
-                            SizedBox(width: 24), 
-                            
+                            SizedBox(width: 24),
+
                             _buildActionButton(
                               icon: _isLiked ? Icons.favorite : Icons.favorite_border,
                               text: _likeCount.toString(),
@@ -557,7 +556,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                               animation: _likeAnimation
                             ),
                             SizedBox(width: 24),
-                            
+
                             _buildActionButton(
                               icon: Icons.share_outlined,
                               text: null,
@@ -668,11 +667,11 @@ class ThreadLinePainter extends CustomPainter {
     // The reply tile starts at 0.0 inside its 48.0 wide container.
     // So the vertical line must be drawn at x = 32.0 to align with the parent.
     final double x = 32.0;
-    
+
     // Avatar Vertical Alignment:
     // Avatar is inside Padding(vertical: 8.0). Radius is 18.0.
     // Center Y = 8.0 + 18.0 = 26.0.
-    final double avatarCenterY = 26.0; 
+    final double avatarCenterY = 26.0;
     final double curveRadius = 12.0;
 
     Path path = Path();
@@ -686,13 +685,13 @@ class ThreadLinePainter extends CustomPainter {
     } else {
       // Draw "|-" shape: Full vertical line for next sibling, with a branch
       path.lineTo(x, size.height);
-      
+
       // Branch off for the current avatar
       Path branchPath = Path();
       branchPath.moveTo(x, avatarCenterY - curveRadius);
       branchPath.quadraticBezierTo(x, avatarCenterY, x + curveRadius, avatarCenterY);
       branchPath.lineTo(size.width, avatarCenterY);
-      
+
       canvas.drawPath(branchPath, paint);
     }
 

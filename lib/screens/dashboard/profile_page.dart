@@ -11,7 +11,7 @@ import 'package:image_cropper/image_cropper.dart';
 
 import '../../widgets/blog_post_card.dart';
 import '../../widgets/comment_tile.dart';
-import '../../widgets/common_error_widget.dart'; 
+import '../../widgets/common_error_widget.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
@@ -20,9 +20,9 @@ import '../image_viewer_screen.dart';
 import 'settings_page.dart';
 import '../../services/overlay_service.dart';
 import '../../services/cloudinary_service.dart';
-import '../../services/moderation_service.dart'; 
-import '../follow_list_screen.dart'; 
-import '../ktm_verification_screen.dart'; 
+import '../../services/moderation_service.dart';
+import '../follow_list_screen.dart';
+import '../ktm_verification_screen.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
 final CloudinaryService _cloudinaryService = CloudinaryService();
@@ -44,16 +44,16 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
-  
+
   late final User? _user;
   late final String _userId;
-  
+
   bool _isScrolled = false;
   bool _isBioExpanded = false;
-  
+
   bool _isBlocked = false;
-  String? _optimisticPinnedPostId; 
-  
+  String? _optimisticPinnedPostId;
+
   bool _isProcessingFollow = false;
 
   @override
@@ -64,22 +64,22 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
     _userId = widget.userId ?? _user!.uid;
-    
+
     // Force reload user data to get fresh emailVerified status on init
     _user?.reload();
 
     _checkBlockedStatus();
 
     _tabController = TabController(
-      length: 3, 
-      vsync: this, 
+      length: 3,
+      vsync: this,
       initialIndex: 0,
     );
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _tabController.index = 0;
     });
-    
+
     _scrollController.addListener(_scrollListener);
   }
 
@@ -90,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       _tabController.index = 0;
     }
   }
-  
+
   void _checkBlockedStatus() async {
     if (_user == null) return;
     moderationService.streamBlockedUsers().listen((blockedList) {
@@ -115,12 +115,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   void _handlePinToggle(String postId, bool isPinned) {
     setState(() {
-      _optimisticPinnedPostId = isPinned ? postId : ''; 
+      _optimisticPinnedPostId = isPinned ? postId : '';
     });
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
-    
+
     if (isPinned) {
       OverlayService().showTopNotification(context, t.translate('profile_pin_success'), Icons.push_pin, (){});
     } else {
@@ -136,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         pageBuilder: (_, __, ___) => ImageViewerScreen(
           imageUrl: url,
           heroTag: heroTag,
-          mediaType: 'image', 
+          mediaType: 'image',
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
@@ -246,10 +246,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       aspectRatio: isBanner ? CropAspectRatio(ratioX: 3, ratioY: 1) : CropAspectRatio(ratioX: 1, ratioY: 1),
       uiSettings: [
         AndroidUiSettings(
-          toolbarTitle: isBanner ? t.translate('profile_crop_banner') : t.translate('profile_crop_avatar'), 
-          toolbarColor: SisapaTheme.blue, 
-          toolbarWidgetColor: Colors.white, 
-          initAspectRatio: isBanner ? CropAspectRatioPreset.ratio3x2 : CropAspectRatioPreset.square, 
+          toolbarTitle: isBanner ? t.translate('profile_crop_banner') : t.translate('profile_crop_avatar'),
+          toolbarColor: SisapaTheme.blue,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: isBanner ? CropAspectRatioPreset.ratio3x2 : CropAspectRatioPreset.square,
           lockAspectRatio: true
         ),
         IOSUiSettings(title: isBanner ? t.translate('profile_crop_banner') : t.translate('profile_crop_avatar'), aspectRatioLockEnabled: true),
@@ -265,7 +265,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         final Map<String, dynamic> updateData = {};
         if (isBanner) updateData['bannerImageUrl'] = downloadUrl;
         else { updateData['profileImageUrl'] = downloadUrl; updateData['avatarIconId'] = -1; }
-        
+
         await FirebaseFirestore.instance.collection('users').doc(_userId).update(updateData);
         if (!isBanner) _updateAllPastContent(downloadUrl);
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_update_success'), Icons.check_circle, (){}, color: Colors.green);
@@ -344,21 +344,21 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     if (_user == null || _isProcessingFollow) return;
     setState(() => _isProcessingFollow = true);
     var t = AppLocalizations.of(context)!;
-    
+
     try {
       if (isPrivate) {
         await FirebaseFirestore.instance.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).set({
           'timestamp': FieldValue.serverTimestamp(),
           'status': 'pending',
         });
-        
+
         await FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').set({
           'type': 'follow_request',
           'senderId': _user!.uid,
           'timestamp': FieldValue.serverTimestamp(),
           'isRead': false,
         });
-        
+
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_sent'), Icons.send, (){}, color: Colors.blue);
       } else {
         final batch = FirebaseFirestore.instance.batch();
@@ -367,7 +367,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         batch.update(myDocRef, {'following': FieldValue.arrayUnion([_userId])});
         batch.update(targetDocRef, {'followers': FieldValue.arrayUnion([_user!.uid])});
         await batch.commit();
-        
+
         FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').add({
           'type': 'follow', 'senderId': _user!.uid, 'timestamp': FieldValue.serverTimestamp(), 'isRead': false,
         });
@@ -397,19 +397,19 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         batch.update(targetDocRef, {'followers': FieldValue.arrayRemove([_user!.uid])});
         await batch.commit();
       }
-    } catch (e) { 
-      if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red); 
+    } catch (e) {
+      if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red);
     } finally {
       if(mounted) setState(() => _isProcessingFollow = false);
     }
   }
 
-  void _shareProfile(String name) { 
+  void _shareProfile(String name) {
     var t = AppLocalizations.of(context)!;
     // Simple localization, assuming name doesn't need translation
-    Share.share(t.translate('profile_share_text')); 
+    Share.share(t.translate('profile_share_text'));
   }
-  
+
   Future<void> _toggleBlock() async {
     var t = AppLocalizations.of(context)!;
     if (_isBlocked) {
@@ -455,8 +455,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   void _submitReport(String reason) {
     Navigator.pop(context);
     moderationService.reportContent(
-      targetId: _userId, 
-      targetType: 'user', 
+      targetId: _userId,
+      targetType: 'user',
       reason: reason
     );
     // LOCALIZATION
@@ -467,10 +467,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Future<void> _signOut(BuildContext context) async {
     var t = AppLocalizations.of(context)!;
     final didConfirm = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(t.translate('settings_logout')), 
-      content: Text(t.translate('settings_logout_confirm')), 
+      title: Text(t.translate('settings_logout')),
+      content: Text(t.translate('settings_logout_confirm')),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t.translate('general_cancel'))), 
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t.translate('general_cancel'))),
         TextButton(onPressed: () => Navigator.pop(context, true), child: Text(t.translate('settings_logout'), style: TextStyle(color: Colors.red)))
       ]
     )) ?? false;
@@ -496,7 +496,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       await _user?.reload();
     } catch (_) {}
     await Future.delayed(Duration(seconds: 1));
-    if (mounted) setState(() {}); 
+    if (mounted) setState(() {});
   }
 
   @override
@@ -507,7 +507,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     if (_userId == null) return Center(child: Text(t.translate('profile_not_logged_in')));
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     final double topPadding = MediaQuery.of(context).padding.top;
     final double pinnedHeaderHeight = topPadding + kToolbarHeight;
 
@@ -520,15 +520,15 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
         final data = snapshot.data?.data() as Map<String, dynamic>? ?? {};
         final name = data['name'] ?? 'User';
-        
+
         final bool isMyProfile = _user?.uid == _userId;
         final bool isPrivateAccount = data['isPrivate'] ?? false;
         final List<dynamic> followers = data['followers'] ?? [];
         final bool amIFollowing = followers.contains(_user?.uid);
-        
+
         final bool canViewProfile = isMyProfile || !isPrivateAccount || amIFollowing;
 
-        final String verificationStatus = data['verificationStatus'] ?? 'none'; 
+        final String verificationStatus = data['verificationStatus'] ?? 'none';
         final bool isVerified = verificationStatus == 'verified';
 
         Widget content = RefreshIndicator(
@@ -545,20 +545,20 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   pinned: true,
                   elevation: 0,
                   scrolledUnderElevation: 0,
-                  expandedHeight: 218.0, 
+                  expandedHeight: 218.0,
                   backgroundColor: isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
                   iconTheme: IconThemeData(color: isDarkMode ? SisapaTheme.white : SisapaTheme.blue),
                   automaticallyImplyLeading: widget.includeScaffold,
-                  
+
                   title: AnimatedOpacity(
                     opacity: _isScrolled ? 1.0 : 0.0,
                     duration: Duration(milliseconds: 200),
                     child: Row(
                       children: [
                         Text(
-                          name, 
+                          name,
                           style: TextStyle(
-                            color: isDarkMode ? SisapaTheme.white : SisapaTheme.black, 
+                            color: isDarkMode ? SisapaTheme.white : SisapaTheme.black,
                             fontWeight: FontWeight.bold
                           )
                         ),
@@ -600,18 +600,18 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         unselectedLabelColor: theme.hintColor,
                         indicatorColor: theme.primaryColor,
                         overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        dividerColor: Colors.transparent, 
+                        dividerColor: Colors.transparent,
                       ),
                       isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
                     ),
                   ),
               ];
             },
-            
-            body: _isBlocked 
+
+            body: _isBlocked
                 ? _buildBlockedBody()
                 : (!canViewProfile)
-                    ? _buildPrivateAccountBody() 
+                    ? _buildPrivateAccountBody()
                     : TabBarView(
                         controller: _tabController,
                         children: [
@@ -623,8 +623,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           ),
         );
 
-        return widget.includeScaffold 
-            ? Scaffold(extendBodyBehindAppBar: true, body: content) 
+        return widget.includeScaffold
+            ? Scaffold(extendBodyBehindAppBar: true, body: content)
             : content;
       }
     );
@@ -644,36 +644,36 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         if (value == 'block') _toggleBlock();
         if (value == 'report') _reportUser();
       },
-      itemBuilder: (context) => isMyProfile 
+      itemBuilder: (context) => isMyProfile
         ? [
-            PopupMenuItem(value: 'share', child: Text(t.translate('profile_menu_share'))), 
-            PopupMenuItem(value: 'settings', child: Text(t.translate('profile_menu_settings'))), 
+            PopupMenuItem(value: 'share', child: Text(t.translate('profile_menu_share'))),
+            PopupMenuItem(value: 'settings', child: Text(t.translate('profile_menu_settings'))),
             PopupMenuItem(value: 'logout', child: Text(t.translate('settings_logout'), style: TextStyle(color: Colors.red)))
           ]
         : [
-            PopupMenuItem(value: 'share', child: Text(t.translate('profile_menu_share_account'))), 
+            PopupMenuItem(value: 'share', child: Text(t.translate('profile_menu_share_account'))),
             PopupMenuItem(value: 'report', child: Text(t.translate('profile_report_title'))),
-            PopupMenuItem(value: 'block', child: Text(_isBlocked ? t.translate('profile_unblocked') : t.translate('general_delete'), style: TextStyle(color: Colors.red))), 
+            PopupMenuItem(value: 'block', child: Text(_isBlocked ? t.translate('profile_unblocked') : t.translate('general_delete'), style: TextStyle(color: Colors.red))),
           ],
     );
   }
 
   Widget _buildHeaderFlexibleSpace(
-    BuildContext context, 
-    Map<String, dynamic> data, 
-    bool isMyProfile, 
-    bool isPrivate, 
+    BuildContext context,
+    Map<String, dynamic> data,
+    bool isMyProfile,
+    bool isPrivate,
     bool amIFollowing
   ) {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
-    
+
     final String? bannerImageUrl = data['bannerImageUrl'];
     final String? profileImageUrl = data['profileImageUrl'];
     final String? dept = data['department'];
     final String? prodi = data['studyProgram'];
     final String? deptCode = data['departmentCode'];
-    
+
     return Stack(
       children: [
         Positioned(
@@ -682,29 +682,29 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           right: 0,
           height: 150,
           child: GestureDetector(
-            onTap: () { 
-              if(isMyProfile) _showBannerOptions(context, bannerImageUrl, 'banner'); 
-              else if(bannerImageUrl!=null && !_isBlocked) _openFullImage(context, bannerImageUrl, 'banner'); 
+            onTap: () {
+              if(isMyProfile) _showBannerOptions(context, bannerImageUrl, 'banner');
+              else if(bannerImageUrl!=null && !_isBlocked) _openFullImage(context, bannerImageUrl, 'banner');
             },
             child: Hero(
-              tag: 'banner', 
+              tag: 'banner',
               child: Container(
-                color: SisapaTheme.darkGrey, 
-                child: bannerImageUrl != null 
-                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey)) 
+                color: SisapaTheme.darkGrey,
+                child: bannerImageUrl != null
+                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey))
                   : (isMyProfile ? Center(child: Icon(Icons.camera_alt, color: Colors.white)) : null)
               )
             ),
           ),
         ),
-        
+
         Positioned(
-          top: 120, 
+          top: 120,
           left: 16,
           child: GestureDetector(
-            onTap: () { 
-              if(isMyProfile) _showProfileOptions(context, profileImageUrl, 'avatar'); 
-              else if(profileImageUrl!=null && !_isBlocked) _openFullImage(context, profileImageUrl, 'avatar'); 
+            onTap: () {
+              if(isMyProfile) _showProfileOptions(context, profileImageUrl, 'avatar');
+              else if(profileImageUrl!=null && !_isBlocked) _openFullImage(context, profileImageUrl, 'avatar');
             },
             child: Hero(tag: 'avatar', child: Stack(children: [
               CircleAvatar(radius: 49, backgroundColor: theme.scaffoldBackgroundColor, child: _buildAvatarImage(data)),
@@ -717,15 +717,15 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           right: 16,
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center, 
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (deptCode != null) ...[
                 _buildDepartmentBadge(deptCode, dept, prodi),
                 SizedBox(width: 8),
               ],
-              isMyProfile 
+              isMyProfile
               ? OutlinedButton(onPressed: () async { if(await Navigator.push(context, MaterialPageRoute(builder: (_) => EditProfileScreen())) == true) setState((){}); }, child: Text(t.translate('profile_edit')), style: OutlinedButton.styleFrom(shape: StadiumBorder()))
-              : _isBlocked 
+              : _isBlocked
                 ? ElevatedButton(onPressed: _toggleBlock, child: Text(t.translate('profile_unblocked')), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white))
                 : _buildFollowButton(isPrivate, amIFollowing)
             ],
@@ -739,14 +739,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     var t = AppLocalizations.of(context)!;
     if (amIFollowing) {
       return OutlinedButton(
-        onPressed: _isProcessingFollow ? null : () => _unfollowUser(false), 
+        onPressed: _isProcessingFollow ? null : () => _unfollowUser(false),
         child: Text(t.translate('profile_unfollow'))
       );
     }
 
     if (!isPrivate) {
       return ElevatedButton(
-        onPressed: _isProcessingFollow ? null : () => _followUser(false), 
+        onPressed: _isProcessingFollow ? null : () => _followUser(false),
         style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
         child: Text(t.translate('community_follow')),
       );
@@ -762,7 +762,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data!.exists) {
           return OutlinedButton(
-            onPressed: _isProcessingFollow ? null : () => _unfollowUser(true), 
+            onPressed: _isProcessingFollow ? null : () => _unfollowUser(true),
             style: OutlinedButton.styleFrom(
               backgroundColor: Theme.of(context).cardColor,
               side: BorderSide(color: Theme.of(context).dividerColor),
@@ -770,9 +770,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             child: Text(t.translate('profile_requested'), style: TextStyle(color: Theme.of(context).hintColor)),
           );
         }
-        
+
         return ElevatedButton(
-          onPressed: _isProcessingFollow ? null : () => _followUser(true), 
+          onPressed: _isProcessingFollow ? null : () => _followUser(true),
           style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
           child: Text(t.translate('community_follow')),
         );
@@ -783,15 +783,15 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Widget _buildProfileInfoBody(BuildContext context, Map<String, dynamic> data, bool isMyProfile) {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
-    
+
     final String name = data['name'] ?? 'Name';
     final String handle = "@${(data['email'] ?? '').split('@')[0]}";
     final String displayBio = _isBioExpanded ? (data['bio'] ?? '') : ((data['bio'] ?? '').length > 100 ? (data['bio'] ?? '').substring(0, 100) + '...' : (data['bio'] ?? ''));
-    
+
     final String verificationStatus = data['verificationStatus'] ?? 'none';
     final bool isVerified = verificationStatus == 'verified';
     final bool isPending = verificationStatus == 'pending';
-    
+
     bool showEmailVerifyBtn = false;
     bool showKtmVerifyBtn = false;
 
@@ -821,7 +821,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           ],
         ),
         Text(handle, style: theme.textTheme.titleSmall),
-        
+
         // --- VERIFICATION BUTTONS ---
         if (showEmailVerifyBtn)
           Padding(
@@ -843,10 +843,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   border: Border.all(color: Colors.red),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min, 
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.warning, size: 16, color: Colors.red), 
-                    SizedBox(width: 6), 
+                    Icon(Icons.warning, size: 16, color: Colors.red),
+                    SizedBox(width: 6),
                     Text(t.translate('profile_verify_email'), style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12))
                   ]
                 ),
@@ -874,7 +874,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               ),
             ),
           ),
-        
+
         SizedBox(height: 8),
         if (!_isBlocked) ...[
           Text(displayBio.isEmpty ? t.translate('profile_no_bio') : displayBio, style: theme.textTheme.bodyLarge),
@@ -884,8 +884,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           SizedBox(height: 8),
           Row(
             children: [
-              _buildStatText(context, (data['following'] ?? []).length, t.translate('profile_following'), 1), 
-              SizedBox(width: 16), 
+              _buildStatText(context, (data['following'] ?? []).length, t.translate('profile_following'), 1),
+              SizedBox(width: 16),
               _buildStatText(context, (data['followers'] ?? []).length, t.translate('profile_followers'), 2)
             ]
           ),
@@ -951,8 +951,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   void _showBadgeInfo(BuildContext context, String dept, String prodi) {
     var t = AppLocalizations.of(context)!;
     showDialog(context: context, builder: (context) => AlertDialog(
-      title: Text(t.translate('profile_academic_title')), 
-      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(t.translate('profile_dept'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)), Text(dept, style: TextStyle(fontSize: 16)), SizedBox(height: 16), Text(t.translate('profile_prodi'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)), Text(prodi, style: TextStyle(fontSize: 16))]), 
+      title: Text(t.translate('profile_academic_title')),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(t.translate('profile_dept'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)), Text(dept, style: TextStyle(fontSize: 16)), SizedBox(height: 16), Text(t.translate('profile_prodi'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)), Text(prodi, style: TextStyle(fontSize: 16))]),
       actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('general_cancel'), style: TextStyle(color: SisapaTheme.blue)))]
     ));
   }
@@ -960,7 +960,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Widget _buildDepartmentBadge(String code, String? fullDeptName, String? fullProdiName) {
     final parts = code.split('-');
     if (parts.length < 2) return SizedBox.shrink();
-    final dept = parts[0]; final prodi = parts[1]; 
+    final dept = parts[0]; final prodi = parts[1];
     Color deptColor = (dept.toUpperCase() == 'TE') ? Color(0xFF00008B) : (dept.toUpperCase() == 'TS' ? Color(0xFF5D4037) : Colors.primaries[dept.hashCode.abs() % Colors.primaries.length]);
     Color prodiColor = (prodi.toUpperCase() == 'BM') ? Colors.orange : Colors.primaries[prodi.hashCode.abs() % Colors.primaries.length];
     return GestureDetector(
@@ -982,15 +982,15 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           MaterialPageRoute(
             builder: (_) => FollowListScreen(
               userId: _userId,
-              initialIndex: tabIndex, 
+              initialIndex: tabIndex,
             )
           )
         );
       },
       child: Row(
         children: [
-          Text("$count", style: TextStyle(fontWeight: FontWeight.bold)), 
-          SizedBox(width: 4), 
+          Text("$count", style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(width: 4),
           Text(label, style: TextStyle(color: Theme.of(context).hintColor))
         ]
       ),
@@ -1003,7 +1003,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
       builder: (context, userSnapshot) {
         if (userSnapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_posts_fail'), isConnectionError: true);
-        
+
         final firestorePinned = (userSnapshot.data?.data() as Map<String, dynamic>?)?['pinnedPostId'];
         final activePinnedId = _optimisticPinnedPostId == '' ? null : (_optimisticPinnedPostId ?? firestorePinned);
 
@@ -1011,13 +1011,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           stream: FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_stream_fail'), isConnectionError: true);
-            
+
             List<Widget> slivers = [];
             if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
               slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
             } else {
               final allDocs = snapshot.data?.docs ?? [];
-              
+
               final visibleDocs = allDocs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 final bool isCommunityIdentityPost = data['isCommunityPost'] ?? false;
@@ -1025,11 +1025,11 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
                 final visibility = data['visibility'] ?? 'public';
                 final ownerId = data['userId'];
-                
+
                 if (visibility == 'public') return true;
                 if (visibility == 'followers') return true;
                 if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
-                
+
                 return false;
               }).toList();
 
@@ -1066,7 +1066,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             }
 
             return CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(), 
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: slivers,
             );
           },
@@ -1081,7 +1081,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       stream: FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_replies_fail'), isConnectionError: true);
-        
+
         List<Widget> slivers = [];
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
@@ -1098,31 +1098,31 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 stream: FirebaseFirestore.instance.collection('posts').doc(parentPostId).snapshots(),
                 builder: (context, parentSnapshot) {
                   if (!parentSnapshot.hasData || !parentSnapshot.data!.exists) return SizedBox.shrink();
-                  
+
                   final parentData = parentSnapshot.data!.data() as Map<String, dynamic>;
                   final visibility = parentData['visibility'] ?? 'public';
                   final ownerId = parentData['userId'];
-                  
-                  final isVisible = (visibility == 'public') || 
-                                    (visibility == 'followers') || 
+
+                  final isVisible = (visibility == 'public') ||
+                                    (visibility == 'followers') ||
                                     (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid);
-                  
+
                   if (isVisible) {
                     return Theme(
                       data: Theme.of(context).copyWith(listTileTheme: ListTileThemeData(minVerticalPadding: 0, visualDensity: VisualDensity.compact, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0))),
                       child: CommentTile(
-                        key: ValueKey(doc.id), 
-                        commentId: doc.id, 
-                        commentData: doc.data() as Map<String, dynamic>, 
-                        postId: parentPostId, 
-                        isOwner: true, 
-                        showPostContext: true, 
+                        key: ValueKey(doc.id),
+                        commentId: doc.id,
+                        commentData: doc.data() as Map<String, dynamic>,
+                        postId: parentPostId,
+                        isOwner: true,
+                        showPostContext: true,
                         heroContextId: 'profile_replies',
                         currentProfileUserId: _userId,
                       ),
                     );
                   }
-                  return SizedBox.shrink(); 
+                  return SizedBox.shrink();
                 },
               );
             }, childCount: docs.length)));
@@ -1145,16 +1145,16 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
         } else {
           final allDocs = snapshot.data?.docs ?? [];
-          
+
           final visibleDocs = allDocs.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final visibility = data['visibility'] ?? 'public';
             final ownerId = data['userId'];
-            
+
             if (visibility == 'public') return true;
-            if (visibility == 'followers') return true; 
+            if (visibility == 'followers') return true;
             if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
-            
+
             return false;
           }).toList();
 
@@ -1165,9 +1165,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               final doc = visibleDocs[index];
               return BlogPostCard(
                 key: ValueKey('repost_${doc.id}'),
-                postId: doc.id, 
-                postData: doc.data() as Map<String, dynamic>, 
-                isOwner: doc['userId'] == FirebaseAuth.instance.currentUser?.uid, 
+                postId: doc.id,
+                postData: doc.data() as Map<String, dynamic>,
+                isOwner: doc['userId'] == FirebaseAuth.instance.currentUser?.uid,
                 heroContextId: 'profile_reposts',
                 currentProfileUserId: _userId,
               );
@@ -1188,9 +1188,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
   final Color backgroundColor;
-  
+
   _SliverAppBarDelegate(this._tabBar, this.backgroundColor);
-  
+
   @override double get minExtent => _tabBar.preferredSize.height;
   @override double get maxExtent => _tabBar.preferredSize.height;
   @override Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => Container(color: backgroundColor, child: _tabBar);

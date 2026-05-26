@@ -1,9 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
 import 'register_page.dart';
-import '../main.dart'; 
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/app_localizations.dart';
@@ -15,8 +15,8 @@ class WelcomeScreen extends StatelessWidget {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0); 
-        const end = Offset.zero;       
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
 
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -34,7 +34,7 @@ class WelcomeScreen extends StatelessWidget {
   void _toggleLanguage() async {
     final currentCode = languageNotifier.value.languageCode;
     final newCode = currentCode == 'en' ? 'id' : 'en';
-    
+
     // Update notifier
     languageNotifier.value = Locale(newCode);
 
@@ -82,14 +82,14 @@ class WelcomeScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, 
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- HEADER ROW (LOGO + LANGUAGE TOGGLE) ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Image.asset('images/app_icon.png', height: 40),
-                      
+
                       // LANGUAGE SWITCHER ICON
                       ValueListenableBuilder<Locale>(
                         valueListenable: languageNotifier,
@@ -133,12 +133,12 @@ class WelcomeScreen extends StatelessWidget {
                     ],
                   ),
 
-                  Spacer(flex: 2), 
+                  Spacer(flex: 2),
 
                   Text(
-                    "SAPA", 
+                    "SAPA",
                     style: theme.textTheme.displayLarge?.copyWith(
-                      fontSize: 72, 
+                      fontSize: 72,
                       fontWeight: FontWeight.w900,
                       color: SisapaTheme.blue,
                       letterSpacing: -2.0,
@@ -146,18 +146,18 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "PNJ", 
+                    "PNJ",
                     style: theme.textTheme.displayLarge?.copyWith(
-                      fontSize: 72, 
+                      fontSize: 72,
                       fontWeight: FontWeight.w900,
                       color: theme.textTheme.bodyLarge?.color,
                       letterSpacing: -2.0,
                       height: 0.9,
                     ),
                   ),
-                  
+
                   SizedBox(height: 24),
-                  
+
                   Container(
                     padding: EdgeInsets.only(left: 4),
                     decoration: BoxDecoration(
@@ -175,8 +175,8 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
-                  Spacer(flex: 3), 
+
+                  Spacer(flex: 3),
 
                   Text(
                     t.translate('welcome_join_message'),
@@ -192,14 +192,14 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).push(_createSlideUpRoute(RegisterPage()));
                       },
-                      child: Text(t.translate('welcome_create_account')), 
+                      child: Text(t.translate('welcome_create_account')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 18),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16), 
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
@@ -214,9 +214,9 @@ class WelcomeScreen extends StatelessWidget {
                       text: TextSpan(
                         style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15),
                         children: [
-                          TextSpan(text: "${t.translate('auth_have_account')} "), 
+                          TextSpan(text: "${t.translate('auth_have_account')} "),
                           TextSpan(
-                            text: t.translate('auth_login'), 
+                            text: t.translate('auth_login'),
                             style: TextStyle(
                               color: SisapaTheme.blue,
                               fontWeight: FontWeight.bold,

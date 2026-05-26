@@ -40,7 +40,7 @@ class PredictionService {
     final String lastWord = words.last;
 
     String? personalizedPrediction = _generateChain(lastWord);
-    
+
     if (personalizedPrediction == null && _globalPhraseDatabase.containsKey(lastWord)) {
       personalizedPrediction = _globalPhraseDatabase[lastWord]!.first;
     } else if (personalizedPrediction == null) {
@@ -75,10 +75,10 @@ class PredictionService {
   // --- 4. TRENDING ALGORITHM (Document Frequency + Deduplication) ---
   List<Map<String, dynamic>> analyzeTrendingTopics(List<QueryDocumentSnapshot> posts) {
     final Map<String, Set<String>> phraseDocMap = {};
-    
+
     final Set<String> stopWords = {
       'the', 'and', 'is', 'to', 'in', 'of', 'for', 'on', 'at', 'this',
-      'di', 'dan', 'yang', 'ini', 'itu', 'ke', 'dari', 'ada', 'dengan', 
+      'di', 'dan', 'yang', 'ini', 'itu', 'ke', 'dari', 'ada', 'dengan',
       'untuk', 'yg', 'gak', 'ya', 'aja', 'si', 'saya', 'aku', 'bisa', 'mau',
       'banget', 'sama', 'sudah', 'lagi', 'apa', 'kapan', 'dimana'
     };
@@ -87,7 +87,7 @@ class PredictionService {
       final data = doc.data() as Map<String, dynamic>;
       final text = (data['text'] ?? '').toString().toLowerCase();
       final postId = doc.id;
-      
+
       final cleanText = text.replaceAll(RegExp(r'[^\w\s#]'), '');
       final words = cleanText.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
 
@@ -121,7 +121,7 @@ class PredictionService {
     });
 
     final List<Map<String, dynamic>> finalTrends = [];
-    
+
     for (var candidate in candidates) {
       String tag = candidate['tag'] as String;
       bool isRedundant = false;
@@ -136,7 +136,7 @@ class PredictionService {
       if (!isRedundant) {
         finalTrends.add(candidate);
       }
-      
+
       if (finalTrends.length >= 10) break;
     }
 
@@ -145,7 +145,7 @@ class PredictionService {
 
   // --- 5. DISCOVER ALGORITHM ---
   List<QueryDocumentSnapshot> getDiscoverRecommendations(
-    List<QueryDocumentSnapshot> allPosts, 
+    List<QueryDocumentSnapshot> allPosts,
     String currentUserId,
     List<dynamic> followingList
   ) {
@@ -154,7 +154,7 @@ class PredictionService {
     for (var doc in allPosts) {
       final data = doc.data() as Map<String, dynamic>;
       final authorId = data['userId'];
-      
+
       if (authorId == currentUserId) continue;
       if (followingList.contains(authorId)) continue;
 
@@ -162,13 +162,13 @@ class PredictionService {
 
       final int likes = (data['likes'] as Map?)?.length ?? 0;
       final int comments = data['commentCount'] ?? 0;
-      score += (likes * 2.0) + (comments * 3.0); 
+      score += (likes * 2.0) + (comments * 3.0);
 
       final Timestamp? ts = data['timestamp'];
       if (ts != null) {
         final hoursAgo = DateTime.now().difference(ts.toDate()).inHours;
-        if (hoursAgo < 24) score += 20; 
-        else score += (100.0 / (hoursAgo + 5)); 
+        if (hoursAgo < 24) score += 20;
+        else score += (100.0 / (hoursAgo + 5));
       }
 
       if (data['mediaUrl'] != null) score += 15.0;
@@ -183,7 +183,7 @@ class PredictionService {
 
   // --- 6. RECOMMENDED ALGORITHM ---
   List<QueryDocumentSnapshot> getPersonalizedRecommendations(
-    List<QueryDocumentSnapshot> allPosts, 
+    List<QueryDocumentSnapshot> allPosts,
     Map<String, dynamic> userProfile,
     String currentUserId
   ) {
@@ -205,10 +205,10 @@ class PredictionService {
     for (var doc in allPosts) {
       final data = doc.data() as Map<String, dynamic>;
       final authorId = data['userId'];
-      
+
       if (authorId == currentUserId) continue;
 
-      double score = 0.0; 
+      double score = 0.0;
 
       if (following.contains(authorId)) score += 50.0;
 
@@ -223,7 +223,7 @@ class PredictionService {
       final Timestamp? ts = data['timestamp'];
       if (ts != null) {
         final hoursAgo = DateTime.now().difference(ts.toDate()).inHours;
-        score += (80.0 / (hoursAgo + 1)); 
+        score += (80.0 / (hoursAgo + 1));
       }
 
       scoredPosts.add({'doc': doc, 'score': score});

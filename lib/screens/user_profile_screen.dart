@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; 
-import '../widgets/blog_post_card.dart'; 
-import '../widgets/comment_tile.dart'; 
-import '../main.dart'; 
+import 'package:intl/intl.dart';
+import '../widgets/blog_post_card.dart';
+import '../widgets/comment_tile.dart';
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../../services/overlay_service.dart';
 import 'follow_list_screen.dart'; // REQUIRED
-
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
@@ -52,9 +51,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
       final targetDocRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       batch.update(myDocRef, { 'following': FieldValue.arrayUnion([widget.userId]) });
       batch.update(targetDocRef, { 'followers': FieldValue.arrayUnion([_currentUser!.uid]) });
-      
+
       await batch.commit();
-      
+
       final notificationId = 'follow_${_currentUser!.uid}';
       FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('notifications')
         .doc(notificationId)
@@ -77,9 +76,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
       final targetDocRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       batch.update(myDocRef, { 'following': FieldValue.arrayRemove([widget.userId]) });
       batch.update(targetDocRef, { 'followers': FieldValue.arrayRemove([_currentUser!.uid]) });
-      
+
       await batch.commit();
-      
+
       final notificationId = 'follow_${_currentUser!.uid}';
       FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('notifications')
         .doc(notificationId)
@@ -104,7 +103,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
         if (!mySnapshot.hasData) {
           return Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        
+
         final myData = mySnapshot.data!.data() as Map<String, dynamic>;
         final List<dynamic> myFollowingList = myData['following'] ?? [];
         final bool amIFollowing = myFollowingList.contains(widget.userId);
@@ -120,10 +119,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  expandedHeight: 410.0, 
-                  pinned: true, 
+                  expandedHeight: 410.0,
+                  pinned: true,
                   elevation: 0,
-                  automaticallyImplyLeading: false, 
+                  automaticallyImplyLeading: false,
                   backgroundColor: theme.scaffoldBackgroundColor,
                   flexibleSpace: FlexibleSpaceBar(
                     collapseMode: CollapseMode.pin,
@@ -141,7 +140,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildProfileHeader(context, targetData, isMyProfile, amIFollowing),
-                                _buildProfileInfo(context, targetData), 
+                                _buildProfileInfo(context, targetData),
                               ],
                             );
                           },
@@ -164,7 +163,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
               physics: null, // ENABLE SWIPING
               children: [
                 _buildMyPosts(widget.userId),
-                _buildMyReposts(widget.userId), 
+                _buildMyReposts(widget.userId),
                 _buildMyReplies(widget.userId),
               ],
             ),
@@ -180,9 +179,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
     final theme = Theme.of(context);
     final String name = data['name'] ?? 'User';
     return Container(
-      height: 180, 
+      height: 180,
       child: Stack(
-        clipBehavior: Clip.none, 
+        clipBehavior: Clip.none,
         children: [
           Container(height: 120, color: SisapaTheme.darkGrey),
           Positioned(
@@ -203,7 +202,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
     final theme = Theme.of(context);
     final String name = data['name'] ?? 'Name not set';
     final String email = data['email'] ?? 'Email not found';
-    final String nim = data['nim'] ?? 'NIM not set'; 
+    final String nim = data['nim'] ?? 'NIM not set';
     final String handle = "@${email.split('@')[0]}";
     final String bio = data['bio'] ?? 'No bio set.';
     final Timestamp? createdAt = data['createdAt'] as Timestamp?;
@@ -218,14 +217,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
         children: [
           Text(name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
           Text(handle, style: theme.textTheme.titleSmall),
-          SizedBox(height: 4), Text(nim, style: theme.textTheme.titleSmall), 
+          SizedBox(height: 4), Text(nim, style: theme.textTheme.titleSmall),
           SizedBox(height: 12), Text(bio, style: theme.textTheme.bodyLarge),
           SizedBox(height: 12), Row(children: [Icon(Icons.calendar_today_outlined, size: 14, color: theme.hintColor), SizedBox(width: 8), Text(joinedDate, style: theme.textTheme.titleSmall)]),
-          SizedBox(height: 12), 
+          SizedBox(height: 12),
           Row(
             children: [
-              _buildStatText(context, followingList.length, "Following", 1), 
-              SizedBox(width: 16), 
+              _buildStatText(context, followingList.length, "Following", 1),
+              SizedBox(width: 16),
               _buildStatText(context, followersList.length, "Followers", 2)
             ]
           ),
@@ -245,15 +244,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
           MaterialPageRoute(
             builder: (_) => FollowListScreen(
               userId: widget.userId,
-              initialIndex: tabIndex, 
+              initialIndex: tabIndex,
             )
           )
         );
       },
       child: Row(
         children: [
-          Text(count.toString(), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)), 
-          SizedBox(width: 4), 
+          Text(count.toString(), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          SizedBox(width: 4),
           Text(label, style: theme.textTheme.titleSmall)
         ]
       ),

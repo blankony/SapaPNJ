@@ -9,13 +9,13 @@ import '../../widgets/blog_post_card.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
-import 'community_settings_screen.dart'; 
-import 'community_members_screen.dart'; 
-import '../create_post_screen.dart'; 
+import 'community_settings_screen.dart';
+import 'community_members_screen.dart';
+import '../create_post_screen.dart';
 import '../../services/overlay_service.dart';
 import '../../services/cloudinary_service.dart';
-import '../image_viewer_screen.dart'; 
-import '../../services/moderation_service.dart'; 
+import '../image_viewer_screen.dart';
+import '../../services/moderation_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
 class CommunityDetailScreen extends StatefulWidget {
@@ -36,16 +36,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   final CloudinaryService _cloudinaryService = CloudinaryService();
   final ScrollController _scrollController = ScrollController();
   final int _postsLimit = 10;
-  
+
   bool _isUploadingImage = false;
-  
+
   // Pagination State
   List<DocumentSnapshot> _posts = [];
   bool _isLoadingPosts = true;
   bool _hasMorePosts = true;
   bool _isLoadingMore = false;
   DocumentSnapshot? _lastDocument;
-  
+
   // Data Cache
   List<String> _blockedUserIds = [];
 
@@ -72,7 +72,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   Future<void> _fetchBlockedUsers() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    
+
     // Ambil data block user sekali saja di awal
     final doc = await FirebaseFirestore.instance.collection('users').doc(uid).collection('moderation').doc('blocked').get();
     if (doc.exists && mounted) {
@@ -97,7 +97,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           .limit(_postsLimit);
 
       QuerySnapshot snapshot = await query.get();
-      
+
       if (mounted) {
         setState(() {
           _posts = snapshot.docs;
@@ -175,20 +175,20 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
   void _showImageOptions(BuildContext context, String? url, bool isBanner, bool hasControl) {
     if (url == null && !hasControl) return;
-    
+
     // LOCALIZATION inside modal
     var t = AppLocalizations.of(context)!;
-    
+
     showModalBottomSheet(context: context, shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))), builder: (ctx) {
       return SafeArea(child: Wrap(children: [
         if (url != null) ListTile(
-          leading: Icon(Icons.visibility_outlined, color: SisapaTheme.blue), 
-          title: Text(isBanner ? t.translate('profile_view_banner') : t.translate('profile_view_photo')), 
+          leading: Icon(Icons.visibility_outlined, color: SisapaTheme.blue),
+          title: Text(isBanner ? t.translate('profile_view_banner') : t.translate('profile_view_photo')),
           onTap: () { Navigator.pop(ctx); _openFullImage(context, url, isBanner ? 'community_banner' : 'community_icon'); }
         ),
         if (hasControl) ListTile(
-          leading: Icon(Icons.photo_library_outlined, color: SisapaTheme.blue), 
-          title: Text(isBanner ? t.translate('profile_change_banner') : t.translate('profile_change_photo')), 
+          leading: Icon(Icons.photo_library_outlined, color: SisapaTheme.blue),
+          title: Text(isBanner ? t.translate('profile_change_banner') : t.translate('profile_change_photo')),
           onTap: () { Navigator.pop(ctx); _pickAndUploadImage(isBanner: isBanner); }
         ),
       ]));
@@ -197,7 +197,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
   Future<void> _pickAndUploadImage({required bool isBanner}) async {
     var t = AppLocalizations.of(context)!;
-    
+
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile == null) return;
@@ -223,10 +223,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
-    
+
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('communities').doc(widget.communityId).snapshots(),
       builder: (context, snapshot) {
@@ -315,8 +315,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               ElevatedButton(onPressed: () => _handleFollowAction(isFollower, t), style: ElevatedButton.styleFrom(backgroundColor: isFollower ? theme.cardColor : SisapaTheme.blue, foregroundColor: isFollower ? theme.textTheme.bodyLarge?.color : Colors.white, elevation: 0, side: isFollower ? BorderSide(color: theme.dividerColor) : null, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(isFollower ? t.translate('community_following') : t.translate('community_follow')))
                             else
                               ElevatedButton.icon(
-                                onPressed: () => Navigator.push(context, _createSlideUpRoute(CreatePostScreen(initialData: {'communityId': widget.communityId, 'communityName': name, 'communityIcon': avatarUrl}))), 
-                                icon: Icon(Icons.campaign, size: 18), 
+                                onPressed: () => Navigator.push(context, _createSlideUpRoute(CreatePostScreen(initialData: {'communityId': widget.communityId, 'communityName': name, 'communityIcon': avatarUrl}))),
+                                icon: Icon(Icons.campaign, size: 18),
                                 label: Text(t.translate('post_create_new')), // "Buat Postingan Baru"
                                 style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
                               ),
@@ -330,7 +330,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 ),
               ];
             },
-            body: _isLoadingPosts 
+            body: _isLoadingPosts
               ? Center(child: CircularProgressIndicator())
               : _posts.isEmpty
                 ? Center(child: Padding(padding: EdgeInsets.only(top: 40), child: Text(t.translate('community_no_broadcasts'), style: TextStyle(color: Colors.grey)))) // "No recent broadcasts."
@@ -345,12 +345,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       }
                       final post = _posts[index];
                       final pData = post.data() as Map<String, dynamic>;
-                      
+
                       // OPTIMASI: Pass isCommunityAdmin dan blockedUserIds
                       return BlogPostCard(
-                        postId: post.id, 
-                        postData: pData, 
-                        isOwner: hasFullControl || pData['userId'] == user?.uid, 
+                        postId: post.id,
+                        postData: pData,
+                        isOwner: hasFullControl || pData['userId'] == user?.uid,
                         heroContextId: 'community_${widget.communityId}',
                         isCommunityAdmin: isAdmin || isOwner,
                         blockedUserIds: _blockedUserIds,

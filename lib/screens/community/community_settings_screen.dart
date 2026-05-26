@@ -1,14 +1,14 @@
-import 'dart:io'; 
-import 'dart:math'; 
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:image_picker/image_picker.dart'; 
-import 'package:image_cropper/image_cropper.dart'; 
-import 'package:flutter_colorpicker/flutter_colorpicker.dart'; 
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../services/overlay_service.dart';
-import '../../services/cloudinary_service.dart'; 
+import '../../services/cloudinary_service.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
@@ -34,10 +34,10 @@ class CommunitySettingsScreen extends StatefulWidget {
 class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with SingleTickerProviderStateMixin {
   final CloudinaryService _cloudinaryService = CloudinaryService();
   late TabController _tabController;
-  
+
   late TextEditingController _nameController;
   late TextEditingController _descController;
-  
+
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
@@ -49,8 +49,8 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); 
-    
+    _tabController = TabController(length: 2, vsync: this);
+
     _allowMemberPosts = widget.communityData['allowMemberPosts'] ?? false;
     _nameController = TextEditingController(text: widget.communityData['name'] ?? '');
     _descController = TextEditingController(text: widget.communityData['description'] ?? '');
@@ -94,7 +94,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
         'allowMemberPosts': value
       });
     } catch(e) {
-      setState(() => _allowMemberPosts = !value); 
+      setState(() => _allowMemberPosts = !value);
     }
   }
 
@@ -107,7 +107,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: pickedFile.path,
         compressQuality: 70,
-        aspectRatio: isBanner 
+        aspectRatio: isBanner
             ? CropAspectRatio(ratioX: 3, ratioY: 1)
             : CropAspectRatio(ratioX: 1, ratioY: 1),
         uiSettings: [
@@ -127,10 +127,10 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
       final String? downloadUrl = await _cloudinaryService.uploadImage(File(croppedFile.path));
 
       if (downloadUrl != null) {
-        final Map<String, dynamic> update = isBanner 
-            ? {'bannerImageUrl': downloadUrl} 
+        final Map<String, dynamic> update = isBanner
+            ? {'bannerImageUrl': downloadUrl}
             : {'imageUrl': downloadUrl};
-            
+
         await FirebaseFirestore.instance.collection('communities').doc(widget.communityId).update(update);
         if (mounted) OverlayService().showTopNotification(context, "Updated successfully!", Icons.check_circle, (){}, color: Colors.green);
       }
@@ -181,7 +181,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     final docRef = FirebaseFirestore.instance.collection('communities').doc(widget.communityId);
     try {
       final batch = FirebaseFirestore.instance.batch();
-      
+
       batch.update(docRef, {'admins': FieldValue.arrayRemove([targetUid])});
       batch.update(docRef, {'editors': FieldValue.arrayRemove([targetUid])});
       batch.update(docRef, {'moderators': FieldValue.arrayRemove([targetUid])});
@@ -368,7 +368,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
         stream: FirebaseFirestore.instance.collection('communities').doc(widget.communityId).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-          
+
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final String ownerId = data['ownerId'];
           final String imageUrl = data['imageUrl'] ?? '';
@@ -380,7 +380,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
           final List editors = data['editors'] ?? [];
           final List moderators = data['moderators'] ?? [];
           final Map<String, dynamic> customRoles = data['adminRoles'] ?? {};
-          
+
           allUserIds.addAll(List<String>.from(followers));
           allUserIds.addAll(List<String>.from(admins));
           allUserIds.addAll(List<String>.from(editors));
@@ -402,7 +402,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                         height: 120,
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey[800] : Colors.grey[300],
-                          image: bannerUrl.isNotEmpty 
+                          image: bannerUrl.isNotEmpty
                               ? DecorationImage(image: CachedNetworkImageProvider(bannerUrl), fit: BoxFit.cover)
                               : null,
                         ),
@@ -411,7 +411,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                             : null,
                       ),
                     ),
-                    
+
                     Positioned(
                       bottom: 0,
                       left: 20,
@@ -440,7 +440,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                 unselectedLabelColor: Colors.grey,
                 tabs: const [Tab(text: "General"), Tab(text: "Members & Roles")],
               ),
-              
+
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -458,9 +458,9 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                             prefixIcon: Icon(Icons.badge_outlined),
                           ),
                         ),
-                        
+
                         SizedBox(height: 16),
-                        
+
                         Text("Description", style: TextStyle(fontWeight: FontWeight.bold, color: theme.hintColor)),
                         SizedBox(height: 8),
                         TextField(
@@ -485,12 +485,12 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: _isSavingInfo 
-                                  ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                              child: _isSavingInfo
+                                  ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                   : Text("Save Changes"),
                             ),
                           ),
-                        
+
                         SizedBox(height: 24),
                         Divider(),
 
@@ -501,9 +501,9 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                           onChanged: (widget.isOwner || widget.isAdmin) ? _updatePermission : null,
                           contentPadding: EdgeInsets.zero,
                         ),
-                        
+
                         Divider(),
-                        
+
                         if (widget.isOwner)
                           ListTile(
                             leading: Icon(Icons.delete_forever, color: Colors.red),
@@ -514,7 +514,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                           )
                       ],
                     ),
-                    
+
                     // TAB 2: ROLES
                     Column(
                       children: [
@@ -533,8 +533,8 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                         ),
                         Expanded(
                           child: _buildMemberList(
-                            allUserIds.toList(), 
-                            ownerId, admins, editors, moderators, 
+                            allUserIds.toList(),
+                            ownerId, admins, editors, moderators,
                             customRoles
                           ),
                         ),
@@ -551,11 +551,11 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
   }
 
   Widget _buildMemberList(
-    List<String> userIds, 
-    String ownerId, 
-    List admins, 
-    List editors, 
-    List moderators, 
+    List<String> userIds,
+    String ownerId,
+    List admins,
+    List editors,
+    List moderators,
     Map<String, dynamic> customRoles
   ) {
     if (userIds.isEmpty) return Center(child: Text("No members found."));
@@ -566,12 +566,12 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
         final userId = userIds[index];
         final currentUid = FirebaseAuth.instance.currentUser?.uid;
         final isMe = userId == currentUid;
-        
+
         return FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return SizedBox.shrink();
-            
+
             final userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
             final String name = userData['name'] ?? 'Unknown';
             final String email = userData['email'] ?? '';
@@ -585,28 +585,28 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
             Color defaultColor = Colors.grey;
             bool hasPrivilege = false;
 
-            if (userId == ownerId) { 
-              defaultRole = "OWNER"; 
-              defaultColor = Colors.red; 
+            if (userId == ownerId) {
+              defaultRole = "OWNER";
+              defaultColor = Colors.red;
               hasPrivilege = true;
-            } else if (admins.contains(userId)) { 
-              defaultRole = "Admin"; 
-              defaultColor = Colors.blue; 
+            } else if (admins.contains(userId)) {
+              defaultRole = "Admin";
+              defaultColor = Colors.blue;
               hasPrivilege = true;
-            } else if (editors.contains(userId)) { 
-              defaultRole = "Editor"; 
-              defaultColor = Colors.green; 
+            } else if (editors.contains(userId)) {
+              defaultRole = "Editor";
+              defaultColor = Colors.green;
               hasPrivilege = true;
-            } else if (moderators.contains(userId)) { 
-              defaultRole = "Moderator"; 
-              defaultColor = Colors.orange; 
+            } else if (moderators.contains(userId)) {
+              defaultRole = "Moderator";
+              defaultColor = Colors.orange;
               hasPrivilege = true;
             }
 
             final roleOverride = customRoles[userId] ?? {};
             final String displayRole = roleOverride['title'] ?? defaultRole;
-            final Color displayColor = roleOverride['color'] != null 
-                ? AvatarHelper.getColor(roleOverride['color']) 
+            final Color displayColor = roleOverride['color'] != null
+                ? AvatarHelper.getColor(roleOverride['color'])
                 : defaultColor;
 
             final bool canManageUser = widget.isOwner || (widget.isAdmin && userId != ownerId);
@@ -626,12 +626,12 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                   border: Border.all(color: displayColor.withOpacity(0.5))
                 ),
                 child: Text(
-                  displayRole, 
+                  displayRole,
                   style: TextStyle(color: displayColor, fontWeight: FontWeight.bold, fontSize: 10)
                 ),
               ),
-              
-              trailing: (isMe || canManageUser) 
+
+              trailing: (isMe || canManageUser)
                 ? PopupMenuButton<String>(
                     onSelected: (val) {
                       if (val == 'edit_appearance') {
@@ -642,18 +642,18 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                     },
                     itemBuilder: (context) => [
                       // Allow me to edit myself if I have a role, OR allow manager to edit others
-                      if ((isMe && hasPrivilege) || canManageUser) 
+                      if ((isMe && hasPrivilege) || canManageUser)
                         PopupMenuItem(
-                          value: 'edit_appearance', 
+                          value: 'edit_appearance',
                           child: Row(
                             children: const [
-                              Icon(Icons.palette_outlined, size: 20, color: Colors.purple), 
-                              SizedBox(width: 8), 
+                              Icon(Icons.palette_outlined, size: 20, color: Colors.purple),
+                              SizedBox(width: 8),
                               Text("Customize Role")
                             ],
                           )
                         ),
-                      
+
                       if ((isMe && hasPrivilege && canManageUser) || canManageUser) PopupMenuDivider(),
 
                       // Only managers can change actual permissions
@@ -666,7 +666,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                         PopupMenuItem(value: 'kick', child: Text("Kick User", style: TextStyle(color: Colors.red))),
                       ]
                     ],
-                  ) 
+                  )
                 : null,
             );
           },

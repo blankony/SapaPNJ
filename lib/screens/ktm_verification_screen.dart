@@ -44,7 +44,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
     try {
       // 1. Upload Image
       final String? url = await _cloudinaryService.uploadImage(_ktmImage!);
-      
+
       if (url != null && user != null) {
         // 2. Update Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
@@ -88,7 +88,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
               style: TextStyle(color: Colors.grey, height: 1.5),
             ),
             const SizedBox(height: 32),
-            
+
             // Image Picker Area
             GestureDetector(
               onTap: () => _pickImage(ImageSource.gallery),
@@ -99,11 +99,11 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Theme.of(context).dividerColor),
-                  image: _ktmImage != null 
+                  image: _ktmImage != null
                     ? DecorationImage(image: FileImage(_ktmImage!), fit: BoxFit.cover)
                     : null
                 ),
-                child: _ktmImage == null 
+                child: _ktmImage == null
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
@@ -115,7 +115,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                   : null,
               ),
             ),
-            
+
             if (_ktmImage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
@@ -129,7 +129,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
               ),
 
             const SizedBox(height: 40),
-            
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -140,7 +140,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
-                child: _isUploading 
+                child: _isUploading
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text("Submit Verification"),
               ),

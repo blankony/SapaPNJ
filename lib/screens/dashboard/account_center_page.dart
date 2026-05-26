@@ -1,4 +1,4 @@
-import 'dart:ui'; 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,11 +7,10 @@ import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../edit_profile_screen.dart';
 import '../change_password_screen.dart';
-import '../../auth_gate.dart'; 
+import '../../auth_gate.dart';
 import '../../services/overlay_service.dart';
-import '../ktm_verification_screen.dart'; 
+import '../ktm_verification_screen.dart';
 import '../../services/app_localizations.dart'; // REQUIRED IMPORT
-
 
 class AccountCenterPage extends StatefulWidget {
   const AccountCenterPage({super.key});
@@ -21,7 +20,7 @@ class AccountCenterPage extends StatefulWidget {
 }
 
 class _AccountCenterPageState extends State<AccountCenterPage> {
-  bool _isDeleting = false; 
+  bool _isDeleting = false;
   User? _currentUser;
 
   @override
@@ -46,12 +45,12 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(1.0, 0.0); 
-        const end = Offset.zero;        
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
-        
+
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var offsetAnimation = animation.drive(tween); 
+        var offsetAnimation = animation.drive(tween);
 
         return SlideTransition(position: offsetAnimation, child: child);
       },
@@ -108,14 +107,14 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                           email: user.email!,
                           password: passwordController.text,
                         );
-                        
+
                         await user.reauthenticateWithCredential(credential);
-                        
+
                         if (builderContext.mounted) {
-                          Navigator.of(builderContext).pop(); 
-                          
+                          Navigator.of(builderContext).pop();
+
                           if (mounted) {
-                            _showFinalDeleteConfirmation(); 
+                            _showFinalDeleteConfirmation();
                           }
                         }
                       }
@@ -143,8 +142,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     backgroundColor: SisapaTheme.blue,
                     foregroundColor: Colors.white,
                   ),
-                  child: isVerifying 
-                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                  child: isVerifying
+                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : Text(t.translate('account_verify_btn')),
                 ),
               ],
@@ -196,7 +195,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
         int batchCount = 0;
 
         final postsQuery = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: uid).get();
-        
+
         for (var doc in postsQuery.docs) {
           batch.delete(doc.reference);
           batchCount++;
@@ -210,18 +209,18 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
 
         batch.delete(FirebaseFirestore.instance.collection('users').doc(uid));
         await batch.commit();
-        
+
         await user.delete();
-        
+
         if (mounted) {
           OverlayService().showTopNotification(
-            context, 
-            t.translate('account_deleted'), 
-            Icons.delete_forever, 
+            context,
+            t.translate('account_deleted'),
+            Icons.delete_forever,
             (){},
             color: Colors.grey
           );
-          
+
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const AuthGate()),
             (route) => false,
@@ -231,13 +230,13 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _isDeleting = false; 
+          _isDeleting = false;
         });
-        
+
         OverlayService().showTopNotification(
-          context, 
-          "${t.translate('account_delete_fail')}: $e", 
-          Icons.error, 
+          context,
+          "${t.translate('account_delete_fail')}: $e",
+          Icons.error,
           (){},
           color: Colors.red
         );
@@ -251,7 +250,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
     final user = FirebaseAuth.instance.currentUser; // Use fresh instance
     final bool isEmailVerified = user?.emailVerified ?? false;
     var t = AppLocalizations.of(context)!;
-    
+
     return Stack(
       children: [
         Scaffold(
@@ -277,14 +276,14 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     shape: BoxShape.circle
                   ),
                   child: Icon(
-                    isEmailVerified ? Icons.email : Icons.mark_email_unread, 
+                    isEmailVerified ? Icons.email : Icons.mark_email_unread,
                     color: isEmailVerified ? Colors.green : Colors.orange,
                     size: 20,
                   ),
                 ),
                 title: Text(t.translate('profile_verify_email')),
                 subtitle: Text(isEmailVerified ? t.translate('account_verified') : t.translate('account_action_req')),
-                trailing: isEmailVerified 
+                trailing: isEmailVerified
                   ? Icon(Icons.check_circle, color: Colors.green)
                   : TextButton(
                       child: Text(t.translate('general_verify')),
@@ -348,8 +347,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                       title: Text(title),
                       subtitle: Text(subtitle),
                       trailing: trailing,
-                      onTap: (status == 'verified' || status == 'pending') 
-                        ? null 
+                      onTap: (status == 'verified' || status == 'pending')
+                        ? null
                         : () => Navigator.push(context, MaterialPageRoute(builder: (_) => KtmVerificationScreen())),
                     );
                   },
@@ -364,7 +363,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                   style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold),
                 ),
               ),
-              
+
               ListTile(
                 leading: Icon(Icons.edit_outlined),
                 title: Text(t.translate('profile_edit')),
@@ -374,9 +373,9 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                   Navigator.of(context).push(_createSlideRightRoute(EditProfileScreen()));
                 },
               ),
-              
+
               _PrivacySwitchTile(),
-              
+
               ListTile(
                 leading: Icon(Icons.lock_outline),
                 title: Text(t.translate('edit_change_password')),
@@ -385,9 +384,9 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                   Navigator.of(context).push(_createSlideRightRoute(ChangePasswordScreen()));
                 },
               ),
-              
+
               Divider(height: 32),
-              
+
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
@@ -428,7 +427,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
             ],
           ),
         ),
-        
+
         if (_isDeleting)
           Positioned.fill(
             child: Stack(
@@ -458,8 +457,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
-                          width: 50, 
-                          height: 50, 
+                          width: 50,
+                          height: 50,
                           child: CircularProgressIndicator(strokeWidth: 4, color: SisapaTheme.blue)
                         ),
                         SizedBox(height: 24),
@@ -495,7 +494,7 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
 
   Future<void> _togglePrivacy(BuildContext context, bool isCurrentlyPrivate) async {
     var t = AppLocalizations.of(context)!;
-    
+
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -504,15 +503,15 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isCurrentlyPrivate 
-              ? t.translate('account_public_mean') 
+            Text(isCurrentlyPrivate
+              ? t.translate('account_public_mean')
               : t.translate('account_private_mean')),
             SizedBox(height: 8),
-            _buildBulletPoint(isCurrentlyPrivate 
-              ? t.translate('account_public_bullet1') 
+            _buildBulletPoint(isCurrentlyPrivate
+              ? t.translate('account_public_bullet1')
               : t.translate('account_private_bullet1')),
-            _buildBulletPoint(isCurrentlyPrivate 
-              ? t.translate('account_public_bullet2') 
+            _buildBulletPoint(isCurrentlyPrivate
+              ? t.translate('account_public_bullet2')
               : t.translate('account_private_bullet2')),
             SizedBox(height: 8),
             Text(
@@ -539,7 +538,7 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         setState(() => _isUpdating = true);
-        
+
         try {
           await FirebaseFirestore.instance
               .collection('users')
@@ -557,7 +556,7 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
           int batchCount = 0;
           for (var doc in postsQuery.docs) {
             final data = doc.data();
-            final currentVis = data['visibility'] ?? 'public'; 
+            final currentVis = data['visibility'] ?? 'public';
 
             if (currentVis != 'private') {
               if (currentVis != targetNewVisibility) {
@@ -565,21 +564,21 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
                 batchCount++;
               }
             }
-            
+
             if (batchCount >= 450) {
               await batch.commit();
             }
           }
-          
+
           if (batchCount > 0) {
             await batch.commit();
           }
 
           if (context.mounted) {
             OverlayService().showTopNotification(
-              context, 
-              !isCurrentlyPrivate ? t.translate('account_privacy_now_private') : t.translate('account_privacy_now_public'), 
-              !isCurrentlyPrivate ? Icons.lock : Icons.public, 
+              context,
+              !isCurrentlyPrivate ? t.translate('account_privacy_now_private') : t.translate('account_privacy_now_public'),
+              !isCurrentlyPrivate ? Icons.lock : Icons.public,
               (){}
             );
           }
@@ -619,15 +618,15 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
       stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return SizedBox.shrink();
-        
+
         final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
         final bool isPrivate = data['isPrivate'] ?? false;
 
         return SwitchListTile(
-          secondary: _isUpdating 
+          secondary: _isUpdating
             ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
             : Icon(
-                isPrivate ? Icons.lock : Icons.lock_open, 
+                isPrivate ? Icons.lock : Icons.lock_open,
                 color: Theme.of(context).primaryColor
               ),
           title: Text(t.translate('account_private_title')),

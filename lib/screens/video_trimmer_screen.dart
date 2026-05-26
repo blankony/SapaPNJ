@@ -10,8 +10,8 @@ class VideoTrimmerScreen extends StatefulWidget {
   final int maxDurationSeconds; // Limit in seconds (e.g. 600 for 10 mins)
 
   const VideoTrimmerScreen({
-    super.key, 
-    required this.file, 
+    super.key,
+    required this.file,
     this.maxDurationSeconds = 600 // Default 10 mins
   });
 
@@ -38,23 +38,23 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
   Future<void> _initializeVideo() async {
     _videoController = VideoPlayerController.file(widget.file);
     await _videoController.initialize();
-    
+
     setState(() {
       _isInitialized = true;
       _totalDuration = _videoController.value.duration.inMilliseconds.toDouble();
       _endValue = _totalDuration;
-      
+
       // Pre-trim to max limit if video is too long
       final maxMs = widget.maxDurationSeconds * 1000.0;
       if (_totalDuration > maxMs) {
-        _endValue = maxMs; 
+        _endValue = maxMs;
       }
-      
+
       // Auto play loop selection
       _videoController.setLooping(true);
       _playTrimmedSection();
     });
-    
+
     // Listen to enforce trim boundaries during playback
     _videoController.addListener(_enforceTrimPlayback);
   }
@@ -66,7 +66,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
       _videoController.seekTo(Duration(milliseconds: _startValue.toInt()));
     }
   }
-  
+
   void _playTrimmedSection() {
     _videoController.seekTo(Duration(milliseconds: _startValue.toInt()));
     _videoController.play();
@@ -85,14 +85,14 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
     // Since we are avoiding heavy dependencies, we will return the trim metadata
     // (start/end times) so the backend or a separate process can handle it,
     // OR we just upload the full file but treat it as trimmed in the UI logic.
-    
+
     // For this project scope: Return original file but with duration metadata.
     Navigator.of(context).pop({
       'file': widget.file,
       'startTime': _startValue,
       'endTime': _endValue,
       'duration': _endValue - _startValue
-    }); 
+    });
   }
 
   String _formatDuration(double ms) {
@@ -105,7 +105,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Trim Video'),
@@ -158,9 +158,9 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
                     ),
                   ],
                 ),
-                
+
                 SizedBox(height: 8),
-                
+
                 // Time Info
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -187,7 +187,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
                     _videoController.seekTo(Duration(milliseconds: _startValue.toInt()));
                   },
                 ),
-                
+
                 SizedBox(height: 8),
                 Text(
                   "Drag sliders to trim. Max length: ${widget.maxDurationSeconds ~/ 60} min.",

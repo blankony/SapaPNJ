@@ -24,31 +24,31 @@ class SisapaTheme {
     ),
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: Color(0xFF15202B), 
-    cardColor: Color(0xFF15202B), 
+    scaffoldBackgroundColor: Color(0xFF15202B),
+    cardColor: Color(0xFF15202B),
     primaryColor: blue,
     hintColor: darkGrey,
-    dividerColor: Color(0xFF38444D), 
-    
+    dividerColor: Color(0xFF38444D),
+
     appBarTheme: AppBarTheme(
-      color: Color(0xFF15202B), 
+      color: Color(0xFF15202B),
       elevation: 0,
-      iconTheme: IconThemeData(color: blue), 
+      iconTheme: IconThemeData(color: blue),
       titleTextStyle: TextStyle(color: white, fontSize: 20, fontWeight: FontWeight.bold),
     ),
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Color(0xFF192734), 
+      fillColor: Color(0xFF192734),
       hintStyle: TextStyle(color: darkGrey),
       labelStyle: TextStyle(color: darkGrey),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none, 
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: blue, width: 2), 
+        borderSide: BorderSide(color: blue, width: 2),
       ),
     ),
 
@@ -95,22 +95,22 @@ class SisapaTheme {
     ),
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: SisapaTheme.white, 
-    cardColor: SisapaTheme.white, 
+    scaffoldBackgroundColor: SisapaTheme.white,
+    cardColor: SisapaTheme.white,
     primaryColor: blue,
     hintColor: darkGrey,
-    dividerColor: extraLightGrey, 
-    
+    dividerColor: extraLightGrey,
+
     appBarTheme: AppBarTheme(
-      color: SisapaTheme.white, 
+      color: SisapaTheme.white,
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
-      titleTextStyle: TextStyle(color: black, fontSize: 20, fontWeight: FontWeight.bold), 
+      titleTextStyle: TextStyle(color: black, fontSize: 20, fontWeight: FontWeight.bold),
     ),
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: extraLightGrey, 
+      fillColor: extraLightGrey,
       hintStyle: TextStyle(color: darkGrey),
       labelStyle: TextStyle(color: darkGrey),
       border: OutlineInputBorder(
@@ -138,15 +138,15 @@ class SisapaTheme {
     ),
 
     iconTheme: IconThemeData(
-      color: darkGrey, 
+      color: darkGrey,
     ),
 
     textTheme: TextTheme(
-      bodyLarge: TextStyle(color: black), 
-      bodyMedium: TextStyle(color: black), 
+      bodyLarge: TextStyle(color: black),
+      bodyMedium: TextStyle(color: black),
       titleMedium: TextStyle(color: black, fontWeight: FontWeight.bold),
       titleSmall: TextStyle(color: darkGrey),
-      headlineMedium: TextStyle(color: black, fontWeight: FontWeight.bold), 
+      headlineMedium: TextStyle(color: black, fontWeight: FontWeight.bold),
     ),
   );
 }

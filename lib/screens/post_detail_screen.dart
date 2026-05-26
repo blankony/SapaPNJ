@@ -1,34 +1,34 @@
-import 'dart:async'; 
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; 
-import 'package:cached_network_image/cached_network_image.dart'; 
-import 'package:video_player/video_player.dart'; 
-import '../widgets/blog_post_card.dart'; 
-import '../widgets/comment_tile.dart'; 
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
+import '../widgets/blog_post_card.dart';
+import '../widgets/comment_tile.dart';
 import '../widgets/common_error_widget.dart'; // REQUIRED
-import '../services/prediction_service.dart'; 
-import '../services/cloudinary_service.dart'; 
-import '../main.dart'; 
+import '../services/prediction_service.dart';
+import '../services/cloudinary_service.dart';
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 
-final CloudinaryService _cloudinaryService = CloudinaryService(); 
+final CloudinaryService _cloudinaryService = CloudinaryService();
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
   final Map<String, dynamic>? initialPostData;
   final String heroContextId;
-  final VideoPlayerController? preloadedController; 
+  final VideoPlayerController? preloadedController;
 
   const PostDetailScreen({
     super.key,
     required this.postId,
     this.initialPostData,
-    this.heroContextId = 'feed', 
+    this.heroContextId = 'feed',
     this.preloadedController,
   });
 
@@ -50,7 +50,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void _onCommentChanged(String text) {
     setState(() { _predictedText = null; });
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () async { 
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (text.trim().isEmpty) return;
       final suggestion = await _predictionService.getLocalPrediction(text);
       if (mounted && suggestion != null && suggestion.isNotEmpty) {
@@ -141,7 +141,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     try {
       final writeBatch = FirebaseFirestore.instance.batch();
-      final commentDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').doc(); 
+      final commentDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').doc();
       writeBatch.set(commentDocRef, commentData);
       final postDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
       writeBatch.update(postDocRef, {'commentCount': FieldValue.increment(1)});
@@ -152,12 +152,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         String commentSnippet = commentData['text'] as String;
         if (commentSnippet.isEmpty) commentSnippet = "Sent a ${_mediaType ?? 'media'} attachment";
         if (commentSnippet.length > 50) commentSnippet = commentSnippet.substring(0, 50) + '...';
-        
+
         FirebaseFirestore.instance.collection('users').doc(postOwnerId).collection('notifications').add({
-          'type': 'comment', 
+          'type': 'comment',
           'senderId': _currentUser!.uid,
           'postId': widget.postId,
-          'postTextSnippet': commentSnippet, 
+          'postTextSnippet': commentSnippet,
           'timestamp': FieldValue.serverTimestamp(),
           'isRead': false,
         });
@@ -166,13 +166,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (mounted) {
         _commentController.clear();
         _clearMedia();
-        setState(() { _predictedText = null; _isSending = false; }); 
+        setState(() { _predictedText = null; _isSending = false; });
         FocusScope.of(context).unfocus();
       }
     } catch (e) {
       if (mounted) {
         OverlayService().showTopNotification(context, "Failed to reply", Icons.error, (){}, color: Colors.red);
-        setState(() { _isSending = false; }); 
+        setState(() { _isSending = false; });
       }
     }
   }
@@ -187,7 +187,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Post")), 
+      appBar: AppBar(title: Text("Post")),
       body: Column(
         children: [
           Expanded(
@@ -210,7 +210,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       if (!snapshot.hasData && widget.initialPostData == null) {
                         return Center(child: Padding(padding: const EdgeInsets.all(24.0), child: CircularProgressIndicator()));
                       }
-                      
+
                       Map<String, dynamic>? data = snapshot.hasData
                           ? snapshot.data!.data() as Map<String, dynamic>?
                           : widget.initialPostData;
@@ -218,15 +218,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       if (data == null) {
                          return Center(child: Padding(padding: const EdgeInsets.all(24.0), child: Text("Post not found or has been deleted.")));
                       }
-                      
+
                       return BlogPostCard(
                         postId: widget.postId,
                         postData: data,
                         isOwner: data['userId'] == _currentUser?.uid,
-                        isClickable: false, 
-                        isDetailView: true, 
+                        isClickable: false,
+                        isDetailView: true,
                         heroContextId: widget.heroContextId,
-                        preloadedController: widget.preloadedController, 
+                        preloadedController: widget.preloadedController,
                       );
                     },
                   ),
@@ -263,9 +263,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             return CommentTile(
               commentId: doc.id,
               commentData: data,
-              postId: widget.postId, 
+              postId: widget.postId,
               isOwner: data['userId'] == _currentUser?.uid,
-              heroContextId: '${widget.heroContextId}_comments', 
+              heroContextId: '${widget.heroContextId}_comments',
               isLast: isLast,
             );
           },
@@ -312,7 +312,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: _mediaType == 'video' 
+                    child: _mediaType == 'video'
                         ? Container(color: Colors.black, child: Center(child: Icon(Icons.videocam, color: Colors.white)))
                         : Image.file(_selectedMediaFile!, fit: BoxFit.cover, width: 100, height: 100),
                   ),
@@ -331,14 +331,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   decoration: BoxDecoration(color: theme.brightness == Brightness.dark ? SisapaTheme.darkGrey.withOpacity(0.2) : SisapaTheme.extraLightGrey, borderRadius: BorderRadius.circular(24)),
                   child: TextField(
                     controller: _commentController,
-                    onChanged: _onCommentChanged, 
+                    onChanged: _onCommentChanged,
                     decoration: InputDecoration(hintText: "Post your reply", hintStyle: TextStyle(color: theme.hintColor), filled: false, border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4)),
-                    maxLines: 4, minLines: 1, 
+                    maxLines: 4, minLines: 1,
                   ),
                 ),
               ),
               SizedBox(width: 8),
-              _isSending 
+              _isSending
                 ? Padding(padding: const EdgeInsets.all(10.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
                 : Container(
                     decoration: BoxDecoration(color: SisapaTheme.blue, shape: BoxShape.circle),

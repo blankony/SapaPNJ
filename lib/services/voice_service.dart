@@ -53,17 +53,17 @@ class VoiceService {
         }
       },
       // PERBAIKAN: Gunakan 'id-ID' (dash) bukan 'id_ID' (underscore)
-      localeId: 'id-ID', 
-      
+      localeId: 'id-ID',
+
       listenOptions: stt.SpeechListenOptions(
-        onDevice: false, 
+        onDevice: false,
         listenMode: stt.ListenMode.dictation,
         cancelOnError: true, // Ubah ke true agar error mereset state
         partialResults: true,
         autoPunctuation: false,
       ),
-      listenFor: const Duration(seconds: 30), 
-      pauseFor: const Duration(seconds: 5),  
+      listenFor: const Duration(seconds: 30),
+      pauseFor: const Duration(seconds: 5),
     );
   }
 

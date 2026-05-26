@@ -1,28 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
-import '../../main.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
-import 'about_page.dart'; 
+import 'about_page.dart';
 import '../edit_profile_screen.dart';
-import 'account_center_page.dart'; 
-import '../blocked_users_page.dart'; 
-import '../../services/notification_prefs_service.dart'; 
+import 'account_center_page.dart';
+import '../blocked_users_page.dart';
+import '../../services/notification_prefs_service.dart';
 import '../../services/overlay_service.dart';
-import '../../services/app_localizations.dart'; 
-
+import '../../services/app_localizations.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-  
+
   Route _createSlideRightRoute(Widget page) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(1.0, 0.0); 
-        const end = Offset.zero;        
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
 
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -39,7 +38,7 @@ class SettingsPage extends StatelessWidget {
   void _goToAboutPage(BuildContext context) {
     Navigator.of(context).push(_createSlideRightRoute(AboutPage()));
   }
-  
+
   void _goToAccountCenter(BuildContext context) {
     Navigator.of(context).push(_createSlideRightRoute(AccountCenterPage()));
   }
@@ -52,10 +51,10 @@ class SettingsPage extends StatelessWidget {
   void _changeLanguage(BuildContext context, String code) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', code);
-    
-    languageNotifier.value = Locale(code); 
-    
-    Navigator.pop(context); 
+
+    languageNotifier.value = Locale(code);
+
+    Navigator.pop(context);
   }
 
   void _showLanguageDialog(BuildContext context) {
@@ -98,7 +97,7 @@ class SettingsPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(t.translate('settings_logout')), // "Log Out"
-        content: Text(t.translate('settings_logout_confirm')), 
+        content: Text(t.translate('settings_logout_confirm')),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(t.translate('general_cancel'))),
           TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(t.translate('settings_logout'), style: TextStyle(color: Colors.red))),
@@ -129,24 +128,24 @@ class SettingsPage extends StatelessWidget {
             context: context,
             icon: Icons.account_circle_outlined,
             title: t.translate('settings_account'), // "Account Center"
-            subtitle: t.translate('settings_account_desc'), 
+            subtitle: t.translate('settings_account_desc'),
             onTap: () => _goToAccountCenter(context),
           ),
-          
+
           _buildSettingsTile(
             context: context,
             icon: Icons.block,
             title: t.translate('settings_blocked'), // "Blocked Accounts"
             onTap: () => _goToBlockedUsers(context),
           ),
-          
+
           _buildSettingsTile(
             context: context,
             icon: Icons.info_outline,
             title: t.translate('settings_about'), // "About Us"
             onTap: () => _goToAboutPage(context),
           ),
-          
+
           _OptimizedThemeTile(),
 
           // --- LANGUAGE TILE ---
@@ -171,7 +170,7 @@ class SettingsPage extends StatelessWidget {
               );
             },
           ),
-          
+
           Divider(),
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -182,7 +181,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          
+
           ValueListenableBuilder<bool>(
             valueListenable: notificationPrefs.allNotificationsEnabled,
             builder: (context, isEnabled, child) {
@@ -315,10 +314,10 @@ class _OptimizedThemeTileState extends State<_OptimizedThemeTile> {
   @override
   Widget build(BuildContext context) {
     var t = AppLocalizations.of(context)!;
-    final subtitleText = _isDark 
+    final subtitleText = _isDark
         ? t.translate('settings_theme_light') // "Switch to Light"
         : t.translate('settings_theme_dark'); // "Switch to Dark"
-    
+
     return ListTile(
       leading: Icon(
         _isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,

@@ -13,13 +13,13 @@ class AiPageEvent {
 // Event Bus Controller
 class AiPageEventBus {
   final _controller = StreamController<AiPageEvent>.broadcast();
-  
+
   Stream<AiPageEvent> get stream => _controller.stream;
-  
+
   void fire(AiPageEvent event) {
     _controller.sink.add(event);
   }
-  
+
   void dispose() {
     _controller.close();
   }

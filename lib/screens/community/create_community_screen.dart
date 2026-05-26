@@ -21,17 +21,17 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final CloudinaryService _cloudinaryService = CloudinaryService();
-  
+
   bool _isLoading = false;
   String _selectedCategory = 'casual';
-  File? _verificationDoc; 
-  
+  File? _verificationDoc;
+
   // NEW: Member Posting Permission
-  bool _allowMemberPosts = false; 
+  bool _allowMemberPosts = false;
 
   Future<void> _pickVerificationDoc() async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80); 
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (pickedFile != null) {
       setState(() {
         _verificationDoc = File(pickedFile.path);
@@ -52,10 +52,10 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
       OverlayService().showTopNotification(context, t.translate('comm_create_error_doc'), Icons.attach_file, (){}, color: Colors.red);
       return;
     }
-    
+
     setState(() => _isLoading = true);
     final user = FirebaseAuth.instance.currentUser;
-    
+
     try {
       String? docUrl;
       if (_verificationDoc != null) {
@@ -68,22 +68,22 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
         'name': _nameController.text.trim(),
         'description': _descController.text.trim(),
         'category': _selectedCategory,
-        'isVerified': isVerified, 
+        'isVerified': isVerified,
         'verificationDocUrl': docUrl,
         'allowMemberPosts': _allowMemberPosts, // Save Preference
-        
+
         'ownerId': user!.uid,
-        'admins': [], 
-        'editors': [], 
-        'moderators': [], 
-        'followers': [user.uid], 
+        'admins': [],
+        'editors': [],
+        'moderators': [],
+        'followers': [user.uid],
         'pendingFollowers': [],
-        
+
         'createdAt': FieldValue.serverTimestamp(),
-        'imageUrl': null, 
+        'imageUrl': null,
         'bannerImageUrl': null,
       });
-      
+
       if(mounted) {
         OverlayService().showTopNotification(context, t.translate('comm_create_success'), Icons.check_circle, (){}, color: Colors.green);
         Navigator.pop(context);
@@ -100,7 +100,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     final theme = Theme.of(context);
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
-    
+
     final bool isOfficial = _selectedCategory != 'casual';
 
     return Scaffold(
@@ -115,7 +115,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
             ),
             SizedBox(height: 24),
-            
+
             // TYPE SELECTION
             Text(t.translate('comm_type_label'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
@@ -135,7 +135,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
                 ),
               ),
             ),
-            
+
             // VERIFICATION UPLOAD
             if (isOfficial) ...[
               SizedBox(height: 24),
@@ -177,9 +177,9 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               maxLines: 3,
               decoration: InputDecoration(labelText: t.translate('comm_desc_label'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
             ),
-            
+
             SizedBox(height: 24),
-            
+
             // PERMISSIONS
             SwitchListTile(
               title: Text(t.translate('comm_allow_post')),
@@ -195,8 +195,8 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _create,
                 style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, padding: EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
-                child: _isLoading 
-                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                child: _isLoading
+                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : Text(isOfficial ? t.translate('comm_submit_verify') : t.translate('comm_create_btn')),
               ),
             )

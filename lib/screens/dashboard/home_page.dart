@@ -10,7 +10,6 @@ import '../../theme/avatar_helper.dart';
 import '../../services/prediction_service.dart';
 import '../../services/app_localizations.dart';
 
-
 class HomePage extends StatefulWidget {
   final ScrollController scrollController;
   final ScrollController recommendedScrollController;
@@ -27,14 +26,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final ScrollController _localScrollController = ScrollController(); 
+  final ScrollController _localScrollController = ScrollController();
   bool _isScrolled = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     _localScrollController.addListener(() {
       if (_localScrollController.hasClients) {
         bool scrolled = _localScrollController.offset > 0;
@@ -70,15 +69,15 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
             floating: true,
             snap: true,
             elevation: 0,
-            backgroundColor: Colors.transparent, 
-            automaticallyImplyLeading: false, 
+            backgroundColor: Colors.transparent,
+            automaticallyImplyLeading: false,
             toolbarHeight: 0,
             collapsedHeight: 0,
             expandedHeight: 0,
-            
+
             bottom: PreferredSize(
               preferredSize: Size.fromHeight(48),
-              child: ClipRRect( 
+              child: ClipRRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                   child: Container(
@@ -107,7 +106,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
           _PostFeedList(
             scrollController: widget.scrollController,
             feedType: 'recent',
-            refreshOffset: 60, 
+            refreshOffset: 60,
           ),
           _PostFeedList(
             scrollController: widget.recommendedScrollController,
@@ -132,7 +131,7 @@ class _PostFeedList extends StatefulWidget {
 }
 
 class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveClientMixin {
-  final PredictionService _aiService = PredictionService(); 
+  final PredictionService _aiService = PredictionService();
   late Stream<QuerySnapshot> _stream;
   String _refreshKey = '';
 
@@ -158,7 +157,7 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
     super.build(context);
     final user = FirebaseAuth.instance.currentUser;
     final bool isRec = widget.feedType == 'recommended';
-    
+
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
@@ -174,17 +173,17 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
           stream: _stream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator()); 
+              return Center(child: CircularProgressIndicator());
             }
-            
+
             if (snapshot.hasError) return CommonErrorWidget(message: t.translate('home_error_loading'));
 
             final allDocs = snapshot.data?.docs ?? [];
-            
+
             List<QueryDocumentSnapshot> docs = allDocs.where((doc) {
               final data = doc.data() as Map<String, dynamic>;
-              if (data['communityId'] != null) return false; 
-              
+              if (data['communityId'] != null) return false;
+
               final vis = data['visibility'] ?? 'public';
               if (vis == 'public') return true;
               if (vis == 'followers' && user != null) {
