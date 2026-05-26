@@ -1,4 +1,3 @@
-// ignore_for_file: prefer_const_constructors
 import 'dart:async'; 
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
