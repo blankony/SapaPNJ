@@ -7,7 +7,6 @@ import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart'; // Import Localization
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -55,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
     final t = AppLocalizations.of(context)!; //
 
     try {
-      await _auth.signInWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );

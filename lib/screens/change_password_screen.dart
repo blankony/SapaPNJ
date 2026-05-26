@@ -4,7 +4,6 @@ import '../main.dart'; // For theme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -32,7 +31,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     
     setState(() { _isLoading = true; _errorMessage = ''; });
 
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) {
       setState(() { _isLoading = false; _errorMessage = 'User not found.'; });
       return;

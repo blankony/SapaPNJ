@@ -12,8 +12,6 @@ import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class NotificationSheet extends StatefulWidget {
   final ScrollController scrollController;
@@ -24,7 +22,7 @@ class NotificationSheet extends StatefulWidget {
 }
 
 class _NotificationSheetState extends State<NotificationSheet> {
-  final User? _currentUser = _auth.currentUser;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -34,7 +32,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
 
   Future<void> _markNotificationsAsRead() async {
     if (_currentUser == null) return;
-    final notifQuery = _firestore
+    final notifQuery = FirebaseFirestore.instance
         .collection('users')
         .doc(_currentUser!.uid)
         .collection('notifications')
@@ -43,7 +41,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
     final notifSnapshot = await notifQuery.get();
     if (notifSnapshot.docs.isEmpty) return;
 
-    final batch = _firestore.batch();
+    final batch = FirebaseFirestore.instance.batch();
     for (final doc in notifSnapshot.docs) {
       batch.update(doc.reference, {'isRead': true});
     }
@@ -104,7 +102,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
 
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
+              stream: FirebaseFirestore.instance
                   .collection('users')
                   .doc(_currentUser!.uid)
                   .collection('notifications')
@@ -199,24 +197,24 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
 
   Future<void> _handleRequest(bool isAccepted) async {
     setState(() => _isProcessing = true);
-    final myUid = _auth.currentUser!.uid;
+    final myUid = FirebaseAuth.instance.currentUser!.uid;
     final senderId = widget.notificationData['senderId'];
     var t = AppLocalizations.of(context)!;
 
     try {
-      final batch = _firestore.batch();
+      final batch = FirebaseFirestore.instance.batch();
       
-      final requestRef = _firestore.collection('users').doc(myUid).collection('follow_requests').doc(senderId);
+      final requestRef = FirebaseFirestore.instance.collection('users').doc(myUid).collection('follow_requests').doc(senderId);
       batch.delete(requestRef);
 
       if (isAccepted) {
-        final myDoc = _firestore.collection('users').doc(myUid);
-        final senderDoc = _firestore.collection('users').doc(senderId);
+        final myDoc = FirebaseFirestore.instance.collection('users').doc(myUid);
+        final senderDoc = FirebaseFirestore.instance.collection('users').doc(senderId);
         
         batch.update(myDoc, {'followers': FieldValue.arrayUnion([senderId])});
         batch.update(senderDoc, {'following': FieldValue.arrayUnion([myUid])});
         
-        final newNotif = _firestore.collection('users').doc(senderId).collection('notifications').doc();
+        final newNotif = FirebaseFirestore.instance.collection('users').doc(senderId).collection('notifications').doc();
         batch.set(newNotif, {
           'type': 'request_accepted', 
           'senderId': myUid,
@@ -226,7 +224,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
         });
       }
 
-      final thisNotifRef = _firestore.collection('users').doc(myUid).collection('notifications').doc(widget.notificationId);
+      final thisNotifRef = FirebaseFirestore.instance.collection('users').doc(myUid).collection('notifications').doc(widget.notificationId);
       batch.delete(thisNotifRef);
 
       await batch.commit();
@@ -245,7 +243,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
     var t = AppLocalizations.of(context)!;
 
     return FutureBuilder<DocumentSnapshot>(
-      future: _firestore.collection('users').doc(senderId).get(),
+      future: FirebaseFirestore.instance.collection('users').doc(senderId).get(),
       builder: (context, snapshot) {
         String name = "Someone";
         String? profileUrl;
@@ -328,7 +326,7 @@ class _NotificationTile extends StatelessWidget {
   });
 
   Future<DocumentSnapshot> _getSenderData(String senderId) {
-    return _firestore.collection('users').doc(senderId).get();
+    return FirebaseFirestore.instance.collection('users').doc(senderId).get();
   }
 
   void _navigateToTarget(BuildContext context) {

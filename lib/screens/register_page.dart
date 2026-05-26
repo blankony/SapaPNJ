@@ -13,8 +13,6 @@ import 'login_page.dart';
 import 'setup/setup_profile_screen.dart'; 
 import '../services/app_localizations.dart'; // REQUIRED IMPORT
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -107,7 +105,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -116,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
         final String idNumber = _nimController.text.trim();
 
         // Check against Firestore (using 'nim' field for both NIM and NIP)
-        final nimQuery = await _firestore
+        final nimQuery = await FirebaseFirestore.instance
             .collection('users')
             .where('nim', isEqualTo: idNumber)
             .get();
@@ -129,7 +127,7 @@ class _RegisterPageState extends State<RegisterPage> {
           );
         }
 
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
           'uid': userCredential.user!.uid,
           'email': _emailController.text.trim(),
           'name': _namaController.text.trim(), 

@@ -15,8 +15,6 @@ import '../../services/overlay_service.dart';
 import '../../services/voice_service.dart';
 import '../../services/app_localizations.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class SearchPage extends StatefulWidget {
   final bool isSearching;
@@ -80,15 +78,15 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchUserDataAndInitFutures() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
             final data = userDoc.data()!;
             _followingIds = List<String>.from(data['following'] ?? []);
             
-            final blockDoc = await _firestore.collection('users').doc(user.uid).collection('moderation').doc('blocked').get();
+            final blockDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).collection('moderation').doc('blocked').get();
             if (blockDoc.exists) {
                 _blockedUserIds = List<String>.from(blockDoc.data()?['ids'] ?? []);
             }
@@ -111,7 +109,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
        _trendingFuture = _fetchTrendingTopics();
        _discoverFuture = _fetchDiscoverContent();
        _communityRecFuture = _fetchCommunityRecs();
-       _peopleRecFuture = _getSuggestedUsers(_auth.currentUser?.uid);
+       _peopleRecFuture = _getSuggestedUsers(FirebaseAuth.instance.currentUser?.uid);
     });
   }
 
@@ -119,7 +117,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Future<List<Map<String, dynamic>>> _fetchTrendingTopics() async {
      try {
-       final snapshot = await _firestore.collection('posts')
+       final snapshot = await FirebaseFirestore.instance.collection('posts')
            .orderBy('timestamp', descending: true)
            .limit(50) 
            .get();
@@ -141,7 +139,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
        // The 'Discover' algorithm filters out posts from people you follow.
        // If we only fetch 40 and you follow the authors of 39 of them, you only see 1 post.
        // Increasing this limit ensures enough "new" content survives the filter.
-       final snapshot = await _firestore.collection('posts')
+       final snapshot = await FirebaseFirestore.instance.collection('posts')
            .orderBy('timestamp', descending: true)
            .limit(100) 
            .get();
@@ -153,7 +151,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         }).toList();
 
         return _predictionService.getDiscoverRecommendations(
-           publicPosts, _auth.currentUser?.uid ?? '', _followingIds
+           publicPosts, FirebaseAuth.instance.currentUser?.uid ?? '', _followingIds
         );
      } catch (e) {
        return [];
@@ -162,9 +160,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Future<List<DocumentSnapshot>> _fetchCommunityRecs() async {
     try {
-      final snapshot = await _firestore.collection('communities').limit(20).get();
+      final snapshot = await FirebaseFirestore.instance.collection('communities').limit(20).get();
       return _predictionService.getRecommendedCommunities(
-        snapshot.docs, _auth.currentUser?.uid ?? '', _followingIds
+        snapshot.docs, FirebaseAuth.instance.currentUser?.uid ?? '', _followingIds
       );
     } catch(e) {
       return [];
@@ -181,7 +179,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       if (following.isNotEmpty) {
         // Check connections from the first few people we follow
         for (String followedId in following.take(5)) {
-           final followedDoc = await _firestore.collection('users').doc(followedId).get();
+           final followedDoc = await FirebaseFirestore.instance.collection('users').doc(followedId).get();
            if (followedDoc.exists) {
               final data = followedDoc.data() as Map<String, dynamic>;
               final List<dynamic> theirFollowing = data['following'] ?? [];
@@ -199,14 +197,14 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       // 2. Fetch Priority Users (Friends of Friends)
       if (priorityUserIds.isNotEmpty) {
         for (String userId in priorityUserIds.take(20)) {
-          final userDoc = await _firestore.collection('users').doc(userId).get();
+          final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
           if (userDoc.exists) allSuggestions.add(userDoc);
         }
       }
       
       // 3. Always fetch Random Users to fill the list
       // This ensures we always have enough users to show the "Show More" button if needed
-      final allUsersSnapshot = await _firestore.collection('users').limit(50).get();
+      final allUsersSnapshot = await FirebaseFirestore.instance.collection('users').limit(50).get();
       final randomUsers = allUsersSnapshot.docs.where((doc) {
         return doc.id != currentUserId && 
                !following.contains(doc.id) &&
@@ -792,7 +790,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                   children: [
                     ...displayedUsers.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
-                      return _UserSearchTile(userId: doc.id, userData: data, currentUserId: _auth.currentUser?.uid);
+                      return _UserSearchTile(userId: doc.id, userData: data, currentUserId: FirebaseAuth.instance.currentUser?.uid);
                     }).toList(),
                     
                     if (canExpand)
@@ -848,9 +846,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildPostResults(AppLocalizations t) {
-    final currentUserId = _auth.currentUser?.uid;
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('posts').orderBy('timestamp', descending: true).limit(50).snapshots(),
+      stream: FirebaseFirestore.instance.collection('posts').orderBy('timestamp', descending: true).limit(50).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_failed'), isConnectionError: true);
         if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator());
@@ -897,9 +895,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildUserResults(AppLocalizations t) {
-    final myUid = _auth.currentUser?.uid;
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('users').limit(50).snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').limit(50).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_user_failed'), isConnectionError: true);
         if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator());
@@ -930,7 +928,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Widget _buildCommunityResults(AppLocalizations t) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('communities').limit(50).snapshots(),
+      stream: FirebaseFirestore.instance.collection('communities').limit(50).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_failed'), isConnectionError: true);
         if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator());
@@ -1000,9 +998,9 @@ class _UserSearchTileState extends State<_UserSearchTile> {
   
   Future<void> _toggleFollow() async {
     if (widget.currentUserId == null) return;
-    final myDocRef = _firestore.collection('users').doc(widget.currentUserId);
-    final targetDocRef = _firestore.collection('users').doc(widget.userId);
-    final batch = _firestore.batch();
+    final myDocRef = FirebaseFirestore.instance.collection('users').doc(widget.currentUserId);
+    final targetDocRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+    final batch = FirebaseFirestore.instance.batch();
     
     if (_isFollowing) {
       batch.update(myDocRef, {'following': FieldValue.arrayRemove([widget.userId])});
@@ -1011,7 +1009,7 @@ class _UserSearchTileState extends State<_UserSearchTile> {
     } else {
       batch.update(myDocRef, {'following': FieldValue.arrayUnion([widget.userId])});
       batch.update(targetDocRef, {'followers': FieldValue.arrayUnion([widget.currentUserId])});
-      _firestore.collection('users').doc(widget.userId).collection('notifications').add({
+      FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('notifications').add({
         'type': 'follow', 'senderId': widget.currentUserId, 'timestamp': FieldValue.serverTimestamp(), 'isRead': false,
       });
       setState(() => _isFollowing = true);

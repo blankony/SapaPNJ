@@ -5,8 +5,6 @@ import 'screens/user_info_screen.dart';
 import 'screens/dashboard/home_dashboard.dart'; 
 
 // Instances
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class DecisionGate extends StatefulWidget {
   const DecisionGate({super.key});
@@ -19,7 +17,7 @@ class _DecisionGateState extends State<DecisionGate> {
 
   @override
   Widget build(BuildContext context) {
-    final User? user = _auth.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
     
     // If user is null, return to loading
     if (user == null) {
@@ -30,7 +28,7 @@ class _DecisionGateState extends State<DecisionGate> {
 
     // 1. Check Profile Completeness (Name & NIM) in Firestore
     return FutureBuilder<DocumentSnapshot>(
-      future: _firestore.collection('users').doc(user.uid).get(),
+      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
         // Loading profile check
         if (snapshot.connectionState == ConnectionState.waiting) {

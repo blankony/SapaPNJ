@@ -12,8 +12,6 @@ import '../../services/overlay_service.dart';
 import '../ktm_verification_screen.dart'; 
 import '../../services/app_localizations.dart'; // REQUIRED IMPORT
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class AccountCenterPage extends StatefulWidget {
   const AccountCenterPage({super.key});
@@ -34,12 +32,12 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
 
   /// Forces a reload of the Firebase User to get the latest emailVerified status
   Future<void> _refreshUser() async {
-    _currentUser = _auth.currentUser;
+    _currentUser = FirebaseAuth.instance.currentUser;
     if (_currentUser != null) {
       await _currentUser!.reload();
       setState(() {
         // Update local reference after reload
-        _currentUser = _auth.currentUser;
+        _currentUser = FirebaseAuth.instance.currentUser;
       });
     }
   }
@@ -104,7 +102,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     });
 
                     try {
-                      final user = _auth.currentUser;
+                      final user = FirebaseAuth.instance.currentUser;
                       if (user != null && user.email != null) {
                         AuthCredential credential = EmailAuthProvider.credential(
                           email: user.email!,
@@ -190,14 +188,14 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
     var t = AppLocalizations.of(context)!;
 
     try {
-      final user = _auth.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final String uid = user.uid;
 
-        WriteBatch batch = _firestore.batch();
+        WriteBatch batch = FirebaseFirestore.instance.batch();
         int batchCount = 0;
 
-        final postsQuery = await _firestore.collection('posts').where('userId', isEqualTo: uid).get();
+        final postsQuery = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: uid).get();
         
         for (var doc in postsQuery.docs) {
           batch.delete(doc.reference);
@@ -205,12 +203,12 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
 
           if (batchCount >= 450) {
             await batch.commit();
-            batch = _firestore.batch();
+            batch = FirebaseFirestore.instance.batch();
             batchCount = 0;
           }
         }
 
-        batch.delete(_firestore.collection('users').doc(uid));
+        batch.delete(FirebaseFirestore.instance.collection('users').doc(uid));
         await batch.commit();
         
         await user.delete();
@@ -250,7 +248,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = _auth.currentUser; // Use fresh instance
+    final user = FirebaseAuth.instance.currentUser; // Use fresh instance
     final bool isEmailVerified = user?.emailVerified ?? false;
     var t = AppLocalizations.of(context)!;
     
@@ -304,7 +302,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
               // --- 2. KTM VERIFICATION (Only shows if Email Verified) ---
               if (isEmailVerified)
                 StreamBuilder<DocumentSnapshot>(
-                  stream: _firestore.collection('users').doc(user!.uid).snapshots(),
+                  stream: FirebaseFirestore.instance.collection('users').doc(user!.uid).snapshots(),
                   builder: (context, snapshot) {
                     String status = 'none';
                     if (snapshot.hasData && snapshot.data!.exists) {

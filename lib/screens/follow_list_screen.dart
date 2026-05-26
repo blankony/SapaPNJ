@@ -10,8 +10,6 @@ import '../widgets/common_error_widget.dart';
 import '../services/overlay_service.dart'; 
 import '../services/app_localizations.dart';
 
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class FollowListScreen extends StatefulWidget {
   final String userId;
@@ -34,7 +32,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   bool _isLoading = true;
   bool _hasError = false;
 
-  bool get _isMe => _auth.currentUser?.uid == widget.userId;
+  bool get _isMe => FirebaseAuth.instance.currentUser?.uid == widget.userId;
 
   @override
   void initState() {
@@ -50,7 +48,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   Future<void> _fetchLists() async {
     setState(() { _isLoading = true; _hasError = false; });
     try {
-      final doc = await _firestore.collection('users').doc(widget.userId).get();
+      final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         if (mounted) {
@@ -98,14 +96,14 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
         _followersIds.remove(followerId);
       });
 
-      final batch = _firestore.batch();
+      final batch = FirebaseFirestore.instance.batch();
       
       // 1. Remove from my 'followers'
-      final myRef = _firestore.collection('users').doc(widget.userId);
+      final myRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       batch.update(myRef, {'followers': FieldValue.arrayRemove([followerId])});
 
       // 2. Remove me from their 'following'
-      final followerRef = _firestore.collection('users').doc(followerId);
+      final followerRef = FirebaseFirestore.instance.collection('users').doc(followerId);
       batch.update(followerRef, {'following': FieldValue.arrayRemove([widget.userId])});
 
       await batch.commit();
@@ -123,7 +121,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   void _cleanupDeadUser(String deadUserId, String listType) {
     if (!_isMe) return;
 
-    final docRef = _firestore.collection('users').doc(widget.userId);
+    final docRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
     
     if (listType == 'following') {
       docRef.update({'following': FieldValue.arrayRemove([deadUserId])});
@@ -263,7 +261,7 @@ class _UserTile extends StatelessWidget {
     var t = AppLocalizations.of(context)!;
 
     return FutureBuilder<DocumentSnapshot>(
-      future: _firestore.collection('users').doc(userId).get(),
+      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(height: 60, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));

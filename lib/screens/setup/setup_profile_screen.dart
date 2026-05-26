@@ -12,8 +12,6 @@ import '../../services/app_localizations.dart'; // IMPORT INI DITAMBAHKAN
 import 'setup_department_screen.dart';
 import '../../services/overlay_service.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final CloudinaryService _cloudinaryService = CloudinaryService();
 
 class SetupProfileScreen extends StatefulWidget {
@@ -109,7 +107,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
 
   Future<void> _saveAndNext() async {
     setState(() { _isLoading = true; });
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     String? avatarUrl;
@@ -130,7 +128,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
       if (avatarUrl != null) updateData['profileImageUrl'] = avatarUrl;
       if (bannerUrl != null) updateData['bannerImageUrl'] = bannerUrl;
 
-      await _firestore.collection('users').doc(user.uid).update(updateData);
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(updateData);
 
       if (mounted) {
         Navigator.of(context).push(
@@ -159,9 +157,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
 
   void _skip() {
     // Even on skip, save the privacy preference
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _firestore.collection('users').doc(user.uid).update({'isPrivate': _isPrivateAccount});
+      FirebaseFirestore.instance.collection('users').doc(user.uid).update({'isPrivate': _isPrivateAccount});
     }
 
     Navigator.of(context).push(

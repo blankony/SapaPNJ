@@ -4,8 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../auth_gate.dart'; 
 import '../services/overlay_service.dart'; // REQUIRED
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class UserInfoScreen extends StatefulWidget {
   const UserInfoScreen({super.key});
@@ -34,10 +32,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     setState(() { _isLoading = true; });
 
     try {
-      final user = _auth.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      await _firestore.collection('users').doc(user.uid).set({
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': _nameController.text.trim(),
         'nim': _nimController.text.trim(), 
         'bio': 'About me...', 

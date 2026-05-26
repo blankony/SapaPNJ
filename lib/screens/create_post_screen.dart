@@ -23,8 +23,6 @@ import '../services/bad_word_service.dart';
 import 'video_trimmer_screen.dart';
 import '../services/app_localizations.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final CloudinaryService _cloudinaryService = CloudinaryService();
 
 class CreatePostScreen extends StatefulWidget {
@@ -167,7 +165,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _checkEmailVerification() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try { await user.reload(); } catch (_) {}
       if (!user.emailVerified) {
@@ -199,11 +197,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _loadIdentity() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     try {
-      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (userDoc.exists) {
         final data = userDoc.data()!;
         if (mounted) {
@@ -223,7 +221,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _isCommunityContext = true;
       _visibility = 'public'; 
       try {
-        final comDoc = await _firestore.collection('communities').doc(_communityId).get();
+        final comDoc = await FirebaseFirestore.instance.collection('communities').doc(_communityId).get();
         if (comDoc.exists) {
           final data = comDoc.data()!;
           _communityVerified = data['isVerified'] ?? false;
@@ -264,10 +262,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _trainAiModel() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      final snapshot = await _firestore.collection('posts').where('userId', isEqualTo: user.uid).limit(20).get();
+      final snapshot = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: user.uid).limit(20).get();
       List<String> postHistory = snapshot.docs.map((doc) => (doc.data()['text'] ?? '').toString()).toList();
       _predictionService.learnFromUserPosts(postHistory);
     } catch (_) {}
@@ -739,7 +737,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (!_canPost) return;
     
     var t = AppLocalizations.of(context)!;
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     final text = _postController.text;

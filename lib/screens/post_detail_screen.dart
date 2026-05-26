@@ -16,8 +16,6 @@ import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final CloudinaryService _cloudinaryService = CloudinaryService(); 
 
 class PostDetailScreen extends StatefulWidget {
@@ -41,7 +39,7 @@ class PostDetailScreen extends StatefulWidget {
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   final PredictionService _predictionService = PredictionService();
-  final User? _currentUser = _auth.currentUser;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   String? _predictedText;
   Timer? _debounce;
@@ -116,7 +114,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     String? profileImageUrl;
 
     try {
-      final userDoc = await _firestore.collection('users').doc(_currentUser!.uid).get();
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
       if (userDoc.exists) {
         final data = userDoc.data();
         userName = data?['name'] ?? userName;
@@ -142,10 +140,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     };
 
     try {
-      final writeBatch = _firestore.batch();
-      final commentDocRef = _firestore.collection('posts').doc(widget.postId).collection('comments').doc(); 
+      final writeBatch = FirebaseFirestore.instance.batch();
+      final commentDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').doc(); 
       writeBatch.set(commentDocRef, commentData);
-      final postDocRef = _firestore.collection('posts').doc(widget.postId);
+      final postDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
       writeBatch.update(postDocRef, {'commentCount': FieldValue.increment(1)});
       await writeBatch.commit();
 
@@ -155,7 +153,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         if (commentSnippet.isEmpty) commentSnippet = "Sent a ${_mediaType ?? 'media'} attachment";
         if (commentSnippet.length > 50) commentSnippet = commentSnippet.substring(0, 50) + '...';
         
-        _firestore.collection('users').doc(postOwnerId).collection('notifications').add({
+        FirebaseFirestore.instance.collection('users').doc(postOwnerId).collection('notifications').add({
           'type': 'comment', 
           'senderId': _currentUser!.uid,
           'postId': widget.postId,
@@ -197,7 +195,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               child: Column(
                 children: [
                   StreamBuilder<DocumentSnapshot>(
-                    stream: _firestore.collection('posts').doc(widget.postId).snapshots(),
+                    stream: FirebaseFirestore.instance.collection('posts').doc(widget.postId).snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Padding(
@@ -245,7 +243,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Widget _buildCommentList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('posts').doc(widget.postId).collection('comments').orderBy('timestamp', descending: false).snapshots(),
+      stream: FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').orderBy('timestamp', descending: false).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16.0), child: Text("Could not load comments.", style: TextStyle(color: Colors.red)));
         if (snapshot.connectionState == ConnectionState.waiting) return Padding(padding: const EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator()));

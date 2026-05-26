@@ -4,7 +4,6 @@ import '../main.dart'; // Import for SisapaTheme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -22,7 +21,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() { _message = ''; });
 
     try {
-      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
       setState(() {
         _message = 'Password reset email sent. Please check your inbox.';
         _isSuccess = true;

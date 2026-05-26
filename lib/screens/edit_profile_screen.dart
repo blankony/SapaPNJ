@@ -14,8 +14,6 @@ import '../../data/pnj_data.dart';
 import '../services/overlay_service.dart'; 
 import '../services/app_localizations.dart'; 
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final CloudinaryService _cloudinaryService = CloudinaryService(); 
 
 class EditProfileScreen extends StatefulWidget {
@@ -26,7 +24,7 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final User? _user = _auth.currentUser;
+  final User? _user = FirebaseAuth.instance.currentUser;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   bool _isLoading = false;
@@ -52,7 +50,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _loadCurrentData() async {
     if (_user == null) return;
-    final userDoc = await _firestore.collection('users').doc(_user!.uid).get();
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(_user!.uid).get();
     if (userDoc.exists) {
       final data = userDoc.data() as Map<String, dynamic>;
       if (mounted) {
@@ -296,7 +294,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         userUpdateData['departmentCode'] = _selectedProdi!['code']; 
       }
 
-      await _firestore.collection('users').doc(_user!.uid).update(userUpdateData);
+      await FirebaseFirestore.instance.collection('users').doc(_user!.uid).update(userUpdateData);
 
       await _updateDenormalizedData(
         _user!.uid, 
@@ -341,10 +339,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'profileImageUrl': imageUrl, 
     };
     
-    final postsQuery = _firestore.collection('posts').where('userId', isEqualTo: userId);
+    final postsQuery = FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId);
     final postsSnapshot = await postsQuery.get();
     
-    final commentsQuery = _firestore.collectionGroup('comments').where('userId', isEqualTo: userId);
+    final commentsQuery = FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId);
     final commentsSnapshot = await commentsQuery.get();
 
     final allDocs = [...postsSnapshot.docs, ...commentsSnapshot.docs];
@@ -353,7 +351,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     const int batchSize = 500;
     for (var i = 0; i < allDocs.length; i += batchSize) {
-      final batch = _firestore.batch();
+      final batch = FirebaseFirestore.instance.batch();
       final end = (i + batchSize < allDocs.length) ? i + batchSize : allDocs.length;
       
       for (var j = i; j < end; j++) {

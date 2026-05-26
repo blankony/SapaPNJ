@@ -23,8 +23,6 @@ import 'blog_post_card/post_media_preview.dart';
 import 'blog_post_card/post_header.dart';
 import 'blog_post_card/post_action_bar.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class BlogPostCard extends StatefulWidget {
   final String postId;
@@ -167,7 +165,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   Map<String, dynamic> get effectivePostData => _resolvedPostData ?? {};
 
   bool get effectiveIsOwner {
-    final currentUser = _auth.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return false;
     return effectivePostData['userId'] == currentUser.uid;
   }
@@ -175,7 +173,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   Future<void> _fetchOriginalPost(String originalId) async {
     if (mounted) setState(() => _isLoadingOriginal = true);
     try {
-      final doc = await _firestore.collection('posts').doc(originalId).get();
+      final doc = await FirebaseFirestore.instance.collection('posts').doc(originalId).get();
       if (doc.exists) {
         if (mounted) {
           setState(() {
@@ -237,7 +235,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   void _syncState() {
-    final currentUser = _auth.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (_resolvedPostData == null) return;
 
     final likes = _resolvedPostData!['likes'] as Map<String, dynamic>? ?? {};
@@ -267,12 +265,12 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   void _toggleLike() async {
-    final currentUser = _auth.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
     _likeController.forward().then((_) => _likeController.reverse());
     if (hapticNotifier.value) HapticFeedback.lightImpact();
     
-    final docRef = _firestore.collection('posts').doc(effectivePostId);
+    final docRef = FirebaseFirestore.instance.collection('posts').doc(effectivePostId);
     
     setState(() {
       _isLiked = !_isLiked;
@@ -285,7 +283,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     
     try {
       final notificationId = 'like_${effectivePostId}_${currentUser.uid}';
-      final notificationRef = _firestore.collection('users').doc(effectivePostData['userId']).collection('notifications').doc(notificationId);
+      final notificationRef = FirebaseFirestore.instance.collection('users').doc(effectivePostData['userId']).collection('notifications').doc(notificationId);
       
       if (_isLiked) {
         await docRef.update({'likes.${currentUser.uid}': true});
@@ -309,7 +307,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   void _toggleRepost() async {
-    final currentUser = _auth.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
     
     _repostController.forward().then((_) => _repostController.reverse());
@@ -317,7 +315,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     final targetId = effectivePostId;
     final targetAuthorId = effectivePostData['userId'];
-    final docRef = _firestore.collection('posts').doc(targetId);
+    final docRef = FirebaseFirestore.instance.collection('posts').doc(targetId);
 
     setState(() {
       _isReposted = !_isReposted;
@@ -330,19 +328,19 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     try {
       final notificationId = 'repost_${targetId}_${currentUser.uid}';
-      final notificationRef = _firestore.collection('users').doc(targetAuthorId).collection('notifications').doc(notificationId);
+      final notificationRef = FirebaseFirestore.instance.collection('users').doc(targetAuthorId).collection('notifications').doc(notificationId);
 
       if (_isReposted) {
         String reposterName = currentUser.displayName ?? 'User';
         try {
-           final userDoc = await _firestore.collection('users').doc(currentUser.uid).get();
+           final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
            if (userDoc.exists) {
              final data = userDoc.data();
              reposterName = data?['userName'] ?? data?['name'] ?? reposterName;
            }
         } catch (_) {}
 
-        await _firestore.collection('posts').add({
+        await FirebaseFirestore.instance.collection('posts').add({
           'type': 'repost',
           'originalPostId': targetId,
           'userId': currentUser.uid,
@@ -367,7 +365,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
           });
         }
       } else {
-        final query = await _firestore.collection('posts')
+        final query = await FirebaseFirestore.instance.collection('posts')
             .where('originalPostId', isEqualTo: targetId)
             .where('userId', isEqualTo: currentUser.uid)
             .where('type', isEqualTo: 'repost')
@@ -393,12 +391,12 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   void _handleBookmarkToggle(bool isCurrentlyBookmarked) async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     if (hapticNotifier.value) HapticFeedback.lightImpact();
     var t = AppLocalizations.of(context)!;
 
-    final docRef = _firestore.collection('users').doc(user.uid).collection('bookmarks').doc(effectivePostId);
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('bookmarks').doc(effectivePostId);
 
     if (!isCurrentlyBookmarked) {
       OverlayService().showTopNotification(context, t.translate('post_bookmark_saved'), Icons.bookmark, () {});
@@ -418,7 +416,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   void _toggleVisibility() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     var t = AppLocalizations.of(context)!;
     
@@ -426,7 +424,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     String newVis;
 
     if (currentVis == 'private') {
-      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final bool isPrivateAccount = userDoc.data()?['isPrivate'] ?? false;
       newVis = isPrivateAccount ? 'followers' : 'public';
     } else {
@@ -452,7 +450,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (mounted) OverlayService().showTopNotification(context, msg, icon, () {}, color: color);
 
     try {
-      await _firestore.collection('posts').doc(effectivePostId).update({
+      await FirebaseFirestore.instance.collection('posts').doc(effectivePostId).update({
         'visibility': newVis,
       });
     } catch (e) {
@@ -494,11 +492,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         false;
     if (confirm) {
       try {
-        await _firestore.collection('posts').doc(widget.postId).delete();
+        await FirebaseFirestore.instance.collection('posts').doc(widget.postId).delete();
         
         if (_isRepostWrapper && widget.postData['originalPostId'] != null) {
-             await _firestore.collection('posts').doc(widget.postData['originalPostId']).update({
-                'repostedBy': FieldValue.arrayRemove([_auth.currentUser?.uid])
+             await FirebaseFirestore.instance.collection('posts').doc(widget.postData['originalPostId']).update({
+                'repostedBy': FieldValue.arrayRemove([FirebaseAuth.instance.currentUser?.uid])
              });
         }
 
@@ -510,7 +508,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   Future<void> _togglePin() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     var t = AppLocalizations.of(context)!;
     final bool newPinState = !_localIsPinned;
@@ -522,10 +520,10 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
     try {
       if (!newPinState) {
-        await _firestore.collection('users').doc(user.uid).update({'pinnedPostId': FieldValue.delete()});
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'pinnedPostId': FieldValue.delete()});
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_unpin_success'), Icons.push_pin_outlined, () {});
       } else {
-        await _firestore.collection('users').doc(user.uid).update({'pinnedPostId': effectivePostId});
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'pinnedPostId': effectivePostId});
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_pin_success'), Icons.push_pin, () {});
       }
     } catch (e) {
@@ -624,7 +622,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   Future<void> _submitEdit() async {
     var t = AppLocalizations.of(context)!;
     try {
-      await _firestore.collection('posts').doc(effectivePostId).update({'text': _editController.text});
+      await FirebaseFirestore.instance.collection('posts').doc(effectivePostId).update({'text': _editController.text});
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

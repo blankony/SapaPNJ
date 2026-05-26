@@ -13,8 +13,6 @@ import '../../services/notification_prefs_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart'; 
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -109,7 +107,7 @@ class SettingsPage extends StatelessWidget {
     ) ?? false;
 
     if (didConfirm) {
-      await _auth.signOut();
+      await FirebaseAuth.instance.signOut();
       if (context.mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }

@@ -13,8 +13,6 @@ import '../theme/avatar_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart'; 
 import '../services/overlay_service.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class CommentTile extends StatefulWidget {
   final String commentId;
@@ -74,7 +72,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   }
 
   void _syncStatsState() {
-    final currentUser = _auth.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
     final likes = widget.commentData['likes'] as Map<String, dynamic>? ?? {};
     final reposts = widget.commentData['repostedBy'] as List? ?? []; 
     
@@ -89,7 +87,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   }
 
   Future<void> _toggleLike() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     _likeController.forward().then((_) => _likeController.reverse());
@@ -100,7 +98,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     });
 
     try {
-      final commentRef = _firestore
+      final commentRef = FirebaseFirestore.instance
           .collection('posts')
           .doc(widget.postId)
           .collection('comments')
@@ -117,7 +115,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   }
 
   Future<void> _toggleRepost() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     setState(() {
@@ -126,7 +124,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     });
 
     try {
-      final commentRef = _firestore
+      final commentRef = FirebaseFirestore.instance
           .collection('posts')
           .doc(widget.postId)
           .collection('comments')
@@ -175,14 +173,14 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     ) ?? false;
     if (!didConfirm) return;
     try {
-      final writeBatch = _firestore.batch();
-      final commentDocRef = _firestore
+      final writeBatch = FirebaseFirestore.instance.batch();
+      final commentDocRef = FirebaseFirestore.instance
           .collection('posts')
           .doc(widget.postId)
           .collection('comments')
           .doc(widget.commentId);
       writeBatch.delete(commentDocRef);
-      final postDocRef = _firestore.collection('posts').doc(widget.postId);
+      final postDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
       writeBatch.update(postDocRef, {
         'commentCount': FieldValue.increment(-1),
       });
@@ -226,7 +224,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   Future<void> _submitEdit() async {
     if (_editController.text.isEmpty) return;
     try {
-      await _firestore
+      await FirebaseFirestore.instance
           .collection('posts')
           .doc(widget.postId)
           .collection('comments')
@@ -248,7 +246,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
 
   void _navigateToOriginalPost() {
     if (!widget.showPostContext) return; 
-    _firestore.collection('posts').doc(widget.postId).get().then((doc) {
+    FirebaseFirestore.instance.collection('posts').doc(widget.postId).get().then((doc) {
       if (doc.exists && mounted) {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -265,7 +263,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   void _navigateToUserProfile() {
     final commentUserId = widget.commentData['userId'];
     if (commentUserId == null) return;
-    if (commentUserId == _auth.currentUser?.uid) return;
+    if (commentUserId == FirebaseAuth.instance.currentUser?.uid) return;
     
     // NEW: Check loop prevention
     if (widget.currentProfileUserId != null && commentUserId == widget.currentProfileUserId) return;
@@ -314,7 +312,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     
     if (widget.showPostContext) {
       return FutureBuilder<DocumentSnapshot>(
-        future: _firestore.collection('posts').doc(widget.postId).get(),
+        future: FirebaseFirestore.instance.collection('posts').doc(widget.postId).get(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return SizedBox.shrink(); 
           if (!snapshot.data!.exists) {

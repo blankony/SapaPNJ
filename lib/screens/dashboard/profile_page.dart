@@ -25,8 +25,6 @@ import '../follow_list_screen.dart';
 import '../ktm_verification_screen.dart'; 
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final CloudinaryService _cloudinaryService = CloudinaryService();
 
 class ProfilePage extends StatefulWidget {
@@ -64,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _user = _auth.currentUser;
+    _user = FirebaseAuth.instance.currentUser;
     _userId = widget.userId ?? _user!.uid;
     
     // Force reload user data to get fresh emailVerified status on init
@@ -186,10 +184,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   Future<void> _updateAllPastContent(String newImageUrl) async {
     try {
-      final batch = _firestore.batch();
-      final postsQuery = await _firestore.collection('posts').where('userId', isEqualTo: _userId).get();
+      final batch = FirebaseFirestore.instance.batch();
+      final postsQuery = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: _userId).get();
       for (var doc in postsQuery.docs) batch.update(doc.reference, {'profileImageUrl': newImageUrl});
-      final commentsQuery = await _firestore.collectionGroup('comments').where('userId', isEqualTo: _userId).get();
+      final commentsQuery = await FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: _userId).get();
       for (var doc in commentsQuery.docs) batch.update(doc.reference, {'profileImageUrl': newImageUrl});
       await batch.commit();
     } catch (e) { debugPrint("Sync fail: $e"); }
@@ -268,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         if (isBanner) updateData['bannerImageUrl'] = downloadUrl;
         else { updateData['profileImageUrl'] = downloadUrl; updateData['avatarIconId'] = -1; }
         
-        await _firestore.collection('users').doc(_userId).update(updateData);
+        await FirebaseFirestore.instance.collection('users').doc(_userId).update(updateData);
         if (!isBanner) _updateAllPastContent(downloadUrl);
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_update_success'), Icons.check_circle, (){}, color: Colors.green);
       }
@@ -349,12 +347,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     
     try {
       if (isPrivate) {
-        await _firestore.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).set({
+        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).set({
           'timestamp': FieldValue.serverTimestamp(),
           'status': 'pending',
         });
         
-        await _firestore.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').set({
+        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').set({
           'type': 'follow_request',
           'senderId': _user!.uid,
           'timestamp': FieldValue.serverTimestamp(),
@@ -363,14 +361,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_sent'), Icons.send, (){}, color: Colors.blue);
       } else {
-        final batch = _firestore.batch();
-        final myDocRef = _firestore.collection('users').doc(_user!.uid);
-        final targetDocRef = _firestore.collection('users').doc(_userId);
+        final batch = FirebaseFirestore.instance.batch();
+        final myDocRef = FirebaseFirestore.instance.collection('users').doc(_user!.uid);
+        final targetDocRef = FirebaseFirestore.instance.collection('users').doc(_userId);
         batch.update(myDocRef, {'following': FieldValue.arrayUnion([_userId])});
         batch.update(targetDocRef, {'followers': FieldValue.arrayUnion([_user!.uid])});
         await batch.commit();
         
-        _firestore.collection('users').doc(_userId).collection('notifications').add({
+        FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').add({
           'type': 'follow', 'senderId': _user!.uid, 'timestamp': FieldValue.serverTimestamp(), 'isRead': false,
         });
       }
@@ -388,13 +386,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
     try {
       if (isRequestOnly) {
-        await _firestore.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).delete();
-        await _firestore.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').delete();
+        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).delete();
+        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').delete();
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_cancel'), Icons.close, (){});
       } else {
-        final batch = _firestore.batch();
-        final myDocRef = _firestore.collection('users').doc(_user!.uid);
-        final targetDocRef = _firestore.collection('users').doc(_userId);
+        final batch = FirebaseFirestore.instance.batch();
+        final myDocRef = FirebaseFirestore.instance.collection('users').doc(_user!.uid);
+        final targetDocRef = FirebaseFirestore.instance.collection('users').doc(_userId);
         batch.update(myDocRef, {'following': FieldValue.arrayRemove([_userId])});
         batch.update(targetDocRef, {'followers': FieldValue.arrayRemove([_user!.uid])});
         await batch.commit();
@@ -476,7 +474,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         TextButton(onPressed: () => Navigator.pop(context, true), child: Text(t.translate('settings_logout'), style: TextStyle(color: Colors.red)))
       ]
     )) ?? false;
-    if (didConfirm) { await _auth.signOut(); if (context.mounted) Navigator.of(context).popUntil((route) => route.isFirst); }
+    if (didConfirm) { await FirebaseAuth.instance.signOut(); if (context.mounted) Navigator.of(context).popUntil((route) => route.isFirst); }
   }
 
   @override
@@ -514,7 +512,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final double pinnedHeaderHeight = topPadding + kToolbarHeight;
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: _firestore.collection('users').doc(_userId).snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(_userId).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(appBar: AppBar(title: Text(t.translate('profile_error_title'))), body: Center(child: Text(t.translate('profile_error_generic'))));
@@ -755,7 +753,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     }
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: _firestore
+      stream: FirebaseFirestore.instance
           .collection('users')
           .doc(_userId)
           .collection('follow_requests')
@@ -1002,7 +1000,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Widget _buildMyPosts(BuildContext context, String userId) {
     var t = AppLocalizations.of(context)!;
     return FutureBuilder<DocumentSnapshot>(
-      future: _firestore.collection('users').doc(userId).get(),
+      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
       builder: (context, userSnapshot) {
         if (userSnapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_posts_fail'), isConnectionError: true);
         
@@ -1010,7 +1008,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         final activePinnedId = _optimisticPinnedPostId == '' ? null : (_optimisticPinnedPostId ?? firestorePinned);
 
         return StreamBuilder<QuerySnapshot>(
-          stream: _firestore.collection('posts').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
+          stream: FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_stream_fail'), isConnectionError: true);
             
@@ -1030,7 +1028,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 
                 if (visibility == 'public') return true;
                 if (visibility == 'followers') return true;
-                if (visibility == 'private' && ownerId == _auth.currentUser?.uid) return true;
+                if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
                 
                 return false;
               }).toList();
@@ -1053,7 +1051,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         key: ValueKey(doc.id),
                         postId: doc.id,
                         postData: doc.data() as Map<String, dynamic>,
-                        isOwner: doc['userId'] == _auth.currentUser?.uid,
+                        isOwner: doc['userId'] == FirebaseAuth.instance.currentUser?.uid,
                         heroContextId: 'profile_posts',
                         isPinned: doc.id == activePinnedId,
                         onPinToggle: (id, isPinned) => _handlePinToggle(id, isPinned),
@@ -1080,7 +1078,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Widget _buildMyReplies(BuildContext context, String userId) {
     var t = AppLocalizations.of(context)!;
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collectionGroup('comments').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_replies_fail'), isConnectionError: true);
         
@@ -1097,7 +1095,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               final parentPostId = doc.reference.parent.parent!.id;
 
               return StreamBuilder<DocumentSnapshot>(
-                stream: _firestore.collection('posts').doc(parentPostId).snapshots(),
+                stream: FirebaseFirestore.instance.collection('posts').doc(parentPostId).snapshots(),
                 builder: (context, parentSnapshot) {
                   if (!parentSnapshot.hasData || !parentSnapshot.data!.exists) return SizedBox.shrink();
                   
@@ -1107,7 +1105,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   
                   final isVisible = (visibility == 'public') || 
                                     (visibility == 'followers') || 
-                                    (visibility == 'private' && ownerId == _auth.currentUser?.uid);
+                                    (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid);
                   
                   if (isVisible) {
                     return Theme(
@@ -1139,7 +1137,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Widget _buildMyReposts(BuildContext context, String userId) {
     var t = AppLocalizations.of(context)!;
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('posts').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance.collection('posts').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_reposts_fail'), isConnectionError: true);
         List<Widget> slivers = [];
@@ -1155,7 +1153,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             
             if (visibility == 'public') return true;
             if (visibility == 'followers') return true; 
-            if (visibility == 'private' && ownerId == _auth.currentUser?.uid) return true;
+            if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
             
             return false;
           }).toList();
@@ -1169,7 +1167,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 key: ValueKey('repost_${doc.id}'),
                 postId: doc.id, 
                 postData: doc.data() as Map<String, dynamic>, 
-                isOwner: doc['userId'] == _auth.currentUser?.uid, 
+                isOwner: doc['userId'] == FirebaseAuth.instance.currentUser?.uid, 
                 heroContextId: 'profile_reposts',
                 currentProfileUserId: _userId,
               );

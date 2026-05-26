@@ -14,7 +14,6 @@ import '../screens/webview_screen.dart';
 import '../screens/drafts_screen.dart'; 
 import '../services/app_localizations.dart'; 
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class SidePanel extends StatefulWidget {
   final VoidCallback onProfileSelected;
@@ -49,7 +48,7 @@ class _SidePanelState extends State<SidePanel> {
     ) ?? false;
 
     if (didConfirm) {
-      await _auth.signOut();
+      await FirebaseAuth.instance.signOut();
       if (context.mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }

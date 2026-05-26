@@ -27,8 +27,6 @@ import '../../services/ai_event_bus.dart';
 import '../../services/draft_service.dart';
 import '../post_detail_screen.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});

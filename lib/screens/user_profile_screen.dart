@@ -10,8 +10,6 @@ import '../theme/avatar_helper.dart';
 import '../../services/overlay_service.dart';
 import 'follow_list_screen.dart'; // REQUIRED
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
@@ -23,7 +21,7 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> with TickerProviderStateMixin {
   late TabController _tabController;
-  final User? _currentUser = _auth.currentUser;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -49,16 +47,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
   Future<void> _followUser() async {
     if (_currentUser == null) return;
     try {
-      final batch = _firestore.batch();
-      final myDocRef = _firestore.collection('users').doc(_currentUser!.uid);
-      final targetDocRef = _firestore.collection('users').doc(widget.userId);
+      final batch = FirebaseFirestore.instance.batch();
+      final myDocRef = FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid);
+      final targetDocRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       batch.update(myDocRef, { 'following': FieldValue.arrayUnion([widget.userId]) });
       batch.update(targetDocRef, { 'followers': FieldValue.arrayUnion([_currentUser!.uid]) });
       
       await batch.commit();
       
       final notificationId = 'follow_${_currentUser!.uid}';
-      _firestore.collection('users').doc(widget.userId).collection('notifications')
+      FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('notifications')
         .doc(notificationId)
         .set({
           'type': 'follow',
@@ -74,16 +72,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
   Future<void> _unfollowUser() async {
     if (_currentUser == null) return;
     try {
-      final batch = _firestore.batch();
-      final myDocRef = _firestore.collection('users').doc(_currentUser!.uid);
-      final targetDocRef = _firestore.collection('users').doc(widget.userId);
+      final batch = FirebaseFirestore.instance.batch();
+      final myDocRef = FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid);
+      final targetDocRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       batch.update(myDocRef, { 'following': FieldValue.arrayRemove([widget.userId]) });
       batch.update(targetDocRef, { 'followers': FieldValue.arrayRemove([_currentUser!.uid]) });
       
       await batch.commit();
       
       final notificationId = 'follow_${_currentUser!.uid}';
-      _firestore.collection('users').doc(widget.userId).collection('notifications')
+      FirebaseFirestore.instance.collection('users').doc(widget.userId).collection('notifications')
         .doc(notificationId)
         .delete();
     } catch (e) {
@@ -101,7 +99,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
     }
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: _firestore.collection('users').doc(_currentUser!.uid).snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).snapshots(),
       builder: (context, mySnapshot) {
         if (!mySnapshot.hasData) {
           return Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -133,7 +131,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         StreamBuilder<DocumentSnapshot>(
-                          stream: _firestore.collection('users').doc(widget.userId).snapshots(),
+                          stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
                           builder: (context, targetSnapshot) {
                             if (!targetSnapshot.hasData) {
                               return Container(height: 410, child: Center(child: CircularProgressIndicator()));
@@ -264,7 +262,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
 
   Widget _buildMyPosts(String userId) {
     return FutureBuilder<DocumentSnapshot>(
-      future: _firestore.collection('users').doc(userId).get(),
+      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
       builder: (context, userSnapshot) {
         String? pinnedPostId;
         if (userSnapshot.hasData && userSnapshot.data!.exists) {
@@ -273,7 +271,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
         }
 
         return StreamBuilder<QuerySnapshot>(
-          stream: _firestore.collection('posts').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
+          stream: FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
             final docs = snapshot.data?.docs ?? [];
@@ -298,7 +296,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
                 return BlogPostCard(
                   postId: doc.id,
                   postData: data,
-                  isOwner: data['userId'] == _auth.currentUser?.uid,
+                  isOwner: data['userId'] == FirebaseAuth.instance.currentUser?.uid,
                   isPinned: doc.id == pinnedPostId,
                 );
               },
@@ -311,7 +309,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
 
   Widget _buildMyReplies(String userId) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collectionGroup('comments').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
         final docs = snapshot.data?.docs ?? [];
@@ -326,7 +324,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
             final doc = docs[index];
             final data = doc.data() as Map<String, dynamic>;
             final String originalPostId = doc.reference.parent.parent!.id;
-            return CommentTile(commentId: doc.id, commentData: data, postId: originalPostId, isOwner: data['userId'] == _auth.currentUser?.uid, showPostContext: true);
+            return CommentTile(commentId: doc.id, commentData: data, postId: originalPostId, isOwner: data['userId'] == FirebaseAuth.instance.currentUser?.uid, showPostContext: true);
           },
         );
       },
@@ -337,7 +335,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
     return CustomScrollView(
       slivers: [
         StreamBuilder<QuerySnapshot>(
-          stream: _firestore.collection('posts').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
+          stream: FirebaseFirestore.instance.collection('posts').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return SliverToBoxAdapter(child: Center(child: CircularProgressIndicator()));
             final docs = snapshot.data?.docs ?? [];
@@ -355,7 +353,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
           },
         ),
         StreamBuilder<QuerySnapshot>(
-          stream: _firestore.collectionGroup('comments').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
+          stream: FirebaseFirestore.instance.collectionGroup('comments').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return SliverToBoxAdapter(child: SizedBox.shrink());
             final docs = snapshot.data?.docs ?? [];
@@ -365,7 +363,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> with TickerProvid
                   final doc = docs[index];
                   final data = doc.data() as Map<String, dynamic>;
                   final String originalPostId = doc.reference.parent.parent!.id;
-                  return CommentTile(commentId: doc.id, commentData: data, postId: originalPostId, isOwner: data['userId'] == _auth.currentUser?.uid, showPostContext: true);
+                  return CommentTile(commentId: doc.id, commentData: data, postId: originalPostId, isOwner: data['userId'] == FirebaseAuth.instance.currentUser?.uid, showPostContext: true);
                 },
                 childCount: docs.length,
               ),

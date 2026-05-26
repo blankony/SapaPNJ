@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart'; // REQUIRED
 
 class ModerationService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // --- REPORTING ---
 
@@ -15,7 +13,7 @@ class ModerationService {
     required String reason,
     String? description,
   }) async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     
     final String subject = "SAPA PNJ Report: $targetType ($reason)";
     final String body = "Reporter ID: ${user?.uid ?? 'Anonymous'}\n"
@@ -54,13 +52,13 @@ class ModerationService {
   // --- BLOCKING ---
 
   Future<void> blockUser(String targetUserId) async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.uid == targetUserId) return;
 
-    final batch = _firestore.batch();
+    final batch = FirebaseFirestore.instance.batch();
 
     // 1. Add to my 'blockedUsers' list
-    final myDocRef = _firestore.collection('users').doc(user.uid);
+    final myDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
     batch.update(myDocRef, {
       'blockedUsers': FieldValue.arrayUnion([targetUserId])
     });
@@ -71,7 +69,7 @@ class ModerationService {
     });
 
     // 3. Remove them from my followers if they follow me
-    final targetDocRef = _firestore.collection('users').doc(targetUserId);
+    final targetDocRef = FirebaseFirestore.instance.collection('users').doc(targetUserId);
     batch.update(targetDocRef, {
       'followers': FieldValue.arrayRemove([user.uid])
     });
@@ -80,19 +78,19 @@ class ModerationService {
   }
 
   Future<void> unblockUser(String targetUserId) async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    await _firestore.collection('users').doc(user.uid).update({
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
       'blockedUsers': FieldValue.arrayRemove([targetUserId])
     });
   }
 
   Stream<List<String>> streamBlockedUsers() {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return Stream.value([]);
 
-    return _firestore.collection('users').doc(user.uid).snapshots().map((doc) {
+    return FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots().map((doc) {
       if (!doc.exists) return [];
       final data = doc.data() as Map<String, dynamic>;
       final blocked = data['blockedUsers'] as List<dynamic>?;

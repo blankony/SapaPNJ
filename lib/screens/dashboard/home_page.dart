@@ -10,8 +10,6 @@ import '../../theme/avatar_helper.dart';
 import '../../services/prediction_service.dart';
 import '../../services/app_localizations.dart';
 
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class HomePage extends StatefulWidget {
   final ScrollController scrollController;
@@ -144,7 +142,7 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
   @override
   void initState() {
     super.initState();
-    _stream = _firestore.collection('posts')
+    _stream = FirebaseFirestore.instance.collection('posts')
         .orderBy('timestamp', descending: true)
         .limit(50)
         .snapshots();
@@ -158,14 +156,14 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     final bool isRec = widget.feedType == 'recommended';
     
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: user != null ? _firestore.collection('users').doc(user.uid).snapshots() : null,
+      stream: user != null ? FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots() : null,
       builder: (context, userSnap) {
         Map<String, dynamic> userData = {};
         if (userSnap.hasData && userSnap.data!.exists) {
