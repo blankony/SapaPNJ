@@ -46,3 +46,8 @@ app.*.map.json
 
 # Kunci Rahasia
 .env
+
+# Misplaced artifacts
+lib/.firebaserc
+lib/firebase.json
+lib/.genkit/
