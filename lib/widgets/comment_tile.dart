@@ -138,7 +138,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         await commentRef.update({'repostedBy': FieldValue.arrayRemove([user.uid])});
       }
     } catch (e) {
-      print("Repost Error: $e"); 
+      debugPrint("Repost Error: $e"); 
       _syncStatsState();
     }
   }

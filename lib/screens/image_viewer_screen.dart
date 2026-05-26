@@ -766,7 +766,7 @@ class _DownloadManager {
 
       onSuccess();
     } catch (e) {
-      print("Download Error: $e");
+      debugPrint("Download Error: $e");
       onFailure(e);
     }
   }

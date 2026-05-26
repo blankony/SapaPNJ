@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -58,11 +59,11 @@ class CloudinaryService {
           publicId: data['public_id'],
         );
       } else {
-        print('Cloudinary upload failed: ${response.statusCode} - $responseBody');
+        debugPrint('Cloudinary upload failed: ${response.statusCode} - $responseBody');
         return CloudinaryResponse(error: data['error']?['message'] ?? 'Upload failed');
       }
     } catch (e) {
-      print('Cloudinary exception: $e');
+      debugPrint('Cloudinary exception: $e');
       return CloudinaryResponse(error: e.toString());
     }
   }
@@ -70,7 +71,7 @@ class CloudinaryService {
   // Method BARU untuk menghapus file di Cloudinary
   Future<bool> deleteResource(String publicId, {String resourceType = 'image'}) async {
     if (_apiKey.isEmpty || _apiSecret.isEmpty) {
-      print("WARNING: API Key/Secret missing. Cannot delete from Cloudinary.");
+      debugPrint("WARNING: API Key/Secret missing. Cannot delete from Cloudinary.");
       return false;
     }
 
@@ -96,14 +97,14 @@ class CloudinaryService {
 
       final data = json.decode(response.body);
       if (data['result'] == 'ok') {
-        print("Cloudinary: Deleted $publicId");
+        debugPrint("Cloudinary: Deleted $publicId");
         return true;
       } else {
-        print("Cloudinary Delete Failed: ${response.body}");
+        debugPrint("Cloudinary Delete Failed: ${response.body}");
         return false;
       }
     } catch (e) {
-      print("Cloudinary Delete Exception: $e");
+      debugPrint("Cloudinary Delete Exception: $e");
       return false;
     }
   }

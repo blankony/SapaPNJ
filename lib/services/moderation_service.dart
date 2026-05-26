@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart'; // REQUIRED
@@ -39,7 +40,7 @@ class ModerationService {
       // Try to launch the email app
       await launchUrl(emailLaunchUri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      print("Could not launch email client: $e");
+      debugPrint("Could not launch email client: $e");
     }
   }
 
