@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:myfirebaseflutterapp/screens/dashboard/profile_page.dart';
+
+import 'profile_page.dart';
 
 class ProfileTabPage extends StatelessWidget {
   const ProfileTabPage({super.key});

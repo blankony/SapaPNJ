@@ -6,14 +6,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'services/app_localizations.dart';
+import 'theme/app_theme.dart';
+import 'theme/avatar_helper.dart';
 
 // Notifiers Global
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 final ValueNotifier<bool> hapticNotifier = ValueNotifier(true);
 final ValueNotifier<Locale> languageNotifier = ValueNotifier(const Locale('en'));
-
-import 'theme/app_theme.dart';
-import 'theme/avatar_helper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
