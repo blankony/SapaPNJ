@@ -12,6 +12,7 @@ import '../theme/avatar_helper.dart';
 import 'login_page.dart';
 import 'setup/setup_profile_screen.dart';
 import '../services/app_localizations.dart'; // REQUIRED IMPORT
+import '../widgets/decorative_background.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -258,30 +259,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Stack(
         children: [
            // --- BACKGROUND BLOBS ---
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 150,
-            left: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
-              ),
-            ),
-          ),
+           const Positioned.fill(child: DecorativeBackground()),
 
           // --- CONTENT ---
           TweenAnimationBuilder(

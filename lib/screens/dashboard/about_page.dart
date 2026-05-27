@@ -5,6 +5,7 @@ import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
+import '../../widgets/decorative_background.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -40,30 +41,7 @@ class AboutPage extends StatelessWidget {
       body: Stack(
         children: [
           // Background Blobs
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 150,
-            left: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
-              ),
-            ),
-          ),
+          const Positioned.fill(child: DecorativeBackground()),
 
           SingleChildScrollView(
             child: Padding(

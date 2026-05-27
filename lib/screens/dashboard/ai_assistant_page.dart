@@ -20,6 +20,7 @@ import '../../widgets/common_error_widget.dart';
 import '../../services/overlay_service.dart';
 import '../../services/voice_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
+import '../../widgets/decorative_background.dart';
 
 // --- ENHANCED LANGUAGE DETECTOR ---
 class LanguageDetector {
@@ -508,14 +509,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
         body: Stack(
           children: [
             if (_messages.isEmpty) ...[
-               Positioned(
-                top: -100, right: -100,
-                child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.15 : 0.1))),
-              ),
-              Positioned(
-                bottom: 150, left: -50,
-                child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.1 : 0.05))),
-              ),
+               const Positioned.fill(child: DecorativeBackground()),
             ],
             Column(
               children: [

@@ -6,6 +6,7 @@ import '../main.dart'; // For SisapaTheme
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import 'language_selection_screen.dart'; // IMPORT LANGUAGE SELECTION SCREEN
+import '../widgets/decorative_background.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -103,30 +104,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       body: Stack(
         children: [
           // --- DECORATIVE BACKGROUND (Matches Welcome Screen) ---
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 150,
-            left: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
-              ),
-            ),
-          ),
+           const Positioned.fill(child: DecorativeBackground()),
 
           // --- MAIN CONTENT ---
           Center(

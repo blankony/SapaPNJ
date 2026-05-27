@@ -6,7 +6,7 @@ import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart'; // Import Localization
-
+import '../widgets/decorative_background.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -124,30 +124,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: Stack(
         children: [
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.15 : 0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 150,
-            left: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDarkMode ? 0.1 : 0.05),
-              ),
-            ),
-          ),
+          const Positioned.fill(child: DecorativeBackground()),
 
           TweenAnimationBuilder(
             tween: Tween<double>(begin: 1.0, end: 0.0),
