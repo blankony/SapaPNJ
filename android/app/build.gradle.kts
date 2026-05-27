@@ -3,7 +3,6 @@ plugins {
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
     // END: FlutterFire Configuration
-    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -11,8 +10,7 @@ plugins {
 android {
     namespace = "com.example.myfirebaseflutterapp"
     compileSdk = 36
-    ndkVersion = "27.2.12479018"
-    ndkPath = "/home/ryanistr/android-ndk-r27c"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
