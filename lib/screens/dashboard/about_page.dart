@@ -106,15 +106,7 @@ class AboutPage extends StatelessWidget {
                       letterSpacing: 1.2,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    t('slogan'), // Uses existing key
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.hintColor,
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+
 
                   SizedBox(height: 32),
 

@@ -156,25 +156,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 24),
 
-                  Container(
-                    padding: EdgeInsets.only(left: 4),
-                    decoration: BoxDecoration(
-                      border: Border(left: BorderSide(color: SisapaTheme.blue, width: 4))
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12.0),
-                      child: Text(
-                        t.translate('slogan'),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: theme.hintColor,
-                          fontWeight: FontWeight.w500,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  ),
 
                   Spacer(flex: 3),
 

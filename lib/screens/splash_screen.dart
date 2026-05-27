@@ -182,15 +182,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                             height: 0.9,
                           ),
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          "SAPA PNJ",
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.hintColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+
                       ],
                     ),
                   ),
