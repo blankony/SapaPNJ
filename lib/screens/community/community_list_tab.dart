@@ -219,11 +219,13 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                           duration: Duration(milliseconds: 500),
                           curve: Curves.easeOut,
                           builder: (context, val, child) => Opacity(opacity: val, child: Transform.translate(offset: Offset(0, 50 * (1-val)), child: child)),
-                          child: BlogPostCard(
-                            postId: post.id,
-                            postData: pData,
-                            isOwner: pData['userId'] == user.uid,
-                            heroContextId: 'community_feed',
+                          child: RepaintBoundary(
+                            child: BlogPostCard(
+                              postId: post.id,
+                              postData: pData,
+                              isOwner: pData['userId'] == user.uid,
+                              heroContextId: 'community_feed',
+                            ),
                           ),
                         );
                       },

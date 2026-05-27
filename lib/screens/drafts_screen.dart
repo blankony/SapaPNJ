@@ -329,28 +329,15 @@ class _DraftsScreenState extends State<DraftsScreen> {
   }
 
   Widget _buildImageThumbnail(String path) {
+    final theme = Theme.of(context);
     try {
       if (path.startsWith('http') || path.startsWith('https')) {
-        return Image.network(
-          path,
+        return CachedNetworkImage(
+          imageUrl: path,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            );
-          },
-          errorBuilder: (c, e, s) => const Icon(
-            Icons.broken_image,
-            size: 20,
-            color: Colors.grey,
-          ),
+          memCacheWidth: 400,
+          placeholder: (context, url) => Container(color: theme.dividerColor.withOpacity(0.1)),
+          errorWidget: (context, url, error) => Icon(Icons.broken_image, color: theme.hintColor),
         );
       } else {
         return Image.file(

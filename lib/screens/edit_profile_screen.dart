@@ -447,6 +447,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               CachedNetworkImage(
                                 imageUrl: _bannerImageUrl!,
                                 fit: BoxFit.cover,
+                                memCacheWidth: 800,
                                 placeholder: (context, url) => Center(child: CircularProgressIndicator(color: SisapaTheme.blue)),
                                 errorWidget: (context, url, error) => Icon(Icons.error_outline, color: Colors.grey),
                               ),

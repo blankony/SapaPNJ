@@ -691,7 +691,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               child: Container(
                 color: SisapaTheme.darkGrey,
                 child: bannerImageUrl != null
-                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey))
+                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, memCacheWidth: 800, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey))
                   : (isMyProfile ? Center(child: Icon(Icons.camera_alt, color: Colors.white)) : null)
               )
             ),

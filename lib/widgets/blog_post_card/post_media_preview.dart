@@ -205,6 +205,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                             child: CachedNetworkImage(
                               imageUrl: url,
                               fit: BoxFit.cover,
+                              memCacheWidth: 600,
                               placeholder: (context, url) => Container(color: theme.dividerColor.withOpacity(0.1)),
                               errorWidget: (context, url, error) => const Icon(Icons.error),
                             ),
@@ -222,6 +223,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                         child: CachedNetworkImage(
                           imageUrl: widget.mediaUrls.first,
                           fit: BoxFit.cover,
+                          memCacheWidth: 600,
                           placeholder: (context, url) => Container(color: theme.dividerColor.withOpacity(0.1)),
                           errorWidget: (context, url, error) => const Icon(Icons.error),
                         ),

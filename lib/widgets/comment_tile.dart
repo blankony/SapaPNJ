@@ -526,6 +526,7 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                                         child: CachedNetworkImage(
                                           imageUrl: mediaUrl,
                                           fit: BoxFit.cover,
+                                          memCacheWidth: 400,
                                           placeholder: (context, url) => Center(child: CircularProgressIndicator(strokeWidth: 2)),
                                           errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.grey),
                                         ),
