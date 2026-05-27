@@ -1,6 +1,6 @@
 ![SAPA PNJ Header](SAPA%20PNJ.png)
 
-# SAPA PNJ (Sarana Pengguna Aplikasi Politeknik Negeri Jakarta)
+# SAPA PNJ
 
 **SAPA PNJ** is a modern, feature-rich social media and communication platform designed exclusively for the Politeknik Negeri Jakarta (PNJ) community. Built with Flutter and backed by a powerful Firebase backend, this application serves as a central hub for students and lecturers to connect, share information, and interact in a dynamic academic environment.
 

@@ -184,7 +184,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         ),
                         SizedBox(height: 16),
                         Text(
-                          "Sarana Pengguna Aplikasi\nPoliteknik Negeri Jakarta",
+                          "SAPA PNJ",
                           textAlign: TextAlign.center,
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.hintColor,
