@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
@@ -62,10 +62,10 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
     if (user == null) return;
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      await ApiService().updateUser(user.uid, {
         'department': _selectedDepartment,
-        'studyProgram': _selectedProdi!['name'],
-        'departmentCode': _selectedProdi!['code'],
+        'study_program': _selectedProdi!['name'],
+        'department_code': _selectedProdi!['code'],
       });
 
       if (mounted) {

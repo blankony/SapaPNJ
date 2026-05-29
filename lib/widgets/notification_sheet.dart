@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
-import '../services/app_localizations.dart'; // IMPORT LOCALIZATION
+import '../services/api_service.dart';
+import '../services/app_localizations.dart';
 
 class NotificationSheet extends StatefulWidget {
   final ScrollController scrollController;
@@ -22,45 +21,61 @@ class NotificationSheet extends StatefulWidget {
 
 class _NotificationSheetState extends State<NotificationSheet> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _notifications = [];
 
   @override
   void initState() {
     super.initState();
+    _loadNotifications();
     _markNotificationsAsRead();
+  }
+
+  Future<void> _loadNotifications() async {
+    if (_currentUser == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final notifs = await ApiService().getNotifications();
+      if (mounted) {
+        setState(() {
+          _notifications = notifs;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _markNotificationsAsRead() async {
     if (_currentUser == null) return;
-    final notifQuery = FirebaseFirestore.instance
-        .collection('users')
-        .doc(_currentUser!.uid)
-        .collection('notifications')
-        .where('isRead', isEqualTo: false);
-
-    final notifSnapshot = await notifQuery.get();
-    if (notifSnapshot.docs.isEmpty) return;
-
-    final batch = FirebaseFirestore.instance.batch();
-    for (final doc in notifSnapshot.docs) {
-      batch.update(doc.reference, {'isRead': true});
-    }
-    await batch.commit();
+    try {
+      await ApiService().markAllNotificationsRead();
+    } catch (_) {}
   }
 
-  String _getGroupLabel(Timestamp timestamp, AppLocalizations t) {
+  String _getGroupLabel(dynamic timestamp, AppLocalizations t) {
+    if (timestamp == null) return t.translate('time_earlier');
     final now = DateTime.now();
-    final date = timestamp.toDate();
+    DateTime date;
+    try {
+      date = DateTime.parse(timestamp.toString());
+    } catch (_) {
+      return t.translate('time_earlier');
+    }
     final today = DateTime(now.year, now.month, now.day);
     final notificationDate = DateTime(date.year, date.month, date.day);
     final difference = today.difference(notificationDate).inDays;
 
     if (difference == 0) {
-      if (now.difference(date).inMinutes < 60) return t.translate('time_new'); // "New"
-      return t.translate('time_today'); // "Today"
+      if (now.difference(date).inMinutes < 60) return t.translate('time_new');
+      return t.translate('time_today');
     }
-    if (difference == 1) return t.translate('time_yesterday'); // "Yesterday"
-    if (difference < 7) return t.translate('time_this_week'); // "This Week"
-    return t.translate('time_earlier'); // "Earlier"
+    if (difference == 1) return t.translate('time_yesterday');
+    if (difference < 7) return t.translate('time_this_week');
+    return t.translate('time_earlier');
   }
 
   @override
@@ -85,13 +100,16 @@ class _NotificationSheetState extends State<NotificationSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  t.translate('notif_activity_title'), // "Activity"
+                  t.translate('notif_activity_title'),
                   style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: Icon(Icons.check_circle_outline),
-                  tooltip: t.translate('notif_mark_read'), // "Mark all read"
-                  onPressed: _markNotificationsAsRead,
+                  tooltip: t.translate('notif_mark_read'),
+                  onPressed: () async {
+                    await _markNotificationsAsRead();
+                    _loadNotifications();
+                  },
                 )
               ],
             ),
@@ -100,82 +118,73 @@ class _NotificationSheetState extends State<NotificationSheet> {
           Divider(height: 1),
 
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(_currentUser!.uid)
-                  .collection('notifications')
-                  .orderBy('timestamp', descending: true)
-                  .limit(50)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                final docs = snapshot.data!.docs;
-
-                if (docs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.notifications_none, size: 64, color: theme.hintColor.withOpacity(0.3)),
-                        SizedBox(height: 16),
-                        Text(t.translate('notif_empty'), style: TextStyle(color: theme.hintColor)), // "No notifications yet"
-                      ],
-                    ),
-                  );
-                }
-
-                List<Widget> listItems = [];
-                String? currentGroup;
-
-                for (var doc in docs) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final Timestamp? timestamp = data['timestamp'];
-
-                  if (timestamp != null) {
-                    // Pass localization instance to helper
-                    String group = _getGroupLabel(timestamp, t);
-                    if (group != currentGroup) {
-                      currentGroup = group;
-                      listItems.add(
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                          child: Text(
-                            group,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.primaryColor
-                            ),
-                          ),
-                        )
-                      );
-                    }
-                  }
-
-                  final bool isRead = data['isRead'] ?? true;
-
-                  if (data['type'] == 'follow_request') {
-                    listItems.add(_FollowRequestTile(
-                      notificationId: doc.id,
-                      notificationData: data,
-                      isRead: isRead
-                    ));
-                  } else {
-                    listItems.add(_NotificationTile(notificationData: data, isRead: isRead));
-                  }
-                }
-
-                return ListView(
-                  controller: widget.scrollController,
-                  children: listItems,
-                );
-              },
-            ),
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : _notifications.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.notifications_none, size: 64, color: theme.hintColor.withOpacity(0.3)),
+                            SizedBox(height: 16),
+                            Text(t.translate('notif_empty'), style: TextStyle(color: theme.hintColor)),
+                          ],
+                        ),
+                      )
+                    : _buildNotificationsList(t, theme),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNotificationsList(AppLocalizations t, ThemeData theme) {
+    List<Widget> listItems = [];
+    String? currentGroup;
+
+    for (var data in _notifications) {
+      final dynamic timestamp = data['created_at'] ?? data['timestamp'];
+
+      if (timestamp != null) {
+        String group = _getGroupLabel(timestamp, t);
+        if (group != currentGroup) {
+          currentGroup = group;
+          listItems.add(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+              child: Text(
+                group,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.primaryColor
+                ),
+              ),
+            )
+          );
+        }
+      }
+
+      final isReadVal = data['is_read'] ?? data['isRead'];
+      final bool isRead = isReadVal == 1 || isReadVal == true;
+
+      if (data['type'] == 'follow_request') {
+        listItems.add(_FollowRequestTile(
+          notificationId: data['id'],
+          notificationData: data,
+          isRead: isRead,
+          onRefresh: _loadNotifications,
+        ));
+      } else {
+        listItems.add(_NotificationTile(
+          notificationData: data,
+          isRead: isRead,
+        ));
+      }
+    }
+
+    return ListView(
+      controller: widget.scrollController,
+      children: listItems,
     );
   }
 }
@@ -184,8 +193,14 @@ class _FollowRequestTile extends StatefulWidget {
   final String notificationId;
   final Map<String, dynamic> notificationData;
   final bool isRead;
+  final VoidCallback onRefresh;
 
-  const _FollowRequestTile({required this.notificationId, required this.notificationData, required this.isRead});
+  const _FollowRequestTile({
+    required this.notificationId,
+    required this.notificationData,
+    required this.isRead,
+    required this.onRefresh,
+  });
 
   @override
   State<_FollowRequestTile> createState() => _FollowRequestTileState();
@@ -196,41 +211,31 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
 
   Future<void> _handleRequest(bool isAccepted) async {
     setState(() => _isProcessing = true);
-    final myUid = FirebaseAuth.instance.currentUser!.uid;
-    final senderId = widget.notificationData['senderId'];
+    final senderId = widget.notificationData['sender_uid'] ?? widget.notificationData['senderId'];
     var t = AppLocalizations.of(context)!;
 
     try {
-      final batch = FirebaseFirestore.instance.batch();
-
-      final requestRef = FirebaseFirestore.instance.collection('users').doc(myUid).collection('follow_requests').doc(senderId);
-      batch.delete(requestRef);
-
+      bool success = false;
       if (isAccepted) {
-        final myDoc = FirebaseFirestore.instance.collection('users').doc(myUid);
-        final senderDoc = FirebaseFirestore.instance.collection('users').doc(senderId);
-
-        batch.update(myDoc, {'followers': FieldValue.arrayUnion([senderId])});
-        batch.update(senderDoc, {'following': FieldValue.arrayUnion([myUid])});
-
-        final newNotif = FirebaseFirestore.instance.collection('users').doc(senderId).collection('notifications').doc();
-        batch.set(newNotif, {
-          'type': 'request_accepted',
-          'senderId': myUid,
-          'postTextSnippet': 'You can now see their posts.',
-          'timestamp': FieldValue.serverTimestamp(),
-          'isRead': false,
-        });
+        success = await ApiService().acceptFollowRequest(senderId);
+      } else {
+        success = await ApiService().declineFollowRequest(senderId);
       }
 
-      final thisNotifRef = FirebaseFirestore.instance.collection('users').doc(myUid).collection('notifications').doc(widget.notificationId);
-      batch.delete(thisNotifRef);
-
-      await batch.commit();
-
-      if(isAccepted && mounted) OverlayService().showTopNotification(context, t.translate('notif_req_accepted'), Icons.person_add, (){}, color: Colors.green);
+      if (success) {
+        if (isAccepted && mounted) {
+          OverlayService().showTopNotification(context, t.translate('notif_req_accepted'), Icons.person_add, (){}, color: Colors.green);
+        }
+        // Mark current notification as read to clean up
+        await ApiService().markNotificationRead(widget.notificationId);
+        widget.onRefresh();
+      } else {
+        throw Exception("Request failed");
+      }
     } catch (e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('notif_req_error'), Icons.error, (){}, color: Colors.red);
+      if (mounted) {
+        OverlayService().showTopNotification(context, t.translate('notif_req_error'), Icons.error, (){}, color: Colors.red);
+      }
       setState(() => _isProcessing = false);
     }
   }
@@ -238,79 +243,66 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final senderId = widget.notificationData['senderId'];
+    final String name = widget.notificationData['sender_name'] ?? "Someone";
+    final String? profileUrl = widget.notificationData['sender_avatar'];
     var t = AppLocalizations.of(context)!;
 
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(senderId).get(),
-      builder: (context, snapshot) {
-        String name = "Someone";
-        String? profileUrl;
-
-        if (snapshot.hasData && snapshot.data!.exists) {
-          final userData = snapshot.data!.data() as Map<String, dynamic>;
-          name = userData['name'] ?? "Unknown";
-          profileUrl = userData['profileImageUrl'];
-        }
-
-        return Container(
-          color: widget.isRead ? Colors.transparent : theme.primaryColor.withOpacity(0.05),
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
+    return Container(
+      color: widget.isRead ? Colors.transparent : theme.primaryColor.withOpacity(0.05),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: theme.dividerColor,
-                    backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
-                    child: profileUrl == null ? Icon(Icons.person, color: Colors.white) : null,
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: theme.textTheme.bodyMedium,
-                        children: [
-                          TextSpan(text: name, style: TextStyle(fontWeight: FontWeight.bold)),
-                          TextSpan(text: " ${t.translate('notif_req_body')}"), // " wants to follow you."
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: theme.dividerColor,
+                backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl) : null,
+                child: profileUrl == null || profileUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
               ),
-              SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (_isProcessing)
-                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  else ...[
-                    OutlinedButton(
-                      onPressed: () => _handleRequest(false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: BorderSide(color: Colors.red.withOpacity(0.5))
-                      ),
-                      child: Text(t.translate('notif_req_decline')) // "Decline"
-                    ),
-                    SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => _handleRequest(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: SisapaTheme.blue,
-                        foregroundColor: Colors.white
-                      ),
-                      child: Text(t.translate('notif_req_confirm')) // "Confirm"
-                    ),
-                  ]
-                ],
-              )
+              SizedBox(width: 16),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: theme.textTheme.bodyMedium,
+                    children: [
+                      TextSpan(text: name, style: TextStyle(fontWeight: FontWeight.bold)),
+                      TextSpan(text: " ${t.translate('notif_req_body')}"),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-        );
-      },
+          SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (_isProcessing)
+                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              else ...[
+                OutlinedButton(
+                  onPressed: () => _handleRequest(false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: BorderSide(color: Colors.red.withOpacity(0.5))
+                  ),
+                  child: Text(t.translate('notif_req_decline'))
+                ),
+                SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () => _handleRequest(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SisapaTheme.blue,
+                    foregroundColor: Colors.white
+                  ),
+                  child: Text(t.translate('notif_req_confirm'))
+                ),
+              ]
+            ],
+          )
+        ],
+      ),
     );
   }
 }
@@ -324,14 +316,10 @@ class _NotificationTile extends StatelessWidget {
     required this.isRead,
   });
 
-  Future<DocumentSnapshot> _getSenderData(String senderId) {
-    return FirebaseFirestore.instance.collection('users').doc(senderId).get();
-  }
-
   void _navigateToTarget(BuildContext context) {
     final String type = notificationData['type'];
-    final String? postId = notificationData['postId'];
-    final String senderId = notificationData['senderId'];
+    final String? postId = notificationData['post_id'] ?? notificationData['postId'];
+    final String senderId = notificationData['sender_uid'] ?? notificationData['senderId'];
 
     Navigator.of(context).pop();
 
@@ -349,43 +337,31 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final String senderId = notificationData['senderId'];
+    final String senderId = notificationData['sender_uid'] ?? notificationData['senderId'] ?? '';
     var t = AppLocalizations.of(context)!;
 
-    if (senderId == 'system') {
+    if (senderId == 'system' || senderId.isEmpty) {
       return _buildSystemTile(context, theme, t);
     }
 
-    return FutureBuilder<DocumentSnapshot>(
-      future: _getSenderData(senderId),
-      builder: (context, snapshot) {
-        String name = "Someone";
-        String? profileUrl;
-
-        if (snapshot.hasData && snapshot.data!.exists) {
-          final userData = snapshot.data!.data() as Map<String, dynamic>;
-          name = userData['name'] ?? "Unknown";
-          profileUrl = userData['profileImageUrl'];
-        }
-
-        return _buildUserTile(context, theme, name, profileUrl, t);
-      },
-    );
+    final String name = notificationData['sender_name'] ?? "Someone";
+    final String? profileUrl = notificationData['sender_avatar'];
+    return _buildUserTile(context, theme, name, profileUrl, t);
   }
 
   Widget _buildSystemTile(BuildContext context, ThemeData theme, AppLocalizations t) {
     final String type = notificationData['type'];
-    final String text = notificationData['postTextSnippet'] ?? '';
-    final Timestamp? timestamp = notificationData['timestamp'];
+    final String text = notificationData['post_text_snippet'] ?? notificationData['postTextSnippet'] ?? '';
+    final dynamic timestamp = notificationData['created_at'] ?? notificationData['timestamp'];
 
     IconData icon = Icons.info;
     Color color = theme.primaryColor;
-    String title = t.translate('notif_sys_title'); // "System Notification"
+    String title = t.translate('notif_sys_title');
 
     if (type == 'upload_complete') {
       icon = Icons.cloud_done;
       color = Colors.green;
-      title = t.translate('notif_upload_title'); // "Upload Successful"
+      title = t.translate('notif_upload_title');
     }
 
     return Container(
@@ -406,7 +382,7 @@ class _NotificationTile extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
-                  timeago.format(timestamp.toDate()),
+                  timeago.format(DateTime.parse(timestamp.toString())),
                   style: TextStyle(fontSize: 12, color: theme.hintColor),
                 ),
               ),
@@ -418,8 +394,8 @@ class _NotificationTile extends StatelessWidget {
 
   Widget _buildUserTile(BuildContext context, ThemeData theme, String name, String? profileUrl, AppLocalizations t) {
     final String type = notificationData['type'];
-    final String snippet = notificationData['postTextSnippet'] ?? '';
-    final Timestamp? timestamp = notificationData['timestamp'];
+    final String snippet = notificationData['post_text_snippet'] ?? notificationData['postTextSnippet'] ?? '';
+    final dynamic timestamp = notificationData['created_at'] ?? notificationData['timestamp'];
 
     IconData badgeIcon;
     Color badgeColor;
@@ -471,8 +447,8 @@ class _NotificationTile extends StatelessWidget {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: theme.dividerColor,
-                  backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
-                  child: profileUrl == null ? Icon(Icons.person, color: Colors.white) : null,
+                  backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl) : null,
+                  child: profileUrl == null || profileUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
                 ),
                 Positioned(
                   bottom: -2,
@@ -522,7 +498,7 @@ class _NotificationTile extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
-                        timeago.format(timestamp.toDate()),
+                        timeago.format(DateTime.parse(timestamp.toString())),
                         style: TextStyle(color: theme.hintColor, fontSize: 12),
                       ),
                     ),

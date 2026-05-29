@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -19,13 +19,14 @@ import '../edit_profile_screen.dart';
 import '../image_viewer_screen.dart';
 import 'settings_page.dart';
 import '../../services/overlay_service.dart';
-import '../../services/cloudinary_service.dart';
+import '../../services/gcs_service.dart';
 import '../../services/moderation_service.dart';
 import '../follow_list_screen.dart';
 import '../ktm_verification_screen.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
-final CloudinaryService _cloudinaryService = CloudinaryService();
+final GcsService _cloudinaryService = GcsService();
+final ApiService _apiService = ApiService();
 
 class ProfilePage extends StatefulWidget {
   final String? userId;
@@ -56,6 +57,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   bool _isProcessingFollow = false;
 
+  // Loaded data
+  Map<String, dynamic> _userData = {};
+  bool _isLoading = true;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -65,10 +70,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     _user = FirebaseAuth.instance.currentUser;
     _userId = widget.userId ?? _user!.uid;
 
-    // Force reload user data to get fresh emailVerified status on init
     _user?.reload();
 
     _checkBlockedStatus();
+    _loadUserData();
 
     _tabController = TabController(
       length: 3,
@@ -182,15 +187,20 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     return entry;
   }
 
-  Future<void> _updateAllPastContent(String newImageUrl) async {
+  Future<void> _loadUserData() async {
     try {
-      final batch = FirebaseFirestore.instance.batch();
-      final postsQuery = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: _userId).get();
-      for (var doc in postsQuery.docs) batch.update(doc.reference, {'profileImageUrl': newImageUrl});
-      final commentsQuery = await FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: _userId).get();
-      for (var doc in commentsQuery.docs) batch.update(doc.reference, {'profileImageUrl': newImageUrl});
-      await batch.commit();
-    } catch (e) { debugPrint("Sync fail: $e"); }
+      final data = await _apiService.getUser(_userId);
+      if (mounted && data != null) {
+        setState(() {
+          _userData = data;
+          _isLoading = false;
+        });
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _showImageSourceSelection({required bool isBanner}) {
@@ -263,11 +273,11 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       loadingOverlay.remove();
       if (downloadUrl != null) {
         final Map<String, dynamic> updateData = {};
-        if (isBanner) updateData['bannerImageUrl'] = downloadUrl;
-        else { updateData['profileImageUrl'] = downloadUrl; updateData['avatarIconId'] = -1; }
+        if (isBanner) updateData['banner_image_url'] = downloadUrl;
+        else { updateData['profile_image_url'] = downloadUrl; updateData['avatar_icon_id'] = -1; }
 
-        await FirebaseFirestore.instance.collection('users').doc(_userId).update(updateData);
-        if (!isBanner) _updateAllPastContent(downloadUrl);
+        await _apiService.updateUser(_userId, updateData);
+        await _loadUserData(); // refresh
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_update_success'), Icons.check_circle, (){}, color: Colors.green);
       }
     } catch (e) {
@@ -347,31 +357,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
     try {
       if (isPrivate) {
-        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).set({
-          'timestamp': FieldValue.serverTimestamp(),
-          'status': 'pending',
-        });
-
-        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').set({
-          'type': 'follow_request',
-          'senderId': _user!.uid,
-          'timestamp': FieldValue.serverTimestamp(),
-          'isRead': false,
-        });
-
+        await _apiService.sendFollowRequest(_userId);
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_sent'), Icons.send, (){}, color: Colors.blue);
       } else {
-        final batch = FirebaseFirestore.instance.batch();
-        final myDocRef = FirebaseFirestore.instance.collection('users').doc(_user!.uid);
-        final targetDocRef = FirebaseFirestore.instance.collection('users').doc(_userId);
-        batch.update(myDocRef, {'following': FieldValue.arrayUnion([_userId])});
-        batch.update(targetDocRef, {'followers': FieldValue.arrayUnion([_user!.uid])});
-        await batch.commit();
-
-        FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').add({
-          'type': 'follow', 'senderId': _user!.uid, 'timestamp': FieldValue.serverTimestamp(), 'isRead': false,
-        });
+        await _apiService.followUser(_userId);
       }
+      await _loadUserData();
     } catch (e) {
        if(mounted) OverlayService().showTopNotification(context, "${t.translate('profile_action_fail')}: $e", Icons.error, (){}, color: Colors.red);
     } finally {
@@ -386,17 +377,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
     try {
       if (isRequestOnly) {
-        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('follow_requests').doc(_user!.uid).delete();
-        await FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').doc('request_${_user!.uid}').delete();
+        await _apiService.cancelFollowRequest(_userId);
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_cancel'), Icons.close, (){});
       } else {
-        final batch = FirebaseFirestore.instance.batch();
-        final myDocRef = FirebaseFirestore.instance.collection('users').doc(_user!.uid);
-        final targetDocRef = FirebaseFirestore.instance.collection('users').doc(_userId);
-        batch.update(myDocRef, {'following': FieldValue.arrayRemove([_userId])});
-        batch.update(targetDocRef, {'followers': FieldValue.arrayRemove([_user!.uid])});
-        await batch.commit();
+        await _apiService.unfollowUser(_userId);
       }
+      await _loadUserData();
     } catch (e) {
       if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red);
     } finally {
@@ -484,19 +470,22 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     super.dispose();
   }
 
-  String _formatJoinedDate(Timestamp? timestamp) {
+  String _formatJoinedDate(dynamic rawDate) {
     var t = AppLocalizations.of(context)!;
-    if (timestamp == null) return t.translate('profile_joined_unknown');
-    return '${t.translate('profile_joined')} ${DateFormat('MMMM yyyy').format(timestamp.toDate())}';
+    if (rawDate == null) return t.translate('profile_joined_unknown');
+
+    DateTime? dateTime;
+    if (rawDate is String) {
+      dateTime = DateTime.tryParse(rawDate);
+    }
+
+    if (dateTime == null) return t.translate('profile_joined_unknown');
+    return '${t.translate('profile_joined')} ${DateFormat('MMMM yyyy').format(dateTime)}';
   }
 
   Future<void> _handleRefresh() async {
-    // FIX: Force reload to update emailVerified status from server
-    try {
-      await _user?.reload();
-    } catch (_) {}
-    await Future.delayed(Duration(seconds: 1));
-    if (mounted) setState(() {});
+    try { await _user?.reload(); } catch (_) {}
+    await _loadUserData();
   }
 
   @override
@@ -511,123 +500,120 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final double topPadding = MediaQuery.of(context).padding.top;
     final double pinnedHeaderHeight = topPadding + kToolbarHeight;
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(_userId).snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Scaffold(appBar: AppBar(title: Text(t.translate('profile_error_title'))), body: Center(child: Text(t.translate('profile_error_generic'))));
-        }
+    if (_isLoading) {
+      return widget.includeScaffold
+          ? Scaffold(body: Center(child: CircularProgressIndicator()))
+          : Center(child: CircularProgressIndicator());
+    }
 
-        final data = snapshot.data?.data() as Map<String, dynamic>? ?? {};
-        final name = data['name'] ?? 'User';
+    final data = _userData;
+    final name = data['name'] ?? 'User';
 
-        final bool isMyProfile = _user?.uid == _userId;
-        final bool isPrivateAccount = data['isPrivate'] ?? false;
-        final List<dynamic> followers = data['followers'] ?? [];
-        final bool amIFollowing = followers.contains(_user?.uid);
+    final bool isMyProfile = _user?.uid == _userId;
+    final bool isPrivateAccount = data['is_private'] ?? data['isPrivate'] ?? false;
+    final List<dynamic> followers = data['followers'] ?? [];
+    final bool amIFollowing = followers.contains(_user?.uid);
 
-        final bool canViewProfile = isMyProfile || !isPrivateAccount || amIFollowing;
+    final bool canViewProfile = isMyProfile || !isPrivateAccount || amIFollowing;
 
-        final String verificationStatus = data['verificationStatus'] ?? 'none';
-        final bool isVerified = verificationStatus == 'verified';
+    final String verificationStatus = data['verification_status'] ?? data['verificationStatus'] ?? 'none';
+    final bool isVerified = verificationStatus == 'verified';
 
-        Widget content = RefreshIndicator(
-          onRefresh: _handleRefresh,
-          color: SisapaTheme.blue,
-          edgeOffset: pinnedHeaderHeight,
-          notificationPredicate: (notification) => true,
-          child: NestedScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  pinned: true,
-                  elevation: 0,
-                  scrolledUnderElevation: 0,
-                  expandedHeight: 218.0,
-                  backgroundColor: isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
-                  iconTheme: IconThemeData(color: isDarkMode ? SisapaTheme.white : SisapaTheme.blue),
-                  automaticallyImplyLeading: widget.includeScaffold,
+    Widget content = RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: SisapaTheme.blue,
+      edgeOffset: pinnedHeaderHeight,
+      notificationPredicate: (notification) => true,
+      child: NestedScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              pinned: true,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              expandedHeight: 218.0,
+              backgroundColor: isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
+              iconTheme: IconThemeData(color: isDarkMode ? SisapaTheme.white : SisapaTheme.blue),
+              automaticallyImplyLeading: widget.includeScaffold,
 
-                  title: AnimatedOpacity(
-                    opacity: _isScrolled ? 1.0 : 0.0,
-                    duration: Duration(milliseconds: 200),
-                    child: Row(
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            color: isDarkMode ? SisapaTheme.white : SisapaTheme.black,
-                            fontWeight: FontWeight.bold
-                          )
-                        ),
-                        if (isVerified) ...[
-                          SizedBox(width: 4),
-                          Icon(Icons.verified, size: 16, color: SisapaTheme.blue),
-                        ] else if (isPrivateAccount) ...[
-                          SizedBox(width: 4),
-                          Icon(Icons.lock, size: 16, color: isDarkMode ? SisapaTheme.white : SisapaTheme.black),
-                        ],
-                      ],
+              title: AnimatedOpacity(
+                opacity: _isScrolled ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 200),
+                child: Row(
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: isDarkMode ? SisapaTheme.white : SisapaTheme.black,
+                        fontWeight: FontWeight.bold
+                      )
                     ),
-                  ),
-                  centerTitle: false,
-                  actions: [
-                      _buildActionMenu(context, data, isMyProfile),
+                    if (isVerified) ...[
+                      SizedBox(width: 4),
+                      Icon(Icons.verified, size: 16, color: SisapaTheme.blue),
+                    ] else if (isPrivateAccount) ...[
+                      SizedBox(width: 4),
+                      Icon(Icons.lock, size: 16, color: isDarkMode ? SisapaTheme.white : SisapaTheme.black),
+                    ],
                   ],
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: _buildHeaderFlexibleSpace(context, data, isMyProfile, isPrivateAccount, amIFollowing),
-                  ),
                 ),
+              ),
+              centerTitle: false,
+              actions: [
+                  _buildActionMenu(context, data, isMyProfile),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: _buildHeaderFlexibleSpace(context, data, isMyProfile, isPrivateAccount, amIFollowing),
+              ),
+            ),
 
-                SliverToBoxAdapter(
-                  child: _buildProfileInfoBody(context, data, isMyProfile),
-                ),
+            SliverToBoxAdapter(
+              child: _buildProfileInfoBody(context, data, isMyProfile),
+            ),
 
-                if (!_isBlocked && canViewProfile)
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _SliverAppBarDelegate(
-                      TabBar(
-                        controller: _tabController,
-                        tabs: [
-                          Tab(text: t.translate('profile_posts')),
-                          Tab(text: t.translate('profile_reposts')),
-                          Tab(text: t.translate('profile_replies'))
-                        ],
-                        labelColor: theme.primaryColor,
-                        unselectedLabelColor: theme.hintColor,
-                        indicatorColor: theme.primaryColor,
-                        overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        dividerColor: Colors.transparent,
-                      ),
-                      isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
-                    ),
+            if (!_isBlocked && canViewProfile)
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverAppBarDelegate(
+                  TabBar(
+                    controller: _tabController,
+                    tabs: [
+                      Tab(text: t.translate('profile_posts')),
+                      Tab(text: t.translate('profile_reposts')),
+                      Tab(text: t.translate('profile_replies'))
+                    ],
+                    labelColor: theme.primaryColor,
+                    unselectedLabelColor: theme.hintColor,
+                    indicatorColor: theme.primaryColor,
+                    overlayColor: WidgetStateProperty.all(Colors.transparent),
+                    dividerColor: Colors.transparent,
                   ),
-              ];
-            },
+                  isDarkMode ? Color(0xFF15202B) : SisapaTheme.white,
+                ),
+              ),
+          ];
+        },
 
-            body: _isBlocked
-                ? _buildBlockedBody()
-                : (!canViewProfile)
-                    ? _buildPrivateAccountBody()
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          Builder(builder: (context) => _buildMyPosts(context, _userId)),
-                          Builder(builder: (context) => _buildMyReposts(context, _userId)),
-                          Builder(builder: (context) => _buildMyReplies(context, _userId)),
-                        ],
-                      ),
-          ),
-        );
-
-        return widget.includeScaffold
-            ? Scaffold(extendBodyBehindAppBar: true, body: content)
-            : content;
-      }
+        body: _isBlocked
+            ? _buildBlockedBody()
+            : (!canViewProfile)
+                ? _buildPrivateAccountBody()
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      Builder(builder: (context) => _buildMyPosts(context, _userId)),
+                      Builder(builder: (context) => _buildMyReposts(context, _userId)),
+                      Builder(builder: (context) => _buildMyReplies(context, _userId)),
+                    ],
+                  ),
+      ),
     );
+
+    return widget.includeScaffold
+        ? Scaffold(extendBodyBehindAppBar: true, body: content)
+        : content;
   }
 
   // --- Header Components ---
@@ -668,11 +654,11 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
 
-    final String? bannerImageUrl = data['bannerImageUrl'];
-    final String? profileImageUrl = data['profileImageUrl'];
+    final String? bannerImageUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
+    final String? profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
     final String? dept = data['department'];
-    final String? prodi = data['studyProgram'];
-    final String? deptCode = data['departmentCode'];
+    final String? prodi = data['study_program'] ?? data['studyProgram'];
+    final String? deptCode = data['department_code'] ?? data['departmentCode'];
 
     return Stack(
       children: [
@@ -752,31 +738,23 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       );
     }
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(_userId)
-          .collection('follow_requests')
-          .doc(_user!.uid)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data!.exists) {
-          return OutlinedButton(
-            onPressed: _isProcessingFollow ? null : () => _unfollowUser(true),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Theme.of(context).cardColor,
-              side: BorderSide(color: Theme.of(context).dividerColor),
-            ),
-            child: Text(t.translate('profile_requested'), style: TextStyle(color: Theme.of(context).hintColor)),
-          );
-        }
+    // For private accounts, check follow request status from API data
+    final bool hasRequested = _userData['has_follow_request'] == true;
+    if (hasRequested) {
+      return OutlinedButton(
+        onPressed: _isProcessingFollow ? null : () => _unfollowUser(true),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Theme.of(context).cardColor,
+          side: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+        child: Text(t.translate('profile_requested'), style: TextStyle(color: Theme.of(context).hintColor)),
+      );
+    }
 
-        return ElevatedButton(
-          onPressed: _isProcessingFollow ? null : () => _followUser(true),
-          style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
-          child: Text(t.translate('community_follow')),
-        );
-      },
+    return ElevatedButton(
+      onPressed: _isProcessingFollow ? null : () => _followUser(true),
+      style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
+      child: Text(t.translate('community_follow')),
     );
   }
 
@@ -788,7 +766,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final String handle = "@${(data['email'] ?? '').split('@')[0]}";
     final String displayBio = _isBioExpanded ? (data['bio'] ?? '') : ((data['bio'] ?? '').length > 100 ? (data['bio'] ?? '').substring(0, 100) + '...' : (data['bio'] ?? ''));
 
-    final String verificationStatus = data['verificationStatus'] ?? 'none';
+    final String verificationStatus = data['verification_status'] ?? data['verificationStatus'] ?? 'none';
     final bool isVerified = verificationStatus == 'verified';
     final bool isPending = verificationStatus == 'pending';
 
@@ -814,7 +792,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             if (isVerified) ...[
               SizedBox(width: 4),
               Icon(Icons.verified, size: 22, color: SisapaTheme.blue),
-            ] else if (data['isPrivate'] ?? false) ...[
+            ] else if (data['is_private'] ?? data['isPrivate'] ?? false) ...[
               SizedBox(width: 6),
               Icon(Icons.lock, size: 22, color: theme.textTheme.titleLarge?.color),
             ],
@@ -880,7 +858,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           Text(displayBio.isEmpty ? t.translate('profile_no_bio') : displayBio, style: theme.textTheme.bodyLarge),
           if ((data['bio'] ?? '').length > 100) GestureDetector(onTap: () => setState(() => _isBioExpanded = !_isBioExpanded), child: Text(_isBioExpanded ? t.translate('general_show_less') : t.translate('general_show_more'), style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold))),
           SizedBox(height: 8),
-          Row(children: [Icon(Icons.calendar_today, size: 14, color: theme.hintColor), SizedBox(width: 4), Text(_formatJoinedDate(data['createdAt']), style: theme.textTheme.titleSmall)]),
+          Row(children: [Icon(Icons.calendar_today, size: 14, color: theme.hintColor), SizedBox(width: 4), Text(_formatJoinedDate(data['created_at'] ?? data['createdAt']), style: theme.textTheme.titleSmall)]),
           SizedBox(height: 8),
           Row(
             children: [
@@ -970,8 +948,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   }
 
   Widget _buildAvatarImage(Map<String, dynamic> data) {
-    if (data['profileImageUrl'] != null) return CircleAvatar(radius: 45, backgroundImage: CachedNetworkImageProvider(data['profileImageUrl']));
-    return CircleAvatar(radius: 45, backgroundColor: AvatarHelper.getColor(data['avatarHex']), child: Icon(AvatarHelper.getIcon(data['avatarIconId']??0), size: 50, color: Colors.white));
+    final url = data['profile_image_url'] ?? data['profileImageUrl'];
+    if (url != null) return CircleAvatar(radius: 45, backgroundImage: CachedNetworkImageProvider(url));
+    return CircleAvatar(radius: 45, backgroundColor: AvatarHelper.getColor(data['avatar_hex'] ?? data['avatarHex']), child: Icon(AvatarHelper.getIcon(data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0), size: 50, color: Colors.white));
   }
 
   Widget _buildStatText(BuildContext context, int count, String label, int tabIndex) {
@@ -999,86 +978,77 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   Widget _buildMyPosts(BuildContext context, String userId) {
     var t = AppLocalizations.of(context)!;
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
-      builder: (context, userSnapshot) {
-        if (userSnapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_posts_fail'), isConnectionError: true);
 
-        final firestorePinned = (userSnapshot.data?.data() as Map<String, dynamic>?)?['pinnedPostId'];
-        final activePinnedId = _optimisticPinnedPostId == '' ? null : (_optimisticPinnedPostId ?? firestorePinned);
+    final String? firestorePinned = _userData['pinned_post_id'] ?? _userData['pinnedPostId'];
+    final activePinnedId = _optimisticPinnedPostId == '' ? null : (_optimisticPinnedPostId ?? firestorePinned);
 
-        return StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_stream_fail'), isConnectionError: true);
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _apiService.getPosts(userUid: userId, limit: 50),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_posts_fail'), isConnectionError: true);
 
-            List<Widget> slivers = [];
-            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-              slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
-            } else {
-              final allDocs = snapshot.data?.docs ?? [];
+        List<Widget> slivers = [];
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
+        } else {
+          final allPosts = snapshot.data ?? [];
 
-              final visibleDocs = allDocs.where((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                final bool isCommunityIdentityPost = data['isCommunityPost'] ?? false;
-                if (isCommunityIdentityPost) return false;
+          final visiblePosts = allPosts.where((data) {
+            final bool isCommunityIdentityPost = data['is_community_post'] ?? data['isCommunityPost'] ?? false;
+            if (isCommunityIdentityPost) return false;
+            final visibility = data['visibility'] ?? 'public';
+            final ownerId = data['user_uid'] ?? data['userId'];
+            if (visibility == 'public') return true;
+            if (visibility == 'followers') return true;
+            if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
+            return false;
+          }).toList();
 
-                final visibility = data['visibility'] ?? 'public';
-                final ownerId = data['userId'];
-
-                if (visibility == 'public') return true;
-                if (visibility == 'followers') return true;
-                if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
-
-                return false;
-              }).toList();
-
-              if (visibleDocs.isEmpty) {
-                slivers.add(SliverFillRemaining(child: Center(child: Text(t.translate('profile_no_posts')))));
-              } else {
-                if (activePinnedId != null) {
-                  final index = visibleDocs.indexWhere((d) => d.id == activePinnedId);
-                  if (index != -1) {
-                    final pinned = visibleDocs.removeAt(index);
-                    visibleDocs.insert(0, pinned);
-                  }
-                }
-                slivers.add(SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final doc = visibleDocs[index];
-                      return BlogPostCard(
-                        key: ValueKey(doc.id),
-                        postId: doc.id,
-                        postData: doc.data() as Map<String, dynamic>,
-                        isOwner: doc['userId'] == FirebaseAuth.instance.currentUser?.uid,
-                        heroContextId: 'profile_posts',
-                        isPinned: doc.id == activePinnedId,
-                        onPinToggle: (id, isPinned) => _handlePinToggle(id, isPinned),
-                        currentProfileUserId: _userId,
-                      );
-                    },
-                    childCount: visibleDocs.length,
-                  ),
-                ));
-                slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
+          if (visiblePosts.isEmpty) {
+            slivers.add(SliverFillRemaining(child: Center(child: Text(t.translate('profile_no_posts')))));
+          } else {
+            if (activePinnedId != null) {
+              final index = visiblePosts.indexWhere((d) => d['id'] == activePinnedId);
+              if (index != -1) {
+                final pinned = visiblePosts.removeAt(index);
+                visiblePosts.insert(0, pinned);
               }
             }
+            slivers.add(SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final pData = visiblePosts[index];
+                  final pId = pData['id'] ?? '';
+                  return BlogPostCard(
+                    key: ValueKey(pId),
+                    postId: pId,
+                    postData: pData,
+                    isOwner: (pData['user_uid'] ?? pData['userId']) == FirebaseAuth.instance.currentUser?.uid,
+                    heroContextId: 'profile_posts',
+                    isPinned: pId == activePinnedId,
+                    onPinToggle: (id, isPinned) => _handlePinToggle(id, isPinned),
+                    currentProfileUserId: _userId,
+                  );
+                },
+                childCount: visiblePosts.length,
+              ),
+            ));
+            slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
+          }
+        }
 
-            return CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: slivers,
-            );
-          },
+        return CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: slivers,
         );
-      }
+      },
     );
   }
 
   Widget _buildMyReplies(BuildContext context, String userId) {
     var t = AppLocalizations.of(context)!;
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId).orderBy('timestamp', descending: true).snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _apiService.getUserComments(userId),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_replies_fail'), isConnectionError: true);
 
@@ -1086,44 +1056,26 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
         } else {
-          final docs = snapshot.data?.docs ?? [];
+          final docs = snapshot.data ?? [];
           if (docs.isEmpty) {
             slivers.add(SliverFillRemaining(child: Center(child: Text(t.translate('profile_no_replies')))));
           } else {
             slivers.add(SliverList(delegate: SliverChildBuilderDelegate((context, index) {
-              final doc = docs[index];
-              final parentPostId = doc.reference.parent.parent!.id;
+              final data = docs[index];
+              final parentPostId = data['post_id'] ?? data['originalPostId'] ?? '';
 
-              return StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance.collection('posts').doc(parentPostId).snapshots(),
-                builder: (context, parentSnapshot) {
-                  if (!parentSnapshot.hasData || !parentSnapshot.data!.exists) return SizedBox.shrink();
-
-                  final parentData = parentSnapshot.data!.data() as Map<String, dynamic>;
-                  final visibility = parentData['visibility'] ?? 'public';
-                  final ownerId = parentData['userId'];
-
-                  final isVisible = (visibility == 'public') ||
-                                    (visibility == 'followers') ||
-                                    (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid);
-
-                  if (isVisible) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(listTileTheme: ListTileThemeData(minVerticalPadding: 0, visualDensity: VisualDensity.compact, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0))),
-                      child: CommentTile(
-                        key: ValueKey(doc.id),
-                        commentId: doc.id,
-                        commentData: doc.data() as Map<String, dynamic>,
-                        postId: parentPostId,
-                        isOwner: true,
-                        showPostContext: true,
-                        heroContextId: 'profile_replies',
-                        currentProfileUserId: _userId,
-                      ),
-                    );
-                  }
-                  return SizedBox.shrink();
-                },
+              return Theme(
+                data: Theme.of(context).copyWith(listTileTheme: ListTileThemeData(minVerticalPadding: 0, visualDensity: VisualDensity.compact, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0))),
+                child: CommentTile(
+                  key: ValueKey(data['id'] ?? index),
+                  commentId: data['id'] ?? '',
+                  commentData: data,
+                  postId: parentPostId,
+                  isOwner: true,
+                  showPostContext: true,
+                  heroContextId: 'profile_replies',
+                  currentProfileUserId: _userId,
+                ),
               );
             }, childCount: docs.length)));
             slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
@@ -1136,42 +1088,31 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   Widget _buildMyReposts(BuildContext context, String userId) {
     var t = AppLocalizations.of(context)!;
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('posts').where('repostedBy', arrayContains: userId).orderBy('timestamp', descending: true).snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _apiService.getReposts(userId),
       builder: (context, snapshot) {
         if (snapshot.hasError) return CommonErrorWidget(message: t.translate('profile_load_reposts_fail'), isConnectionError: true);
         List<Widget> slivers = [];
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           slivers.add(SliverFillRemaining(child: Center(child: CircularProgressIndicator())));
         } else {
-          final allDocs = snapshot.data?.docs ?? [];
+          final allPosts = snapshot.data ?? [];
 
-          final visibleDocs = allDocs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final visibility = data['visibility'] ?? 'public';
-            final ownerId = data['userId'];
-
-            if (visibility == 'public') return true;
-            if (visibility == 'followers') return true;
-            if (visibility == 'private' && ownerId == FirebaseAuth.instance.currentUser?.uid) return true;
-
-            return false;
-          }).toList();
-
-          if (visibleDocs.isEmpty) {
+          if (allPosts.isEmpty) {
             slivers.add(SliverFillRemaining(child: Center(child: Text(t.translate('profile_no_reposts')))));
           } else {
             slivers.add(SliverList(delegate: SliverChildBuilderDelegate((context, index) {
-              final doc = visibleDocs[index];
+              final pData = allPosts[index];
+              final pId = pData['id'] ?? '';
               return BlogPostCard(
-                key: ValueKey('repost_${doc.id}'),
-                postId: doc.id,
-                postData: doc.data() as Map<String, dynamic>,
-                isOwner: doc['userId'] == FirebaseAuth.instance.currentUser?.uid,
+                key: ValueKey('repost_$pId'),
+                postId: pId,
+                postData: pData,
+                isOwner: (pData['user_uid'] ?? pData['userId']) == FirebaseAuth.instance.currentUser?.uid,
                 heroContextId: 'profile_reposts',
                 currentProfileUserId: _userId,
               );
-            }, childCount: visibleDocs.length)));
+            }, childCount: allPosts.length)));
             slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
           }
         }

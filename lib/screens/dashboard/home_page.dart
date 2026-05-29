@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/blog_post_card.dart';
 import '../../widgets/common_error_widget.dart';
 import '../../main.dart';
@@ -9,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/prediction_service.dart';
 import '../../services/app_localizations.dart';
+import '../../services/api_service.dart';
 
 class HomePage extends StatefulWidget {
   final ScrollController scrollController;
@@ -132,7 +132,11 @@ class _PostFeedList extends StatefulWidget {
 
 class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveClientMixin {
   final PredictionService _aiService = PredictionService();
-  late Stream<QuerySnapshot> _stream;
+  final ApiService _api = ApiService();
+  List<Map<String, dynamic>> _posts = [];
+  Map<String, dynamic> _userData = {};
+  bool _isLoading = true;
+  bool _hasError = false;
   String _refreshKey = '';
 
   @override
@@ -141,14 +145,35 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
   @override
   void initState() {
     super.initState();
-    _stream = FirebaseFirestore.instance.collection('posts')
-        .orderBy('timestamp', descending: true)
-        .limit(50)
-        .snapshots();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; _hasError = false; });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final results = await Future.wait([
+          _api.getPosts(limit: 50),
+          _api.getUser(user.uid),
+        ]);
+        if (mounted) {
+          setState(() {
+            _posts = results[0] as List<Map<String, dynamic>>;
+            _userData = (results[1] as Map<String, dynamic>?) ?? {};
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() { _isLoading = false; _hasError = true; });
+    }
   }
 
   Future<void> _refresh() async {
-    await Future.delayed(Duration(seconds: 1));
+    await _loadData();
     if(mounted) setState(() => _refreshKey = DateTime.now().toString());
   }
 
@@ -161,75 +186,44 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: user != null ? FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots() : null,
-      builder: (context, userSnap) {
-        Map<String, dynamic> userData = {};
-        if (userSnap.hasData && userSnap.data!.exists) {
-          userData = userSnap.data!.data() as Map<String, dynamic>;
-        }
+    if (_isLoading) return Center(child: CircularProgressIndicator());
+    if (_hasError) return CommonErrorWidget(message: t.translate('home_error_loading'));
 
-        return StreamBuilder<QuerySnapshot>(
-          stream: _stream,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+    List<Map<String, dynamic>> docs = List.from(_posts);
 
-            if (snapshot.hasError) return CommonErrorWidget(message: t.translate('home_error_loading'));
+    // Client-side recommendation sorting if needed
+    // Note: visibility filtering is now handled server-side
 
-            final allDocs = snapshot.data?.docs ?? [];
+    if (docs.isEmpty) {
+       return Center(
+         child: Column(
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: [
+             Icon(Icons.feed_outlined, size: 64, color: Colors.grey.withOpacity(0.5)),
+             SizedBox(height: 16),
+             Text(t.translate('home_no_posts'), style: TextStyle(color: Colors.grey)),
+           ],
+         ),
+       );
+    }
 
-            List<QueryDocumentSnapshot> docs = allDocs.where((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              if (data['communityId'] != null) return false;
-
-              final vis = data['visibility'] ?? 'public';
-              if (vis == 'public') return true;
-              if (vis == 'followers' && user != null) {
-                final following = List.from(userData['following'] ?? []);
-                return data['userId'] == user.uid || following.contains(data['userId']);
-              }
-              return vis == 'private' && data['userId'] == user?.uid;
-            }).toList();
-
-            if (isRec && docs.isNotEmpty) {
-              docs = _aiService.getPersonalizedRecommendations(docs, userData, user?.uid ?? '');
-            }
-
-            if (docs.isEmpty) {
-               return Center(
-                 child: Column(
-                   mainAxisAlignment: MainAxisAlignment.center,
-                   children: [
-                     Icon(Icons.feed_outlined, size: 64, color: Colors.grey.withOpacity(0.5)),
-                     SizedBox(height: 16),
-                     Text(t.translate('home_no_posts'), style: TextStyle(color: Colors.grey)),
-                   ],
-                 ),
-               );
-            }
-
-            return RefreshIndicator(
-              onRefresh: _refresh,
-              edgeOffset: widget.refreshOffset,
-              child: ListView.builder(
-                key: PageStorageKey('${widget.feedType}_$_refreshKey'),
-                controller: widget.scrollController,
-                padding: EdgeInsets.only(top: 10, bottom: 100),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  return BlogPostCard(
-                    postId: docs[index].id,
-                    postData: docs[index].data() as Map<String, dynamic>,
-                    isOwner: docs[index]['userId'] == user?.uid,
-                  );
-                },
-              ),
-            );
-          },
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      edgeOffset: widget.refreshOffset,
+      child: ListView.builder(
+        key: PageStorageKey('${widget.feedType}_$_refreshKey'),
+        controller: widget.scrollController,
+        padding: EdgeInsets.only(top: 10, bottom: 100),
+        itemCount: docs.length,
+        itemBuilder: (context, index) {
+          final post = docs[index];
+          return BlogPostCard(
+            postId: post['id'] ?? '',
+            postData: post,
+            isOwner: post['user_uid'] == user?.uid,
+          );
+        },
+      ),
     );
   }
 }

@@ -177,3 +177,13 @@ app.*.symbols
 lib/.firebaserc
 lib/firebase.json
 lib/.genkit/
+
+# AI instruction files
+CLAUDE.md
+GEMINI.md
+
+# Environment variables
+.env
+
+# Cloud Functions dependencies
+cloud_functions/**/node_modules/

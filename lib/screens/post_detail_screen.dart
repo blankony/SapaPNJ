@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,13 +11,14 @@ import '../widgets/blog_post_card.dart';
 import '../widgets/comment_tile.dart';
 import '../widgets/common_error_widget.dart'; // REQUIRED
 import '../services/prediction_service.dart';
-import '../services/cloudinary_service.dart';
+import '../services/gcs_service.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 
-final CloudinaryService _cloudinaryService = CloudinaryService();
+final GcsService _cloudinaryService = GcsService();
+final ApiService _apiService = ApiService();
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
@@ -107,61 +109,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       }
     }
 
-    String userName = "Anonymous";
-    String userEmail = "anonymous@mail.com";
-    int iconId = 0;
-    String hex = '';
-    String? profileImageUrl;
-
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
-      if (userDoc.exists) {
-        final data = userDoc.data();
-        userName = data?['name'] ?? userName;
-        userEmail = data?['email'] ?? userEmail;
-        iconId = data?['avatarIconId'] ?? 0;
-        hex = data?['avatarHex'] ?? '';
-        profileImageUrl = data?['profileImageUrl'];
-      }
-    } catch (e) {}
-
-    final commentData = {
-      'text': _commentController.text.trim(),
-      'mediaUrl': mediaUrl,
-      'mediaType': _mediaType,
-      'timestamp': FieldValue.serverTimestamp(),
-      'userId': _currentUser!.uid,
-      'originalPostId': widget.postId,
-      'userName': userName,
-      'userEmail': userEmail,
-      'avatarIconId': iconId,
-      'avatarHex': hex,
-      'profileImageUrl': profileImageUrl,
-    };
-
-    try {
-      final writeBatch = FirebaseFirestore.instance.batch();
-      final commentDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').doc();
-      writeBatch.set(commentDocRef, commentData);
-      final postDocRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
-      writeBatch.update(postDocRef, {'commentCount': FieldValue.increment(1)});
-      await writeBatch.commit();
-
-      final String? postOwnerId = widget.initialPostData?['userId'];
-      if (postOwnerId != null && postOwnerId != _currentUser!.uid) {
-        String commentSnippet = commentData['text'] as String;
-        if (commentSnippet.isEmpty) commentSnippet = "Sent a ${_mediaType ?? 'media'} attachment";
-        if (commentSnippet.length > 50) commentSnippet = commentSnippet.substring(0, 50) + '...';
-
-        FirebaseFirestore.instance.collection('users').doc(postOwnerId).collection('notifications').add({
-          'type': 'comment',
-          'senderId': _currentUser!.uid,
-          'postId': widget.postId,
-          'postTextSnippet': commentSnippet,
-          'timestamp': FieldValue.serverTimestamp(),
-          'isRead': false,
-        });
-      }
+      await _apiService.addComment(
+        widget.postId,
+        text: _commentController.text.trim(),
+        mediaUrl: mediaUrl,
+        mediaType: _mediaType,
+      );
 
       if (mounted) {
         _commentController.clear();
@@ -194,8 +148,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance.collection('posts').doc(widget.postId).snapshots(),
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: _apiService.getPost(widget.postId),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Padding(
@@ -207,12 +161,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         );
                       }
 
-                      if (!snapshot.hasData && widget.initialPostData == null) {
+                      if (snapshot.connectionState == ConnectionState.waiting && widget.initialPostData == null) {
                         return Center(child: Padding(padding: const EdgeInsets.all(24.0), child: CircularProgressIndicator()));
                       }
 
                       Map<String, dynamic>? data = snapshot.hasData
-                          ? snapshot.data!.data() as Map<String, dynamic>?
+                          ? snapshot.data
                           : widget.initialPostData;
 
                       if (data == null) {
@@ -222,7 +176,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       return BlogPostCard(
                         postId: widget.postId,
                         postData: data,
-                        isOwner: data['userId'] == _currentUser?.uid,
+                        isOwner: (data['user_uid'] ?? data['userId']) == _currentUser?.uid,
                         isClickable: false,
                         isDetailView: true,
                         heroContextId: widget.heroContextId,
@@ -242,29 +196,28 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').orderBy('timestamp', descending: false).snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _apiService.getComments(widget.postId),
       builder: (context, snapshot) {
         if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16.0), child: Text("Could not load comments.", style: TextStyle(color: Colors.red)));
         if (snapshot.connectionState == ConnectionState.waiting) return Padding(padding: const EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator()));
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return Padding(padding: const EdgeInsets.all(32.0), child: Center(child: Text("No replies yet. Be the first!", style: TextStyle(color: Colors.grey))));
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return Padding(padding: const EdgeInsets.all(32.0), child: Center(child: Text("No replies yet. Be the first!", style: TextStyle(color: Colors.grey))));
 
-        final docs = snapshot.data!.docs;
+        final docs = snapshot.data!;
         return ListView.builder(
           itemCount: docs.length,
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero, // ADDED: prevents gaps between list items
+          padding: EdgeInsets.zero,
           itemBuilder: (context, index) {
-            final doc = docs[index];
-            final data = doc.data() as Map<String, dynamic>;
+            final data = docs[index];
             final bool isLast = index == docs.length - 1;
 
             return CommentTile(
-              commentId: doc.id,
+              commentId: data['id'] ?? '',
               commentData: data,
               postId: widget.postId,
-              isOwner: data['userId'] == _currentUser?.uid,
+              isOwner: (data['user_uid'] ?? data['userId']) == _currentUser?.uid,
               heroContextId: '${widget.heroContextId}_comments',
               isLast: isLast,
             );

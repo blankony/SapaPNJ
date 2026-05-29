@@ -1,18 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
-import '../../services/cloudinary_service.dart';
+import '../../services/gcs_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT INI DITAMBAHKAN
 import 'setup_department_screen.dart';
 import '../../services/overlay_service.dart';
 
-final CloudinaryService _cloudinaryService = CloudinaryService();
+final GcsService _cloudinaryService = GcsService();
 
 class SetupProfileScreen extends StatefulWidget {
   const SetupProfileScreen({super.key});
@@ -122,13 +122,13 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
       }
 
       final Map<String, dynamic> updateData = {
-        'isPrivate': _isPrivateAccount, // Save Privacy Setting
+        'is_private': _isPrivateAccount, // Save Privacy Setting
       };
 
-      if (avatarUrl != null) updateData['profileImageUrl'] = avatarUrl;
-      if (bannerUrl != null) updateData['bannerImageUrl'] = bannerUrl;
+      if (avatarUrl != null) updateData['profile_image_url'] = avatarUrl;
+      if (bannerUrl != null) updateData['banner_image_url'] = bannerUrl;
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(updateData);
+      await ApiService().updateUser(user.uid, updateData);
 
       if (mounted) {
         Navigator.of(context).push(
@@ -159,7 +159,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
     // Even on skip, save the privacy preference
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      FirebaseFirestore.instance.collection('users').doc(user.uid).update({'isPrivate': _isPrivateAccount});
+      ApiService().updateUser(user.uid, {'is_private': _isPrivateAccount});
     }
 
     Navigator.of(context).push(

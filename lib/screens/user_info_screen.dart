@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import '../auth_gate.dart';
-import '../services/overlay_service.dart'; // REQUIRED
+import '../services/overlay_service.dart';
 
 class UserInfoScreen extends StatefulWidget {
   const UserInfoScreen({super.key});
@@ -34,15 +34,14 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'name': _nameController.text.trim(),
-        'nim': _nimController.text.trim(),
-        'bio': 'About me...',
-        'following': [],
-        'followers': [],
-      }, SetOptions(merge: true));
+      final success = await ApiService().createUser(
+        uid: user.uid,
+        email: user.email ?? '',
+        name: _nameController.text.trim(),
+        nim: _nimController.text.trim(),
+      );
 
-      if (mounted) {
+      if (success && mounted) {
         OverlayService().showTopNotification(
           context,
           "Profile saved.",
@@ -56,6 +55,17 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         );
       }
 
+    } on ApiException catch (e) {
+      if (mounted) {
+         OverlayService().showTopNotification(
+           context,
+           e.message,
+           Icons.error,
+           (){},
+           color: Colors.red
+         );
+      }
+      setState(() { _isLoading = false; });
     } catch (e) {
       if(mounted) {
          OverlayService().showTopNotification(

@@ -8,7 +8,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -364,24 +364,24 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     });
 
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('users').doc(user.uid)
-          .collection('chat_sessions').doc(sessionId)
-          .collection('messages').orderBy('timestamp', descending: false).get();
+      final messages = await ApiService().getChatMessages(sessionId);
 
       final List<ChatMessage> loadedUiMessages = [];
       final List<Content> geminiHistory = [];
       String? lastRole;
       List<Part> bufferParts = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        final text = data['text'] ?? '';
-        final isUser = data['isUser'] ?? true;
+      for (var msg in messages) {
+        final text = msg['text'] ?? '';
+        final isUser = msg['is_user'] == true || msg['isUser'] == true;
         final String currentRole = isUser ? 'user' : 'model';
 
         loadedUiMessages.add(ChatMessage(
-          text: text, isUser: isUser, timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          text: text,
+          isUser: isUser,
+          timestamp: msg['timestamp'] != null
+              ? DateTime.tryParse(msg['timestamp']) ?? DateTime.now()
+              : DateTime.now(),
         ));
 
         if (lastRole == null) {
@@ -450,22 +450,18 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
 
   Future<void> _saveMessageToFirestore(String uid, String text, bool isUser) async {
     try {
-      final sessionsRef = FirebaseFirestore.instance.collection('users').doc(uid).collection('chat_sessions');
       if (_currentSessionId == null) {
         String title = text.replaceAll('\n', ' ');
         if (title.length > 30) title = "${title.substring(0, 30)}...";
         if (!isUser) title = "New Chat";
-        final newSession = await sessionsRef.add({
-          'title': title, 'createdAt': FieldValue.serverTimestamp(), 'lastUpdated': FieldValue.serverTimestamp(),
-        });
-        _currentSessionId = newSession.id;
-      } else {
-        sessionsRef.doc(_currentSessionId).update({'lastUpdated': FieldValue.serverTimestamp()});
+        final newSessionId = await ApiService().createChatSession(title: title);
+        _currentSessionId = newSessionId;
+        aiPageEventBus.fire(AiPageEvent(type: AiEventType.newChat));
       }
-      await sessionsRef.doc(_currentSessionId).collection('messages').add({
-        'text': text, 'isUser': isUser, 'timestamp': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {}
+      await ApiService().saveChatMessage(_currentSessionId!, text: text, isUser: isUser);
+    } catch (e) {
+      debugPrint("Error saving chat message: $e");
+    }
   }
 
   void _scrollToBottom() {
@@ -815,13 +811,15 @@ class _UserAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return SizedBox(width: 32);
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: ApiService().getUser(user.uid),
       builder: (context, snapshot) {
         String? profileUrl; int iconId = 0; String? colorHex;
-        if (snapshot.hasData && snapshot.data!.exists) {
-           final data = snapshot.data!.data() as Map<String, dynamic>;
-           profileUrl = data['profileImageUrl']; iconId = data['avatarIconId'] ?? 0; colorHex = data['avatarHex'];
+        if (snapshot.hasData && snapshot.data != null) {
+           final data = snapshot.data!;
+           profileUrl = data['profile_image_url'] ?? data['profileImageUrl']; 
+           iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0; 
+           colorHex = data['avatar_hex'] ?? data['avatarHex'];
         }
         return CircleAvatar(
           radius: 18, backgroundColor: profileUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:url_launcher/url_launcher.dart'; // REQUIRED
+import 'package:url_launcher/url_launcher.dart';
+import 'api_service.dart';
 
 class ModerationService {
 
@@ -54,48 +54,35 @@ class ModerationService {
   Future<void> blockUser(String targetUserId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.uid == targetUserId) return;
-
-    final batch = FirebaseFirestore.instance.batch();
-
-    // 1. Add to my 'blockedUsers' list
-    final myDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    batch.update(myDocRef, {
-      'blockedUsers': FieldValue.arrayUnion([targetUserId])
-    });
-
-    // 2. Unfollow them if I am following
-    batch.update(myDocRef, {
-      'following': FieldValue.arrayRemove([targetUserId])
-    });
-
-    // 3. Remove them from my followers if they follow me
-    final targetDocRef = FirebaseFirestore.instance.collection('users').doc(targetUserId);
-    batch.update(targetDocRef, {
-      'followers': FieldValue.arrayRemove([user.uid])
-    });
-
-    await batch.commit();
+    await ApiService().blockUser(targetUserId);
   }
 
   Future<void> unblockUser(String targetUserId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
-    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-      'blockedUsers': FieldValue.arrayRemove([targetUserId])
-    });
+    await ApiService().unblockUser(targetUserId);
   }
 
-  Stream<List<String>> streamBlockedUsers() {
+  Stream<List<String>> streamBlockedUsers() async* {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return Stream.value([]);
-
-    return FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots().map((doc) {
-      if (!doc.exists) return [];
-      final data = doc.data() as Map<String, dynamic>;
-      final blocked = data['blockedUsers'] as List<dynamic>?;
-      return blocked?.map((e) => e.toString()).toList() ?? [];
-    });
+    if (user == null) {
+      yield [];
+      return;
+    }
+    // Yield first immediately
+    try {
+      yield await ApiService().getBlockedUsers();
+    } catch (_) {
+      yield [];
+    }
+    // Yield every 30 seconds
+    yield* Stream.periodic(const Duration(seconds: 30), (_) async {
+      try {
+        return await ApiService().getBlockedUsers();
+      } catch (_) {
+        return <String>[];
+      }
+    }).asyncMap((event) => event);
   }
 }
 

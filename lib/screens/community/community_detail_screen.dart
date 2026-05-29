@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,10 +12,11 @@ import 'community_settings_screen.dart';
 import 'community_members_screen.dart';
 import '../create_post_screen.dart';
 import '../../services/overlay_service.dart';
-import '../../services/cloudinary_service.dart';
+import '../../services/gcs_service.dart';
 import '../image_viewer_screen.dart';
 import '../../services/moderation_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
+import '../../services/api_service.dart';
 
 class CommunityDetailScreen extends StatefulWidget {
   final String communityId;
@@ -33,18 +33,22 @@ class CommunityDetailScreen extends StatefulWidget {
 }
 
 class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
-  final CloudinaryService _cloudinaryService = CloudinaryService();
+  final GcsService _cloudinaryService = GcsService();
+  final ApiService _api = ApiService();
   final ScrollController _scrollController = ScrollController();
   final int _postsLimit = 10;
 
   bool _isUploadingImage = false;
 
   // Pagination State
-  List<DocumentSnapshot> _posts = [];
+  List<Map<String, dynamic>> _posts = [];
   bool _isLoadingPosts = true;
   bool _hasMorePosts = true;
   bool _isLoadingMore = false;
-  DocumentSnapshot? _lastDocument;
+  String? _lastCursor;
+
+  // Community data
+  Map<String, dynamic>? _communityData;
 
   // Data Cache
   List<String> _blockedUserIds = [];
@@ -53,7 +57,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   void initState() {
     super.initState();
     _fetchBlockedUsers();
-    _fetchInitialPosts();
+    _loadCommunityAndPosts();
     _scrollController.addListener(_onScroll);
   }
 
@@ -72,38 +76,31 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   Future<void> _fetchBlockedUsers() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-
-    // Ambil data block user sekali saja di awal
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).collection('moderation').doc('blocked').get();
-    if (doc.exists && mounted) {
-      setState(() {
-        _blockedUserIds = List<String>.from(doc.data()?['ids'] ?? []);
-      });
-    }
+    try {
+      final ids = await _api.getBlockedUsers();
+      if (mounted) setState(() => _blockedUserIds = ids);
+    } catch (_) {}
   }
 
-  Future<void> _fetchInitialPosts() async {
+  Future<void> _loadCommunityAndPosts() async {
     if (!mounted) return;
-    setState(() {
-      _isLoadingPosts = true;
-      _posts = [];
-    });
+    setState(() { _isLoadingPosts = true; _posts = []; });
 
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('posts')
-          .where('communityId', isEqualTo: widget.communityId)
-          .orderBy('timestamp', descending: true)
-          .limit(_postsLimit);
-
-      QuerySnapshot snapshot = await query.get();
+      final results = await Future.wait([
+        _api.getCommunity(widget.communityId),
+        _api.getPosts(communityId: widget.communityId, limit: _postsLimit),
+      ]);
 
       if (mounted) {
+        final communityResult = results[0] as Map<String, dynamic>?;
+        final postsResult = results[1] as List<Map<String, dynamic>>;
         setState(() {
-          _posts = snapshot.docs;
+          _communityData = communityResult;
+          _posts = postsResult;
           _isLoadingPosts = false;
-          _lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-          _hasMorePosts = snapshot.docs.length == _postsLimit;
+          _lastCursor = postsResult.isNotEmpty ? postsResult.last['created_at']?.toString() : null;
+          _hasMorePosts = postsResult.length == _postsLimit;
         });
       }
     } catch (e) {
@@ -113,25 +110,22 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   }
 
   Future<void> _fetchMorePosts() async {
-    if (_isLoadingMore || !_hasMorePosts || _lastDocument == null) return;
+    if (_isLoadingMore || !_hasMorePosts || _lastCursor == null) return;
 
     setState(() => _isLoadingMore = true);
 
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('posts')
-          .where('communityId', isEqualTo: widget.communityId)
-          .orderBy('timestamp', descending: true)
-          .startAfterDocument(_lastDocument!)
-          .limit(_postsLimit);
-
-      QuerySnapshot snapshot = await query.get();
+      final newPosts = await _api.getPosts(
+        communityId: widget.communityId,
+        limit: _postsLimit,
+        cursor: _lastCursor,
+      );
 
       if (mounted) {
         setState(() {
-          _posts.addAll(snapshot.docs);
-          _lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-          _hasMorePosts = snapshot.docs.length == _postsLimit;
+          _posts.addAll(newPosts);
+          _lastCursor = newPosts.isNotEmpty ? newPosts.last['created_at']?.toString() : null;
+          _hasMorePosts = newPosts.length == _postsLimit;
           _isLoadingMore = false;
         });
       }
@@ -154,16 +148,15 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     if (user == null) return;
     try {
       if (isFollowing) {
-        await FirebaseFirestore.instance.collection('communities').doc(widget.communityId).update({
-          'followers': FieldValue.arrayRemove([user.uid]),
-        });
+        await _api.unfollowCommunity(widget.communityId);
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_unfollow'), Icons.remove_circle_outline, (){});
       } else {
-        await FirebaseFirestore.instance.collection('communities').doc(widget.communityId).update({
-          'followers': FieldValue.arrayUnion([user.uid])
-        });
+        await _api.followCommunity(widget.communityId);
         if(mounted) OverlayService().showTopNotification(context, t.translate('community_following'), Icons.check_circle, (){}, color: Colors.green);
       }
+      // Refresh community data
+      final updated = await _api.getCommunity(widget.communityId);
+      if (mounted && updated != null) setState(() => _communityData = updated);
     } catch (e) {
       if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red);
     }
@@ -207,8 +200,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     try {
       final String? url = await _cloudinaryService.uploadImage(File(croppedFile.path));
       if (url != null) {
-        Map<String, dynamic> update = isBanner ? {'bannerImageUrl': url} : {'imageUrl': url};
-        await FirebaseFirestore.instance.collection('communities').doc(widget.communityId).update(update);
+        Map<String, dynamic> update = isBanner ? {'banner_image_url': url} : {'image_url': url};
+        await _api.updateCommunity(widget.communityId, update);
+        // Refresh
+        final updated = await _api.getCommunity(widget.communityId);
+        if (mounted && updated != null) setState(() => _communityData = updated);
         if(mounted) OverlayService().showTopNotification(context, t.translate('profile_update_success'), Icons.check_circle, (){}, color: Colors.green);
       }
     } catch (e) {
@@ -227,139 +223,132 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('communities').doc(widget.communityId).snapshots(),
-      builder: (context, snapshot) {
-        final data = snapshot.hasData && snapshot.data!.exists ? snapshot.data!.data() as Map<String, dynamic> : widget.communityData;
-        final String ownerId = data['ownerId'];
-        final List admins = data['admins'] ?? [];
-        final List editors = data['editors'] ?? [];
-        final List followers = data['followers'] ?? [];
-        final bool isOwner = user?.uid == ownerId;
-        final bool isAdmin = admins.contains(user?.uid);
-        final bool isEditor = editors.contains(user?.uid);
-        final bool isFollower = followers.contains(user?.uid);
-        final bool hasFullControl = isOwner || isAdmin;
-        final bool canPost = isOwner || isAdmin || isEditor;
-        final String name = data['name'] ?? 'Channel';
-        final String? bannerUrl = data['bannerImageUrl'];
-        final String? avatarUrl = data['imageUrl'];
-        final bool isVerified = data['isVerified'] ?? false;
+    final data = _communityData ?? widget.communityData;
+    final String ownerId = data['owner_uid'] ?? data['ownerId'] ?? '';
+    final List admins = data['admins'] ?? [];
+    final List editors = data['editors'] ?? [];
+    final List followers = data['allMembers'] ?? data['followers'] ?? [];
+    final bool isOwner = user?.uid == ownerId;
+    final bool isAdmin = admins.contains(user?.uid);
+    final bool isEditor = editors.contains(user?.uid);
+    final bool isFollower = followers.contains(user?.uid);
+    final bool hasFullControl = isOwner || isAdmin;
+    final bool canPost = isOwner || isAdmin || isEditor;
+    final String name = data['name'] ?? 'Channel';
+    final String? bannerUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
+    final String? avatarUrl = data['image_url'] ?? data['imageUrl'];
+    final bool isVerified = data['is_verified'] ?? data['isVerified'] ?? false;
 
-        return Scaffold(
-          body: NestedScrollView(
-            controller: _scrollController,
-            physics: BouncingScrollPhysics(),
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  expandedHeight: 180.0,
-                  pinned: true,
-                  title: innerBoxIsScrolled ? Text(name) : null,
-                  elevation: 0,
-                  actions: [
-                    if (hasFullControl)
-                      IconButton(
-                        icon: Icon(Icons.settings_outlined),
-                        onPressed: () => Navigator.push(context, _createSlideUpRoute(CommunitySettingsScreen(communityId: widget.communityId, communityData: data, isOwner: isOwner, isAdmin: isAdmin))),
-                      )
-                  ],
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _showImageOptions(context, bannerUrl, true, hasFullControl),
-                          child: Hero(tag: 'community_banner', child: bannerUrl != null ? CachedNetworkImage(imageUrl: bannerUrl, fit: BoxFit.cover, memCacheWidth: 800) : Container(color: isDarkMode ? Colors.grey[800] : Colors.grey[300], child: hasFullControl ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo, color: Colors.white), Text(t.translate('edit_banner_add'), style: TextStyle(color: Colors.white, fontSize: 12))])) : null)),
-                        ),
-                        Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.8)]))),
-                        Positioned(
-                          left: 16, bottom: 16, right: 16,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              GestureDetector(
-                                onTap: () => _showImageOptions(context, avatarUrl, false, hasFullControl),
-                                child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: SisapaTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                  Row(children: [Flexible(child: Text(name, style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)), if (isVerified) ...[SizedBox(width: 4), Icon(Icons.verified, size: 18, color: SisapaTheme.blue)]]),
-                                  Text(data['category'] == 'pnj_official' ? "Official Channel" : t.translate('general_community'), style: TextStyle(color: Colors.white70, fontSize: 12)),
-                                ]),
-                              ),
-                            ],
+    return Scaffold(
+      body: NestedScrollView(
+        controller: _scrollController,
+        physics: BouncingScrollPhysics(),
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180.0,
+              pinned: true,
+              title: innerBoxIsScrolled ? Text(name) : null,
+              elevation: 0,
+              actions: [
+                if (hasFullControl)
+                  IconButton(
+                    icon: Icon(Icons.settings_outlined),
+                    onPressed: () => Navigator.push(context, _createSlideUpRoute(CommunitySettingsScreen(communityId: widget.communityId, communityData: data, isOwner: isOwner, isAdmin: isAdmin))),
+                  )
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _showImageOptions(context, bannerUrl, true, hasFullControl),
+                      child: Hero(tag: 'community_banner', child: bannerUrl != null ? CachedNetworkImage(imageUrl: bannerUrl, fit: BoxFit.cover, memCacheWidth: 800) : Container(color: isDarkMode ? Colors.grey[800] : Colors.grey[300], child: hasFullControl ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo, color: Colors.white), Text(t.translate('edit_banner_add'), style: TextStyle(color: Colors.white, fontSize: 12))])) : null)),
+                    ),
+                    Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.8)]))),
+                    Positioned(
+                      left: 16, bottom: 16, right: 16,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _showImageOptions(context, avatarUrl, false, hasFullControl),
+                            child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: SisapaTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                              Row(children: [Flexible(child: Text(name, style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)), if (isVerified) ...[SizedBox(width: 4), Icon(Icons.verified, size: 18, color: SisapaTheme.blue)]]),
+                              Text(data['category'] == 'pnj_official' ? "Official Channel" : t.translate('general_community'), style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            ]),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(data['description'] ?? t.translate('profile_no_bio'), style: theme.textTheme.bodyMedium),
+                    SizedBox(height: 12),
+                    Row(
                       children: [
-                        Text(data['description'] ?? t.translate('profile_no_bio'), style: theme.textTheme.bodyMedium),
-                        SizedBox(height: 12),
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () => Navigator.push(context, _createSlideUpRoute(CommunityMembersScreen(communityId: widget.communityId, communityData: data, isStaff: hasFullControl))),
-                              child: Row(children: [Icon(Icons.group, size: 16, color: theme.hintColor), SizedBox(width: 4), Text("${followers.length} ${t.translate('comm_followers_count')}", style: TextStyle(fontWeight: FontWeight.bold)), Icon(Icons.arrow_forward_ios, size: 12, color: theme.hintColor)]),
-                            ),
-                            Spacer(),
-                            if (!canPost)
-                              ElevatedButton(onPressed: () => _handleFollowAction(isFollower, t), style: ElevatedButton.styleFrom(backgroundColor: isFollower ? theme.cardColor : SisapaTheme.blue, foregroundColor: isFollower ? theme.textTheme.bodyLarge?.color : Colors.white, elevation: 0, side: isFollower ? BorderSide(color: theme.dividerColor) : null, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(isFollower ? t.translate('community_following') : t.translate('community_follow')))
-                            else
-                              ElevatedButton.icon(
-                                onPressed: () => Navigator.push(context, _createSlideUpRoute(CreatePostScreen(initialData: {'communityId': widget.communityId, 'communityName': name, 'communityIcon': avatarUrl}))),
-                                icon: Icon(Icons.campaign, size: 18),
-                                label: Text(t.translate('post_create_new')), // "Buat Postingan Baru"
-                                style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
-                              ),
-                          ],
+                        InkWell(
+                          onTap: () => Navigator.push(context, _createSlideUpRoute(CommunityMembersScreen(communityId: widget.communityId, communityData: data, isStaff: hasFullControl))),
+                          child: Row(children: [Icon(Icons.group, size: 16, color: theme.hintColor), SizedBox(width: 4), Text("${followers.length} ${t.translate('comm_followers_count')}", style: TextStyle(fontWeight: FontWeight.bold)), Icon(Icons.arrow_forward_ios, size: 12, color: theme.hintColor)]),
                         ),
-                        Divider(height: 24),
-                        Text(t.translate('community_broadcast'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)), // "Broadcast Feed" / "Feed Siaran"
+                        Spacer(),
+                        if (!canPost)
+                          ElevatedButton(onPressed: () => _handleFollowAction(isFollower, t), style: ElevatedButton.styleFrom(backgroundColor: isFollower ? theme.cardColor : SisapaTheme.blue, foregroundColor: isFollower ? theme.textTheme.bodyLarge?.color : Colors.white, elevation: 0, side: isFollower ? BorderSide(color: theme.dividerColor) : null, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(isFollower ? t.translate('community_following') : t.translate('community_follow')))
+                        else
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.push(context, _createSlideUpRoute(CreatePostScreen(initialData: {'communityId': widget.communityId, 'communityName': name, 'communityIcon': avatarUrl}))),
+                            icon: Icon(Icons.campaign, size: 18),
+                            label: Text(t.translate('post_create_new')),
+                            style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
+                          ),
                       ],
                     ),
-                  ),
+                    Divider(height: 24),
+                    Text(t.translate('community_broadcast'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  ],
                 ),
-              ];
-            },
-            body: _isLoadingPosts
-              ? Center(child: CircularProgressIndicator())
-              : _posts.isEmpty
-                ? Center(child: Padding(padding: EdgeInsets.only(top: 40), child: Text(t.translate('community_no_broadcasts'), style: TextStyle(color: Colors.grey)))) // "No recent broadcasts."
-                : ListView.builder(
-                    padding: EdgeInsets.only(bottom: 80),
-                    physics: NeverScrollableScrollPhysics(), // Scroll handled by NestedScrollView
-                    shrinkWrap: true, // Needed for NestedScrollView
-                    itemCount: _posts.length + (_hasMorePosts ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _posts.length) {
-                        return Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
-                      }
-                      final post = _posts[index];
-                      final pData = post.data() as Map<String, dynamic>;
+              ),
+            ),
+          ];
+        },
+        body: _isLoadingPosts
+          ? Center(child: CircularProgressIndicator())
+          : _posts.isEmpty
+            ? Center(child: Padding(padding: EdgeInsets.only(top: 40), child: Text(t.translate('community_no_broadcasts'), style: TextStyle(color: Colors.grey))))
+            : ListView.builder(
+                padding: EdgeInsets.only(bottom: 80),
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: _posts.length + (_hasMorePosts ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == _posts.length) {
+                    return Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
+                  }
+                  final pData = _posts[index];
 
-                      // OPTIMASI: Pass isCommunityAdmin dan blockedUserIds
-                      return BlogPostCard(
-                        postId: post.id,
-                        postData: pData,
-                        isOwner: hasFullControl || pData['userId'] == user?.uid,
-                        heroContextId: 'community_${widget.communityId}',
-                        isCommunityAdmin: isAdmin || isOwner,
-                        blockedUserIds: _blockedUserIds,
-                      );
-                    }
-                  ),
-          ),
-        );
-      }
+                  return BlogPostCard(
+                    postId: pData['id'] ?? '',
+                    postData: pData,
+                    isOwner: hasFullControl || pData['user_uid'] == user?.uid,
+                    heroContextId: 'community_${widget.communityId}',
+                    isCommunityAdmin: isAdmin || isOwner,
+                    blockedUserIds: _blockedUserIds,
+                  );
+                }
+              ),
+      ),
     );
   }
 }

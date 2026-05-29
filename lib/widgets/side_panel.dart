@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
@@ -12,6 +11,7 @@ import '../screens/dashboard/settings_page.dart';
 import '../screens/saved_posts_screen.dart';
 import '../screens/webview_screen.dart';
 import '../screens/drafts_screen.dart';
+import '../services/api_service.dart';
 import '../services/app_localizations.dart';
 
 class SidePanel extends StatefulWidget {
@@ -130,7 +130,6 @@ class _SidePanelState extends State<SidePanel> {
     languageNotifier.value = Locale(code);
   }
 
-  // --- WIDGET HELPER: Modern Menu Item ---
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -150,7 +149,7 @@ class _SidePanelState extends State<SidePanel> {
           ),
         ),
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)), // Modern Pill Shape
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
         visualDensity: VisualDensity.compact,
       ),
@@ -171,10 +170,8 @@ class _SidePanelState extends State<SidePanel> {
           bottomRight: Radius.circular(28),
         ),
       ),
-      child: StreamBuilder<DocumentSnapshot>(
-        stream: _currentUserId != null
-            ? FirebaseFirestore.instance.collection('users').doc(_currentUserId).snapshots()
-            : null,
+      child: FutureBuilder<Map<String, dynamic>?>(
+        future: _currentUserId != null ? ApiService().getUser(_currentUserId!) : Future.value(null),
         builder: (context, snapshot) {
           String name = t.translate('general_user');
           String handle = "@user";
@@ -183,22 +180,22 @@ class _SidePanelState extends State<SidePanel> {
           String? profileImageUrl;
           String? bannerImageUrl;
 
-          if (snapshot.hasData && snapshot.data!.exists) {
-            final data = snapshot.data!.data() as Map<String, dynamic>;
+          if (snapshot.hasData && snapshot.data != null) {
+            final data = snapshot.data!;
             name = data['name'] ?? t.translate('general_user');
             final email = data['email'] ?? "";
             handle = email.isNotEmpty ? "@${email.split('@')[0]}" : "@user";
-            iconId = data['avatarIconId'] ?? 0;
-            colorHex = data['avatarHex'];
-            profileImageUrl = data['profileImageUrl'];
-            bannerImageUrl = data['bannerImageUrl'];
+            iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
+            colorHex = data['avatar_hex'] ?? data['avatarHex'];
+            profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+            bannerImageUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
           }
 
           Widget avatarWidget = CircleAvatar(
             radius: 30,
             backgroundColor: profileImageUrl != null ? Colors.transparent : (Colors.blue),
-            backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
-            child: profileImageUrl == null ?
+            backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+            child: profileImageUrl == null || profileImageUrl.isEmpty ?
               Icon(Icons.person, size: 30, color: Colors.white)
               : null,
           );
@@ -206,9 +203,9 @@ class _SidePanelState extends State<SidePanel> {
           try {
              avatarWidget = CircleAvatar(
               radius: 30,
-              backgroundColor: profileImageUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
-              backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
-              child: profileImageUrl == null ?
+              backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : AvatarHelper.getColor(colorHex),
+              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+              child: profileImageUrl == null || profileImageUrl.isEmpty ?
                 Icon(AvatarHelper.getIcon(iconId), size: 30, color: Colors.white)
                 : null,
             );
@@ -219,13 +216,12 @@ class _SidePanelState extends State<SidePanel> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- MODERN HEADER (Height Increased to 220 to fix Overflow) ---
+              // --- MODERN HEADER ---
               SizedBox(
                 height: 220,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Background Banner
                     if (bannerImageUrl != null && bannerImageUrl.isNotEmpty)
                       CachedNetworkImage(
                         imageUrl: bannerImageUrl,
@@ -235,7 +231,6 @@ class _SidePanelState extends State<SidePanel> {
                     else
                       Container(color: theme.primaryColor.withOpacity(0.1)),
 
-                    // Gradient
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -251,7 +246,6 @@ class _SidePanelState extends State<SidePanel> {
                       ),
                     ),
 
-                    // Content
                     SafeArea(
                       bottom: false,
                       child: Padding(
@@ -259,7 +253,6 @@ class _SidePanelState extends State<SidePanel> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Top Row: Avatar & Close Button
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,30 +278,29 @@ class _SidePanelState extends State<SidePanel> {
                               ],
                             ),
                             Spacer(),
-                            // User Info (Name & Handle)
                             InkWell(
                               onTap: () {
                                 Navigator.pop(context);
                                 widget.onProfileSelected();
                               },
                               child: SizedBox(
-                                width: double.infinity, // Paksa ambil lebar penuh
+                                width: double.infinity,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min, // Agar tidak makan tempat vertikal berlebih
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
                                       name,
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                                       maxLines: 1,
-                                      overflow: TextOverflow.ellipsis, // Potong jika kepanjangan
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    SizedBox(height: 2), // Sedikit jarak
+                                    SizedBox(height: 2),
                                     Text(
                                       handle,
                                       style: TextStyle(fontSize: 14, color: Colors.white70),
                                       maxLines: 1,
-                                      overflow: TextOverflow.ellipsis, // Potong email panjang jadi ...
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
@@ -324,7 +316,6 @@ class _SidePanelState extends State<SidePanel> {
 
               const SizedBox(height: 12),
 
-              // --- MENU LIST ---
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,
@@ -346,7 +337,6 @@ class _SidePanelState extends State<SidePanel> {
                       }
                     ),
 
-                    // Expandable Services
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: Theme(
@@ -412,7 +402,6 @@ class _SidePanelState extends State<SidePanel> {
                 ),
               ),
 
-              // --- BOTTOM CONTROL BAR ---
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(

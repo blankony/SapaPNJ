@@ -1,0 +1,198 @@
+================================================================================
+  SAPA PNJ — GCP SETUP INSTRUCTIONS (Phase 1: Media Storage Migration)
+================================================================================
+
+PREREQUISITES
+─────────────
+  • Google Cloud SDK (gcloud CLI) installed
+        https://cloud.google.com/sdk/docs/install
+  • A GCP project (or create one below)
+  • Node.js >= 18 (for Cloud Functions)
+
+================================================================================
+STEP 1 — GCP PROJECT SETUP
+================================================================================
+
+  # Authenticate with Google Cloud
+  gcloud auth login
+
+  # Create a new project (skip if you already have one)
+  gcloud projects create sapapnj-gcp --name="SapaPNJ"
+
+  # Set it as active
+  gcloud config set project sapapnj-gcp
+
+  # Enable required APIs
+  gcloud services enable storage.googleapis.com
+  gcloud services enable cloudfunctions.googleapis.com
+  gcloud services enable cloudbuild.googleapis.com
+  gcloud services enable run.googleapis.com
+
+  # Link a billing account (required for Cloud Functions)
+  # Go to: https://console.cloud.google.com/billing
+  # Then link it to your project.
+
+================================================================================
+STEP 2 — CREATE THE GCS BUCKET
+================================================================================
+
+  # Create the bucket (choose a region close to you)
+  gcloud storage buckets create gs://sapapnj-media-assets \
+    --location=asia-southeast2 \
+    --default-storage-class=STANDARD \
+    --uniform-bucket-level-access
+
+  # Make objects publicly readable (so CachedNetworkImage can fetch them)
+  gcloud storage buckets add-iam-policy-binding gs://sapapnj-media-assets \
+    --member=allUsers \
+    --role=roles/storage.objectViewer
+
+  # Set CORS so the Flutter client can upload directly
+  # First, create a cors.json file with this content:
+
+  --- cors.json ---
+  [
+    {
+      "origin": ["*"],
+      "method": ["GET", "PUT", "POST", "HEAD"],
+      "responseHeader": ["Content-Type", "Content-Length"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+  --- end of cors.json ---
+
+  # Then apply it:
+  gcloud storage buckets update gs://sapapnj-media-assets --cors-file=cors.json
+
+================================================================================
+STEP 3 — CREATE A SERVICE ACCOUNT FOR CLOUD FUNCTIONS
+================================================================================
+
+  # Create the service account
+  gcloud iam service-accounts create sapapnj-media-fn \
+    --display-name="SapaPNJ Media Functions"
+
+  # Grant it permission to sign URLs and manage the bucket
+  gcloud projects add-iam-policy-binding sapapnj-gcp \
+    --member="serviceAccount:sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com" \
+    --role="roles/storage.admin"
+
+  gcloud projects add-iam-policy-binding sapapnj-gcp \
+    --member="serviceAccount:sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountTokenCreator"
+
+================================================================================
+STEP 4 — DEPLOY THE CLOUD FUNCTIONS
+================================================================================
+
+  # Navigate to the cloud functions directory
+  cd cloud_functions/media
+
+  # Install dependencies
+  npm install
+
+  # Deploy getSignedUploadUrl
+gcloud functions deploy getSignedUploadUrl \
+  --gen2 \
+  --runtime=nodejs22 \
+  --region=asia-southeast2 \
+  --trigger-http \
+  --allow-unauthenticated \
+  --entry-point=getSignedUploadUrl \
+  --set-env-vars=GCS_BUCKET_NAME=sapapnj-media-assets \
+  --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com \
+  --source=.
+
+  # Deploy deleteObject
+  gcloud functions deploy deleteObject \
+    --gen2 \
+    --runtime=nodejs22 \
+    --region=asia-southeast2 \
+    --trigger-http \
+    --allow-unauthenticated \
+    --entry-point=deleteObject \
+    --set-env-vars=GCS_BUCKET_NAME=sapapnj-media-assets \
+    --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com \
+    --source=.
+
+  # After deployment, note the URL printed for each function.
+  # It will look like:
+  #   https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/getSignedUploadUrl
+  #   https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/deleteObject
+  #
+  # The BASE URL (without the function name) is what you need:
+  #   https://asia-southeast2-sapapnj-gcp.cloudfunctions.net
+
+================================================================================
+STEP 5 — UPDATE YOUR .env FILE
+================================================================================
+
+  Open the .env file in the project root and fill in:
+
+    GCS_BUCKET_NAME=sapapnj-media-assets
+    GCS_FUNCTION_URL=https://asia-southeast2-sapapnj-gcp.cloudfunctions.net
+
+  (Use the actual base URL from step 4 output.)
+
+================================================================================
+STEP 6 — VERIFY EVERYTHING WORKS
+================================================================================
+
+  1. Test the signed URL endpoint:
+
+     curl -X POST https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/getSignedUploadUrl \
+       -H "Content-Type: application/json" \
+       -d '{"fileName": "test.png", "contentType": "image/png"}'
+
+     You should get back a JSON with "uploadUrl", "objectName", "contentType".
+
+  2. Test uploading a file:
+
+     # Use the uploadUrl from step 1's response
+     curl -X PUT "<uploadUrl>" \
+       -H "Content-Type: image/png" \
+       --data-binary @test.png
+
+  3. Verify the file is accessible:
+
+     Open in browser:
+     https://storage.googleapis.com/sapapnj-media-assets/<objectName>
+
+  4. Test deletion:
+
+     curl -X POST https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/deleteObject \
+       -H "Content-Type: application/json" \
+       -d '{"objectName": "<objectName>"}'
+
+================================================================================
+STEP 7 (OPTIONAL) — MIGRATE EXISTING CLOUDINARY ASSETS
+================================================================================
+
+  If you have existing media on Cloudinary that needs to be preserved:
+
+  1. Export all Cloudinary URLs from your Firestore documents.
+  2. Download each asset using the Cloudinary URL.
+  3. Upload each asset to GCS:
+       gsutil cp <local_file> gs://sapapnj-media-assets/uploads/<filename>
+  4. Update the Firestore documents to point to the new GCS URLs:
+       https://storage.googleapis.com/sapapnj-media-assets/uploads/<filename>
+
+  A migration script can be written if needed — ask for help.
+
+================================================================================
+NOTES
+================================================================================
+
+  • The Cloud Functions are set to --allow-unauthenticated for simplicity.
+    For production, add Firebase Auth token verification in the function code.
+
+  • Region "asia-southeast2" is Jakarta. Change to your nearest region if needed.
+    Common alternatives:
+      asia-southeast1  (Singapore)
+      us-central1      (Iowa)
+      europe-west1     (Belgium)
+
+  • The old cloudinary_service.dart file is kept in the repo but is no longer
+    imported by any code. You can safely delete it when ready.
+
+================================================================================

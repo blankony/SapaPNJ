@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
@@ -234,21 +234,9 @@ class SettingsPage extends StatelessWidget {
               ) ?? false;
 
               if (confirm) {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  final batch = FirebaseFirestore.instance.batch();
-                  final snapshot = await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .collection('notifications')
-                      .get();
-                  for (var doc in snapshot.docs) {
-                    batch.delete(doc.reference);
-                  }
-                  await batch.commit();
-                  if (context.mounted) {
-                     OverlayService().showTopNotification(context, t.translate('settings_notif_cleared'), Icons.check_circle, (){});
-                  }
+                final success = await ApiService().clearNotifications();
+                if (success && context.mounted) {
+                   OverlayService().showTopNotification(context, t.translate('settings_notif_cleared'), Icons.check_circle, (){});
                 }
               }
             },

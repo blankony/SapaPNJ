@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
@@ -113,32 +113,24 @@ class _RegisterPageState extends State<RegisterPage> {
       if (userCredential.user != null) {
         final String idNumber = _nimController.text.trim();
 
-        // Check against Firestore (using 'nim' field for both NIM and NIP)
-        final nimQuery = await FirebaseFirestore.instance
-            .collection('users')
-            .where('nim', isEqualTo: idNumber)
-            .get();
-
-        if (nimQuery.docs.isNotEmpty) {
-          await userCredential.user!.delete();
-          throw FirebaseAuthException(
-            code: 'nim-already-in-use',
-            message: t.translate('error_nim_registered')
+        // Check NIM availability and create user via API
+        try {
+          await ApiService().createUser(
+            uid: userCredential.user!.uid,
+            email: _emailController.text.trim(),
+            name: _namaController.text.trim(),
+            nim: idNumber,
           );
+        } on ApiException catch (e) {
+          if (e.code == 'nim-already-in-use') {
+            await userCredential.user!.delete();
+            throw FirebaseAuthException(
+              code: 'nim-already-in-use',
+              message: t.translate('error_nim_registered')
+            );
+          }
+          rethrow;
         }
-
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-          'uid': userCredential.user!.uid,
-          'email': _emailController.text.trim(),
-          'name': _namaController.text.trim(),
-          'nim': idNumber, // Stores NIM or NIP
-          'bio': 'Member of PNJ',
-          'createdAt': FieldValue.serverTimestamp(),
-          'following': [],
-          'followers': [],
-          'agreedToTerms': true,
-          'agreedAt': FieldValue.serverTimestamp(),
-        });
 
         if (mounted) {
            Navigator.of(context).pushAndRemoveUntil(

@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
@@ -10,7 +10,7 @@ import '../change_password_screen.dart';
 import '../../auth_gate.dart';
 import '../../services/overlay_service.dart';
 import '../ktm_verification_screen.dart';
-import '../../services/app_localizations.dart'; // REQUIRED IMPORT
+import '../../services/app_localizations.dart';
 
 class AccountCenterPage extends StatefulWidget {
   const AccountCenterPage({super.key});
@@ -22,6 +22,8 @@ class AccountCenterPage extends StatefulWidget {
 class _AccountCenterPageState extends State<AccountCenterPage> {
   bool _isDeleting = false;
   User? _currentUser;
+  Map<String, dynamic> _userDbData = {};
+  bool _isLoadingDbData = true;
 
   @override
   void initState() {
@@ -29,15 +31,28 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
     _refreshUser();
   }
 
-  /// Forces a reload of the Firebase User to get the latest emailVerified status
+  /// Forces a reload of the Firebase User and gets user details from API
   Future<void> _refreshUser() async {
     _currentUser = FirebaseAuth.instance.currentUser;
     if (_currentUser != null) {
       await _currentUser!.reload();
-      setState(() {
-        // Update local reference after reload
-        _currentUser = FirebaseAuth.instance.currentUser;
-      });
+      _currentUser = FirebaseAuth.instance.currentUser;
+      
+      try {
+        final data = await ApiService().getUser(_currentUser!.uid);
+        if (data != null && mounted) {
+          setState(() {
+            _userDbData = data;
+            _isLoadingDbData = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoadingDbData = false;
+          });
+        }
+      }
     }
   }
 
@@ -191,40 +206,26 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
       if (user != null) {
         final String uid = user.uid;
 
-        WriteBatch batch = FirebaseFirestore.instance.batch();
-        int batchCount = 0;
+        final success = await ApiService().deleteUser(uid);
+        if (success) {
+          await user.delete();
 
-        final postsQuery = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: uid).get();
+          if (mounted) {
+            OverlayService().showTopNotification(
+              context,
+              t.translate('account_deleted'),
+              Icons.delete_forever,
+              (){},
+              color: Colors.grey
+            );
 
-        for (var doc in postsQuery.docs) {
-          batch.delete(doc.reference);
-          batchCount++;
-
-          if (batchCount >= 450) {
-            await batch.commit();
-            batch = FirebaseFirestore.instance.batch();
-            batchCount = 0;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const AuthGate()),
+              (route) => false,
+            );
           }
-        }
-
-        batch.delete(FirebaseFirestore.instance.collection('users').doc(uid));
-        await batch.commit();
-
-        await user.delete();
-
-        if (mounted) {
-          OverlayService().showTopNotification(
-            context,
-            t.translate('account_deleted'),
-            Icons.delete_forever,
-            (){},
-            color: Colors.grey
-          );
-
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const AuthGate()),
-            (route) => false,
-          );
+        } else {
+          throw Exception("API call failed");
         }
       }
     } catch (e) {
@@ -247,7 +248,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = FirebaseAuth.instance.currentUser; // Use fresh instance
+    final user = FirebaseAuth.instance.currentUser;
     final bool isEmailVerified = user?.emailVerified ?? false;
     var t = AppLocalizations.of(context)!;
 
@@ -255,7 +256,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
       children: [
         Scaffold(
           appBar: AppBar(
-            title: Text(t.translate('settings_account')), // "Account Center"
+            title: Text(t.translate('settings_account')),
           ),
           body: ListView(
             children: [
@@ -300,59 +301,64 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
 
               // --- 2. KTM VERIFICATION (Only shows if Email Verified) ---
               if (isEmailVerified)
-                StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance.collection('users').doc(user!.uid).snapshots(),
-                  builder: (context, snapshot) {
-                    String status = 'none';
-                    if (snapshot.hasData && snapshot.data!.exists) {
-                      final data = snapshot.data!.data() as Map<String, dynamic>;
-                      status = data['verificationStatus'] ?? 'none';
-                    }
-
-                    String title = t.translate('account_ktm');
-                    String subtitle = t.translate('account_ktm_desc');
-                    IconData icon = Icons.badge_outlined;
-                    Color color = Colors.grey;
-                    Widget? trailing;
-
-                    if (status == 'verified') {
-                      subtitle = t.translate('account_ktm_verified');
-                      color = Colors.green;
-                      icon = Icons.verified_user;
-                      trailing = Icon(Icons.check_circle, color: Colors.green);
-                    } else if (status == 'pending') {
-                      subtitle = t.translate('account_ktm_review');
-                      color = Colors.orange;
-                      icon = Icons.hourglass_top;
-                      trailing = Text(t.translate('profile_verify_pending'), style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold));
-                    } else if (status == 'rejected') {
-                      subtitle = t.translate('account_ktm_rejected');
-                      color = Colors.red;
-                      icon = Icons.error_outline;
-                      trailing = Icon(Icons.arrow_forward_ios, size: 16);
-                    } else {
-                      // None
-                      trailing = Icon(Icons.arrow_forward_ios, size: 16);
-                    }
-
-                    return ListTile(
-                      leading: Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
-                          shape: BoxShape.circle
-                        ),
-                        child: Icon(icon, color: color, size: 20),
-                      ),
-                      title: Text(title),
-                      subtitle: Text(subtitle),
-                      trailing: trailing,
-                      onTap: (status == 'verified' || status == 'pending')
-                        ? null
-                        : () => Navigator.push(context, MaterialPageRoute(builder: (_) => KtmVerificationScreen())),
+                (() {
+                  if (_isLoadingDbData) {
+                    return const SizedBox(
+                      height: 50,
+                      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                     );
-                  },
-                ),
+                  }
+
+                  final String status = _userDbData['verification_status'] ?? _userDbData['verificationStatus'] ?? 'none';
+
+                  String title = t.translate('account_ktm');
+                  String subtitle = t.translate('account_ktm_desc');
+                  IconData icon = Icons.badge_outlined;
+                  Color color = Colors.grey;
+                  Widget? trailing;
+
+                  if (status == 'verified') {
+                    subtitle = t.translate('account_ktm_verified');
+                    color = Colors.green;
+                    icon = Icons.verified_user;
+                    trailing = Icon(Icons.check_circle, color: Colors.green);
+                  } else if (status == 'pending') {
+                    subtitle = t.translate('account_ktm_review');
+                    color = Colors.orange;
+                    icon = Icons.hourglass_top;
+                    trailing = Text(t.translate('profile_verify_pending'), style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold));
+                  } else if (status == 'rejected') {
+                    subtitle = t.translate('account_ktm_rejected');
+                    color = Colors.red;
+                    icon = Icons.error_outline;
+                    trailing = Icon(Icons.arrow_forward_ios, size: 16);
+                  } else {
+                    // None
+                    trailing = Icon(Icons.arrow_forward_ios, size: 16);
+                  }
+
+                  return ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        shape: BoxShape.circle
+                      ),
+                      child: Icon(icon, color: color, size: 20),
+                    ),
+                    title: Text(title),
+                    subtitle: Text(subtitle),
+                    trailing: trailing,
+                    onTap: (status == 'verified' || status == 'pending')
+                      ? null
+                      : () async {
+                          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => KtmVerificationScreen()));
+                          if (res == true) {
+                            _refreshUser();
+                          }
+                        },
+                  );
+                })(),
 
               Divider(height: 32),
 
@@ -370,11 +376,14 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                 subtitle: Text(t.translate('account_edit_desc')),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
-                  Navigator.of(context).push(_createSlideRightRoute(EditProfileScreen()));
+                  Navigator.of(context).push(_createSlideRightRoute(EditProfileScreen())).then((_) => _refreshUser());
                 },
               ),
 
-              _PrivacySwitchTile(),
+              _PrivacySwitchTile(
+                isPrivate: _userDbData['is_private'] == 1 || _userDbData['is_private'] == true,
+                onUpdated: _refreshUser,
+              ),
 
               ListTile(
                 leading: Icon(Icons.lock_outline),
@@ -485,6 +494,10 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
 }
 
 class _PrivacySwitchTile extends StatefulWidget {
+  final bool isPrivate;
+  final VoidCallback onUpdated;
+  const _PrivacySwitchTile({required this.isPrivate, required this.onUpdated});
+
   @override
   State<_PrivacySwitchTile> createState() => _PrivacySwitchTileState();
 }
@@ -540,39 +553,7 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
         setState(() => _isUpdating = true);
 
         try {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .update({'isPrivate': !isCurrentlyPrivate});
-
-          final batch = FirebaseFirestore.instance.batch();
-          final postsQuery = await FirebaseFirestore.instance
-              .collection('posts')
-              .where('userId', isEqualTo: user.uid)
-              .get();
-
-          final String targetNewVisibility = isCurrentlyPrivate ? 'public' : 'followers';
-
-          int batchCount = 0;
-          for (var doc in postsQuery.docs) {
-            final data = doc.data();
-            final currentVis = data['visibility'] ?? 'public';
-
-            if (currentVis != 'private') {
-              if (currentVis != targetNewVisibility) {
-                batch.update(doc.reference, {'visibility': targetNewVisibility});
-                batchCount++;
-              }
-            }
-
-            if (batchCount >= 450) {
-              await batch.commit();
-            }
-          }
-
-          if (batchCount > 0) {
-            await batch.commit();
-          }
+          await ApiService().updateUser(user.uid, {'is_private': !isCurrentlyPrivate});
 
           if (context.mounted) {
             OverlayService().showTopNotification(
@@ -581,6 +562,7 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
               !isCurrentlyPrivate ? Icons.lock : Icons.public,
               (){}
             );
+            widget.onUpdated();
           }
         } catch (e) {
           if (context.mounted) {
@@ -610,31 +592,19 @@ class _PrivacySwitchTileState extends State<_PrivacySwitchTile> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return SizedBox.shrink();
     var t = AppLocalizations.of(context)!;
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return SizedBox.shrink();
-
-        final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-        final bool isPrivate = data['isPrivate'] ?? false;
-
-        return SwitchListTile(
-          secondary: _isUpdating
-            ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-            : Icon(
-                isPrivate ? Icons.lock : Icons.lock_open,
-                color: Theme.of(context).primaryColor
-              ),
-          title: Text(t.translate('account_private_title')),
-          subtitle: Text(t.translate('account_private_subtitle')),
-          value: isPrivate,
-          onChanged: _isUpdating ? null : (_) => _togglePrivacy(context, isPrivate),
-        );
-      },
+    return SwitchListTile(
+      secondary: _isUpdating
+        ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+        : Icon(
+            widget.isPrivate ? Icons.lock : Icons.lock_open,
+            color: Theme.of(context).primaryColor
+          ),
+      title: Text(t.translate('account_private_title')),
+      subtitle: Text(t.translate('account_private_subtitle')),
+      value: widget.isPrivate,
+      onChanged: _isUpdating ? null : (_) => _togglePrivacy(context, widget.isPrivate),
     );
   }
 }

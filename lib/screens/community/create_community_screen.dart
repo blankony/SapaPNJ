@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/overlay_service.dart';
-import '../../services/cloudinary_service.dart';
+import '../../services/gcs_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
 class CreateCommunityScreen extends StatefulWidget {
@@ -20,7 +20,7 @@ class CreateCommunityScreen extends StatefulWidget {
 class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
-  final CloudinaryService _cloudinaryService = CloudinaryService();
+  final GcsService _cloudinaryService = GcsService();
 
   bool _isLoading = false;
   String _selectedCategory = 'casual';
@@ -64,25 +64,14 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
 
       bool isVerified = _selectedCategory != 'casual' && docUrl != null;
 
-      await FirebaseFirestore.instance.collection('communities').add({
-        'name': _nameController.text.trim(),
-        'description': _descController.text.trim(),
-        'category': _selectedCategory,
-        'isVerified': isVerified,
-        'verificationDocUrl': docUrl,
-        'allowMemberPosts': _allowMemberPosts, // Save Preference
-
-        'ownerId': user!.uid,
-        'admins': [],
-        'editors': [],
-        'moderators': [],
-        'followers': [user.uid],
-        'pendingFollowers': [],
-
-        'createdAt': FieldValue.serverTimestamp(),
-        'imageUrl': null,
-        'bannerImageUrl': null,
-      });
+      await ApiService().createCommunity(
+        name: _nameController.text.trim(),
+        description: _descController.text.trim(),
+        category: _selectedCategory,
+        isVerified: isVerified,
+        verificationDocUrl: docUrl,
+        allowMemberPosts: _allowMemberPosts,
+      );
 
       if(mounted) {
         OverlayService().showTopNotification(context, t.translate('comm_create_success'), Icons.check_circle, (){}, color: Colors.green);

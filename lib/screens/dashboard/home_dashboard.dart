@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -55,8 +55,9 @@ class _HomeDashboardState extends State<HomeDashboard>
   late Widget _persistentHomeTab;
   bool _hasRestoredState = false;
 
-  // Subscriptions
-  StreamSubscription<QuerySnapshot>? _notificationSubscription;
+  // Timer & Last Notification for API Polling
+  Timer? _notificationTimer;
+  Map<String, dynamic>? _lastNotification;
 
   @override
   bool get wantKeepAlive => true;
@@ -164,7 +165,7 @@ class _HomeDashboardState extends State<HomeDashboard>
 
   @override
   void dispose() {
-    _notificationSubscription?.cancel();
+    _notificationTimer?.cancel();
     _entranceController.dispose();
     _homeScrollController.dispose();
     _recommendedScrollController.dispose();
@@ -178,38 +179,43 @@ class _HomeDashboardState extends State<HomeDashboard>
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    _notificationSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('notifications')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .snapshots()
-        .listen(_handleNotificationSnapshot);
+    _pollNotifications();
+    _notificationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _pollNotifications();
+    });
   }
 
-  void _handleNotificationSnapshot(QuerySnapshot snapshot) {
+  Future<void> _pollNotifications() async {
+    try {
+      final notifs = await ApiService().getNotifications();
+      if (notifs.isNotEmpty) {
+        final newest = notifs.first;
+        final isUnread = newest['is_read'] == false || newest['is_read'] == 0;
+        if (isUnread) {
+          if (_lastNotification == null || _lastNotification!['id'] != newest['id']) {
+            _lastNotification = newest;
+            _handleNotification(newest);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error polling notifications: $e");
+    }
+  }
+
+  void _handleNotification(Map<String, dynamic> data) {
     if (!notificationPrefs.allNotificationsEnabled.value ||
         !notificationPrefs.headsUpEnabled.value) {
       return;
     }
-
-    if (snapshot.docs.isNotEmpty) {
-      final doc = snapshot.docs.first;
-      final data = doc.data() as Map<String, dynamic>;
-
-      if (data['isRead'] == false) {
-        _showNotificationOverlay(doc, data);
-      }
-    }
+    _showNotificationOverlay(data);
   }
 
-  void _showNotificationOverlay(
-      QueryDocumentSnapshot doc, Map<String, dynamic> data) {
+  void _showNotificationOverlay(Map<String, dynamic> data) {
     final String type = data['type'] ?? 'info';
     String message = 'New Notification';
     IconData icon = Icons.notifications;
-    String? postId = data['postId'];
+    String? postId = data['post_id'];
 
     switch (type) {
       case 'like':
@@ -235,7 +241,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       message,
       icon,
       () {
-        doc.reference.update({'isRead': true});
+        ApiService().markNotificationRead(data['id']);
         if (postId != null) {
           Navigator.push(context,
               _AnimatedRoute(page: PostDetailScreen(postId: postId)));
@@ -390,27 +396,25 @@ class _HomeDashboardState extends State<HomeDashboard>
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
               Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('communities')
-                      .where('followers', arrayContains: user.uid)
-                      .snapshots(),
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: ApiService().getMyCommunities(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting)
                       return Center(child: CircularProgressIndicator());
 
-                    final docs = snapshot.data?.docs ?? [];
-                    if (docs.isEmpty) {
+                    final list = snapshot.data ?? [];
+                    if (list.isEmpty) {
                       return Center(
                           child: Text("You haven't joined any communities yet."));
                     }
 
                     return ListView.builder(
-                      itemCount: docs.length,
+                      itemCount: list.length,
                       itemBuilder: (context, index) {
-                        final data = docs[index].data() as Map<String, dynamic>;
+                        final data = list[index];
+                        final String id = data['id'];
                         final String name = data['name'] ?? 'Community';
-                        final String? icon = data['imageUrl'];
+                        final String? icon = data['image_url'];
 
                         return ListTile(
                           leading: CircleAvatar(
@@ -427,7 +431,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                           onTap: () {
                             Navigator.pop(ctx);
                             _navigateToCreatePost(initialData: {
-                              'communityId': docs[index].id,
+                              'communityId': id,
                               'communityName': name,
                               'communityIcon': icon,
                             });
@@ -881,23 +885,20 @@ class _AppBarAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    return StreamBuilder<DocumentSnapshot>(
-      stream: currentUserId != null
-          ? FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUserId)
-              .snapshots()
-          : null,
+    if (currentUserId == null) return const SizedBox();
+
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: ApiService().getUser(currentUserId),
       builder: (context, snapshot) {
         int iconId = 0;
         String? colorHex;
         String? profileImageUrl;
 
-        if (snapshot.hasData && snapshot.data!.exists) {
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          iconId = data['avatarIconId'] ?? 0;
-          colorHex = data['avatarHex'];
-          profileImageUrl = data['profileImageUrl'];
+        if (snapshot.hasData && snapshot.data != null) {
+          final data = snapshot.data!;
+          iconId = data['avatar_icon_id'] ?? 0;
+          colorHex = data['avatar_hex'];
+          profileImageUrl = data['profile_image_url'];
         }
 
         return CircleAvatar(
@@ -929,17 +930,13 @@ class _NotificationButton extends StatelessWidget {
           icon: Icon(Icons.notifications_none), onPressed: onPressed);
     }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('notifications')
-          .where('isRead', isEqualTo: false)
-          .limit(1)
-          .snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: ApiService().getNotifications(),
       builder: (context, snapshot) {
-        final bool hasUnread =
-            snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+        bool hasUnread = false;
+        if (snapshot.hasData && snapshot.data != null) {
+          hasUnread = snapshot.data!.any((n) => n['is_read'] == false || n['is_read'] == 0);
+        }
 
         return Stack(
           children: [

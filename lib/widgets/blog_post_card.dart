@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
@@ -70,6 +70,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   bool _isLiked = false;
   bool _isReposted = false;
   bool _isSharing = false;
+  bool _isBookmarked = false;
   int _likeCount = 0;
   int _repostCount = 0;
 
@@ -166,17 +167,17 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   bool get effectiveIsOwner {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return false;
-    return effectivePostData['userId'] == currentUser.uid;
+    return (effectivePostData['user_uid'] ?? effectivePostData['userId']) == currentUser.uid;
   }
 
   Future<void> _fetchOriginalPost(String originalId) async {
     if (mounted) setState(() => _isLoadingOriginal = true);
     try {
-      final doc = await FirebaseFirestore.instance.collection('posts').doc(originalId).get();
-      if (doc.exists) {
+      final data = await ApiService().getPost(originalId);
+      if (data != null) {
         if (mounted) {
           setState(() {
-            _resolvedPostData = doc.data();
+            _resolvedPostData = data;
             _isLoadingOriginal = false;
             _syncState();
           });
@@ -237,15 +238,21 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     final currentUser = FirebaseAuth.instance.currentUser;
     if (_resolvedPostData == null) return;
 
+    // API returns is_liked, like_count, is_bookmarked directly
+    final bool apiLiked = _resolvedPostData!['is_liked'] == true;
+    final int apiLikeCount = _resolvedPostData!['like_count'] ?? 0;
+    final bool apiBookmarked = _resolvedPostData!['is_bookmarked'] == true;
+    // Fallback for Firestore-style data during transition
     final likes = _resolvedPostData!['likes'] as Map<String, dynamic>? ?? {};
     final reposts = _resolvedPostData!['repostedBy'] as List? ?? [];
 
     if (mounted) {
       setState(() {
-        _isLiked = currentUser != null && likes.containsKey(currentUser.uid);
-        _likeCount = likes.length;
+        _isLiked = apiLiked || (currentUser != null && likes.containsKey(currentUser.uid));
+        _likeCount = apiLikeCount > 0 ? apiLikeCount : likes.length;
         _isReposted = currentUser != null && reposts.contains(currentUser.uid);
-        _repostCount = reposts.length;
+        _repostCount = _resolvedPostData!['repost_count'] ?? reposts.length;
+        _isBookmarked = apiBookmarked;
       });
     }
   }
@@ -269,37 +276,13 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     _likeController.forward().then((_) => _likeController.reverse());
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
-    final docRef = FirebaseFirestore.instance.collection('posts').doc(effectivePostId);
-
     setState(() {
       _isLiked = !_isLiked;
-      if (_isLiked) {
-        _likeCount++;
-      } else {
-        _likeCount--;
-      }
+      if (_isLiked) { _likeCount++; } else { _likeCount--; }
     });
 
     try {
-      final notificationId = 'like_${effectivePostId}_${currentUser.uid}';
-      final notificationRef = FirebaseFirestore.instance.collection('users').doc(effectivePostData['userId']).collection('notifications').doc(notificationId);
-
-      if (_isLiked) {
-        await docRef.update({'likes.${currentUser.uid}': true});
-        if (effectivePostData['userId'] != currentUser.uid) {
-          notificationRef.set({
-            'type': 'like',
-            'senderId': currentUser.uid,
-            'postId': effectivePostId,
-            'postTextSnippet': effectivePostData['text'],
-            'timestamp': FieldValue.serverTimestamp(),
-            'isRead': false,
-          });
-        }
-      } else {
-        await docRef.update({'likes.${currentUser.uid}': FieldValue.delete()});
-        if (effectivePostData['userId'] != currentUser.uid) notificationRef.delete();
-      }
+      await ApiService().toggleLike(effectivePostId);
     } catch (e) {
       _syncState();
     }
@@ -313,72 +296,29 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
     final targetId = effectivePostId;
-    final targetAuthorId = effectivePostData['userId'];
-    final docRef = FirebaseFirestore.instance.collection('posts').doc(targetId);
 
     setState(() {
       _isReposted = !_isReposted;
-      if (_isReposted) {
-        _repostCount++;
-      } else {
-        _repostCount--;
-      }
+      if (_isReposted) { _repostCount++; } else { _repostCount--; }
     });
 
     try {
-      final notificationId = 'repost_${targetId}_${currentUser.uid}';
-      final notificationRef = FirebaseFirestore.instance.collection('users').doc(targetAuthorId).collection('notifications').doc(notificationId);
-
+      final api = ApiService();
       if (_isReposted) {
-        String reposterName = currentUser.displayName ?? 'User';
-        try {
-           final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
-           if (userDoc.exists) {
-             final data = userDoc.data();
-             reposterName = data?['userName'] ?? data?['name'] ?? reposterName;
-           }
-        } catch (_) {}
-
-        await FirebaseFirestore.instance.collection('posts').add({
-          'type': 'repost',
-          'originalPostId': targetId,
-          'userId': currentUser.uid,
-          'userName': reposterName,
-          'userEmail': currentUser.email,
-          'timestamp': FieldValue.serverTimestamp(),
-          'visibility': effectivePostData['visibility'] ?? 'public',
-        });
-
-        await docRef.update({
-          'repostedBy': FieldValue.arrayUnion([currentUser.uid])
-        });
-
-        if (targetAuthorId != currentUser.uid) {
-          notificationRef.set({
-            'type': 'repost',
-            'senderId': currentUser.uid,
-            'postId': targetId,
-            'postTextSnippet': effectivePostData['text'],
-            'timestamp': FieldValue.serverTimestamp(),
-            'isRead': false,
-          });
-        }
+        await api.createPost(
+          isRepost: true,
+          originalPostId: targetId,
+          visibility: effectivePostData['visibility'] ?? 'public',
+        );
       } else {
-        final query = await FirebaseFirestore.instance.collection('posts')
-            .where('originalPostId', isEqualTo: targetId)
-            .where('userId', isEqualTo: currentUser.uid)
-            .where('type', isEqualTo: 'repost')
-            .get();
-
-        for (var doc in query.docs) {
-          await doc.reference.delete();
+        // Find and delete the repost — the server handles repost_count decrement
+        final reposts = await api.getReposts(currentUser.uid);
+        for (final r in reposts) {
+          if (r['original_post_id'] == targetId) {
+            await api.deletePost(r['id']);
+            break;
+          }
         }
-
-        await docRef.update({
-          'repostedBy': FieldValue.arrayRemove([currentUser.uid])
-        });
-
-        if (targetAuthorId != currentUser.uid) notificationRef.delete();
       }
     } catch (e) {
       debugPrint("Repost Error: $e");
@@ -395,7 +335,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (hapticNotifier.value) HapticFeedback.lightImpact();
     var t = AppLocalizations.of(context)!;
 
-    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('bookmarks').doc(effectivePostId);
+    setState(() {
+      _isBookmarked = !isCurrentlyBookmarked;
+    });
 
     if (!isCurrentlyBookmarked) {
       OverlayService().showTopNotification(context, t.translate('post_bookmark_saved'), Icons.bookmark, () {});
@@ -404,12 +346,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
 
     try {
-      if (!isCurrentlyBookmarked) {
-        await docRef.set({'timestamp': FieldValue.serverTimestamp()});
-      } else {
-        await docRef.delete();
-      }
+      await ApiService().toggleBookmark(effectivePostId);
     } catch (e) {
+      setState(() {
+        _isBookmarked = isCurrentlyBookmarked;
+      });
       OverlayService().showTopNotification(context, t.translate('post_bookmark_error'), Icons.error, () {}, color: Colors.red);
     }
   }
@@ -423,8 +364,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     String newVis;
 
     if (currentVis == 'private') {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final bool isPrivateAccount = userDoc.data()?['isPrivate'] ?? false;
+      final userData = await ApiService().getUser(user.uid);
+      final bool isPrivateAccount = userData?['is_private'] == true;
       newVis = isPrivateAccount ? 'followers' : 'public';
     } else {
       newVis = 'private';
@@ -449,9 +390,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (mounted) OverlayService().showTopNotification(context, msg, icon, () {}, color: color);
 
     try {
-      await FirebaseFirestore.instance.collection('posts').doc(effectivePostId).update({
-        'visibility': newVis,
-      });
+      await ApiService().updatePost(effectivePostId, {'visibility': newVis});
     } catch (e) {
       if (mounted) {
         OverlayService().showTopNotification(context, t.translate('vis_toast_fail'), Icons.error, () {}, color: Colors.red);
@@ -491,14 +430,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         false;
     if (confirm) {
       try {
-        await FirebaseFirestore.instance.collection('posts').doc(widget.postId).delete();
-
-        if (_isRepostWrapper && widget.postData['originalPostId'] != null) {
-             await FirebaseFirestore.instance.collection('posts').doc(widget.postData['originalPostId']).update({
-                'repostedBy': FieldValue.arrayRemove([FirebaseAuth.instance.currentUser?.uid])
-             });
-        }
-
+        await ApiService().deletePost(widget.postId);
         if (mounted) OverlayService().showTopNotification(context, t.translate('post_deleted'), Icons.delete_outline, () {});
       } catch (e) {
         if (mounted) OverlayService().showTopNotification(context, t.translate('post_delete_fail'), Icons.error, () {}, color: Colors.red);
@@ -511,24 +443,20 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (user == null) return;
     var t = AppLocalizations.of(context)!;
     final bool newPinState = !_localIsPinned;
-    setState(() {
-      _localIsPinned = newPinState;
-    });
+    setState(() { _localIsPinned = newPinState; });
     if (widget.onPinToggle != null) {
       widget.onPinToggle!(effectivePostId, newPinState);
     }
     try {
       if (!newPinState) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'pinnedPostId': FieldValue.delete()});
+        await ApiService().updateUser(user.uid, {'pinned_post_id': null});
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_unpin_success'), Icons.push_pin_outlined, () {});
       } else {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'pinnedPostId': effectivePostId});
+        await ApiService().updateUser(user.uid, {'pinned_post_id': effectivePostId});
         if (mounted) OverlayService().showTopNotification(context, t.translate('profile_pin_success'), Icons.push_pin, () {});
       }
     } catch (e) {
-      setState(() {
-        _localIsPinned = !newPinState;
-      });
+      setState(() { _localIsPinned = !newPinState; });
       if (widget.onPinToggle != null) widget.onPinToggle!(effectivePostId, !newPinState);
       if (mounted) OverlayService().showTopNotification(context, t.translate('pin_fail'), Icons.error, () {}, color: Colors.red);
     }
@@ -576,7 +504,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       return;
     }
 
-    final postUserId = effectivePostData['userId'];
+    final postUserId = effectivePostData['user_uid'] ?? effectivePostData['userId'];
     if (postUserId == null) return;
 
     if (effectiveIsOwner) {
@@ -621,7 +549,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   Future<void> _submitEdit() async {
     var t = AppLocalizations.of(context)!;
     try {
-      await FirebaseFirestore.instance.collection('posts').doc(effectivePostId).update({'text': _editController.text});
+      await ApiService().updatePost(effectivePostId, {'text': _editController.text});
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -748,50 +676,49 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (!_isRepostWrapper) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final reposterId = widget.postData['userId'];
-    final timestamp = widget.postData['timestamp'] as Timestamp?;
-    final timeStr = timestamp != null ? timeago.format(timestamp.toDate(), locale: 'en_short') : 'just now';
-
-    final initialName = widget.postData['userName'] ?? 'User';
-
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(reposterId).snapshots(),
-      builder: (context, snapshot) {
-        String displayName = initialName;
-        if (snapshot.hasData && snapshot.data!.exists) {
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          displayName = data['userName'] ?? data['name'] ?? displayName;
-        }
-
-        return Container(
-          padding: const EdgeInsets.only(left: 36.0, bottom: 6.0),
-          child: Row(
-            children: [
-              Icon(Icons.repeat, size: 14, color: theme.hintColor),
-              const SizedBox(width: 6),
-              Flexible(
-                child: GestureDetector(
-                  onTap: () {
-                    if (reposterId != null) {
-                       Navigator.of(context).push(_createSlideLeftRoute(ProfilePage(userId: reposterId, includeScaffold: true)));
-                    }
-                  },
-                  child: RichText(
-                    text: TextSpan(
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 13, fontWeight: FontWeight.w600),
-                      children: [
-                        TextSpan(text: "$displayName "),
-                        TextSpan(text: "reposted · $timeStr", style: const TextStyle(fontWeight: FontWeight.normal)),
-                      ],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+    final reposterId = widget.postData['userId'] ?? widget.postData['user_uid'];
+    final createdAt = widget.postData['created_at'] ?? widget.postData['timestamp'];
+    String timeStr;
+    if (createdAt != null) {
+      try {
+        final parsedDate = DateTime.parse(createdAt.toString());
+        timeStr = timeago.format(parsedDate, locale: 'en_short');
+      } catch (_) {
+        timeStr = 'just now';
       }
+    } else {
+      timeStr = 'just now';
+    }
+
+    final displayName = widget.postData['user_name'] ?? widget.postData['userName'] ?? 'User';
+
+    return Container(
+      padding: const EdgeInsets.only(left: 36.0, bottom: 6.0),
+      child: Row(
+        children: [
+          Icon(Icons.repeat, size: 14, color: theme.hintColor),
+          const SizedBox(width: 6),
+          Flexible(
+            child: GestureDetector(
+              onTap: () {
+                if (reposterId != null) {
+                   Navigator.of(context).push(_createSlideLeftRoute(ProfilePage(userId: reposterId, includeScaffold: true)));
+                }
+              },
+              child: RichText(
+                text: TextSpan(
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 13, fontWeight: FontWeight.w600),
+                  children: [
+                    TextSpan(text: "$displayName "),
+                    TextSpan(text: "reposted · $timeStr", style: const TextStyle(fontWeight: FontWeight.normal)),
+                  ],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -961,6 +888,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                             likeCount: _likeCount,
                             isReposted: _isReposted,
                             isLiked: _isLiked,
+                            isBookmarked: _isBookmarked,
                             isSharing: _isSharing,
                             isDetailView: widget.isDetailView,
                             onCommentTap: _navigateToDetail,

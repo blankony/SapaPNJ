@@ -1,0 +1,13 @@
+{
+  "name": "sapapnj-media-functions",
+  "version": "1.0.0",
+  "description": "Cloud Functions for SapaPNJ GCS media operations",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.0.0",
+    "@google-cloud/functions-framework": "^3.0.0"
+  }
+}

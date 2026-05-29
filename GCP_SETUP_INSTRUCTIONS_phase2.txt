@@ -1,0 +1,167 @@
+================================================================================
+  SAPA PNJ — GCP SETUP INSTRUCTIONS (Phase 2: Database Migration)
+================================================================================
+
+PREREQUISITES
+─────────────
+  • Phase 1 completed (Cloud Functions deployed, GCS bucket configured)
+  • Google Cloud SDK (gcloud CLI) installed and authenticated
+  • Active project: sapapnj-gcp
+
+================================================================================
+STEP 1 — ENABLE CLOUD SQL API
+================================================================================
+
+  gcloud services enable sqladmin.googleapis.com
+  gcloud services enable sql-component.googleapis.com
+
+================================================================================
+STEP 2 — CREATE THE CLOUD SQL INSTANCE
+================================================================================
+
+  # Create a MySQL 8.0 instance (db-f1-micro = cheapest tier)
+  # Region: asia-southeast2 (Jakarta) — same as your Cloud Functions
+  gcloud sql instances create sapapnj-db \
+    --database-version=MYSQL_8_0 \
+    --tier=db-f1-micro \
+    --region=asia-southeast2 \
+    --storage-type=SSD \
+    --storage-size=10GB \
+    --availability-type=zonal \
+    --assign-ip
+
+  # This takes 5-10 minutes. Wait for it to complete.
+
+  # Verify the instance is running:
+  gcloud sql instances describe sapapnj-db --format="value(state)"
+  # Should output: RUNNABLE
+
+================================================================================
+STEP 3 — CREATE THE DATABASE AND USER
+================================================================================
+
+  # Create the database
+  gcloud sql databases create sapapnj --instance=sapapnj-db
+
+  # Create a user for the API (replace YOUR_PASSWORD with a strong password)
+  gcloud sql users create sapapnj-api \
+    --instance=sapapnj-db \
+    --password=YOUR_PASSWORD
+
+================================================================================
+STEP 4 — GRANT CLOUD FUNCTIONS ACCESS TO CLOUD SQL
+================================================================================
+
+  # Grant the existing service account Cloud SQL Client role
+  gcloud projects add-iam-policy-binding sapapnj-gcp \
+    --member="serviceAccount:sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com" \
+    --role="roles/cloudsql.client"
+
+================================================================================
+STEP 5 — APPLY THE DATABASE SCHEMA
+================================================================================
+
+  # Get the instance connection name (you'll need this later)
+  gcloud sql instances describe sapapnj-db --format="value(connectionName)"
+  # sapapnj-gcp:asia-southeast2:sapapnj-db
+  # Output will be like: sapapnj-gcp:asia-southeast2:sapapnj-db
+
+  # Option A: Apply schema via gcloud (connect and paste SQL)
+  gcloud sql connect sapapnj-db --user=sapapnj-api
+  # Once connected, select the database by running:
+  #   mysql> USE sapapnj;
+  # Then paste the contents of cloud_functions/api/schema.sql
+
+  # Option B: Use Cloud SQL Proxy locally
+  # See: https://cloud.google.com/sql/docs/mysql/sql-proxy
+
+================================================================================
+STEP 6 — DEPLOY THE API GATEWAY
+================================================================================
+
+  # Navigate to the API directory
+  cd cloud_functions/api
+
+  # Install dependencies
+  npm install
+
+  # Deploy the API Cloud Function
+  
+  # Option A: Linux / macOS / GCP Cloud Shell (Bash)
+  gcloud functions deploy sapapnjApi \
+    --gen2 \
+    --runtime=nodejs22 \
+    --region=asia-southeast2 \
+    --trigger-http \
+    --allow-unauthenticated \
+    --entry-point=sapapnjApi \
+    --set-env-vars=DB_USER=sapapnj-api,DB_PASS=REDACTED,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db \
+    --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com \
+    --source=. \
+    --memory=256MB \
+    --timeout=60s
+
+  # Option B: Windows PowerShell
+  gcloud functions deploy sapapnjApi `
+    --gen2 `
+    --runtime=nodejs22 `
+    --region=asia-southeast2 `
+    --trigger-http `
+    --allow-unauthenticated `
+    --entry-point=sapapnjApi `
+    --set-env-vars=DB_USER=sapapnj-api,DB_PASS=REDACTED,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db `
+    --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com `
+    --source=. `
+    --memory=256MB `
+    --timeout=60s
+
+  # Option C: Single Line (Works everywhere)
+  gcloud functions deploy sapapnjApi --gen2 --runtime=nodejs22 --region=asia-southeast2 --trigger-http --allow-unauthenticated --entry-point=sapapnjApi --set-env-vars=DB_USER=sapapnj-api,DB_PASS=YOUR_PASSWORD,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com --source=. --memory=256MB --timeout=60s
+
+  # After deployment, note the URL printed:
+  #   https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi
+  #
+  # 
+  # This is your API_BASE_URL. https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi
+
+================================================================================
+STEP 7 — UPDATE YOUR .env FILE
+================================================================================
+
+  Open the .env file in the project root and add:
+
+    API_BASE_URL=https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi
+
+  (Use the actual URL from step 6 output.)
+
+================================================================================
+STEP 8 — VERIFY THE API
+================================================================================
+
+  1. Test health check:
+
+     curl https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi/api/health
+
+     You should get: {"status":"ok"}
+
+  2. Test authenticated endpoint (requires a Firebase ID token):
+
+     # Get a token from your Flutter app or Firebase Admin SDK
+     curl -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN" \
+       https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi/api/users/YOUR_UID
+
+================================================================================
+NOTES
+================================================================================
+
+  • The Cloud SQL instance (db-f1-micro) costs ~$7-10/month.
+    Stop it when not in use: gcloud sql instances patch sapapnj-db --activation-policy=NEVER
+    Restart: gcloud sql instances patch sapapnj-db --activation-policy=ALWAYS
+
+  • The API uses @google-cloud/cloud-sql-connector for IAM-based auth.
+    No need to manage SSL certificates or IP whitelists.
+
+  • For production, remove --allow-unauthenticated and enforce Firebase Auth
+    token verification on all endpoints (already implemented in middleware).
+
+================================================================================

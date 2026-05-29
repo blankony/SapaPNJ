@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/moderation_service.dart';
-import '../../main.dart'; // For AvatarHelper and SisapaTheme
+import '../../services/api_service.dart';
+import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 
@@ -41,24 +41,24 @@ class BlockedUsersPage extends StatelessWidget {
             itemCount: blockedIds.length,
             itemBuilder: (context, index) {
               final userId = blockedIds[index];
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
+              return FutureBuilder<Map<String, dynamic>?>(
+                future: ApiService().getUser(userId),
                 builder: (context, userSnapshot) {
-                  if (!userSnapshot.hasData) return SizedBox.shrink();
+                  if (!userSnapshot.hasData || userSnapshot.data == null) return SizedBox.shrink();
 
-                  final data = userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                  final data = userSnapshot.data!;
                   final name = data['name'] ?? 'Unknown User';
                   final email = data['email'] ?? '';
                   final handle = email.isNotEmpty ? "@${email.split('@')[0]}" : "";
-                  final profileImageUrl = data['profileImageUrl'];
-                  final iconId = data['avatarIconId'] ?? 0;
-                  final colorHex = data['avatarHex'];
+                  final profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+                  final iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
+                  final colorHex = data['avatar_hex'] ?? data['avatarHex'];
 
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: profileImageUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
-                      backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
-                      child: profileImageUrl == null ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white, size: 20) : null,
+                      backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : AvatarHelper.getColor(colorHex),
+                      backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+                      child: profileImageUrl == null || profileImageUrl.isEmpty ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white, size: 20) : null,
                     ),
                     title: Text(name),
                     subtitle: Text(handle),

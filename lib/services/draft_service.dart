@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'cloudinary_service.dart';
+import 'gcs_service.dart';
 
 class DraftPost {
   final String id;
@@ -61,7 +61,7 @@ class DraftPost {
 
 class DraftService {
   static const String _keyDrafts = 'user_drafts';
-  final CloudinaryService _cloudinaryService = CloudinaryService();
+  final GcsService _gcsService = GcsService();
 
   Future<List<DraftPost>> getDrafts() async {
     final prefs = await SharedPreferences.getInstance();
@@ -98,7 +98,7 @@ class DraftService {
       if (oldestDraft.publicIds.isNotEmpty) {
         String resourceType = oldestDraft.mediaType == 'video' ? 'video' : 'image';
         for (String pubId in oldestDraft.publicIds) {
-          _cloudinaryService.deleteResource(pubId, resourceType: resourceType);
+          _gcsService.deleteResource(pubId, resourceType: resourceType);
         }
       }
 
@@ -120,7 +120,7 @@ class DraftService {
       if (draft.publicIds.isNotEmpty) {
         String resourceType = draft.mediaType == 'video' ? 'video' : 'image';
         for (String pubId in draft.publicIds) {
-          await _cloudinaryService.deleteResource(pubId, resourceType: resourceType);
+          await _gcsService.deleteResource(pubId, resourceType: resourceType);
         }
       }
       drafts.removeAt(index);

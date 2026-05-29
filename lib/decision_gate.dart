@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/user_info_screen.dart';
 import 'screens/dashboard/home_dashboard.dart';
-
-// Instances
+import 'services/api_service.dart';
 
 class DecisionGate extends StatefulWidget {
   const DecisionGate({super.key});
@@ -14,6 +12,7 @@ class DecisionGate extends StatefulWidget {
 }
 
 class _DecisionGateState extends State<DecisionGate> {
+  final ApiService _api = ApiService();
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +25,9 @@ class _DecisionGateState extends State<DecisionGate> {
       );
     }
 
-    // 1. Check Profile Completeness (Name & NIM) in Firestore
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+    // 1. Check Profile Completeness (Name & NIM) via API
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _api.getUser(user.uid),
       builder: (context, snapshot) {
         // Loading profile check
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -44,13 +43,13 @@ class _DecisionGateState extends State<DecisionGate> {
           );
         }
 
-        // Document not found, or 'name'/'nim' fields are null or empty
-        if (!snapshot.hasData || !snapshot.data!.exists) {
+        // User not found in DB
+        if (!snapshot.hasData || snapshot.data == null) {
            // Navigate to UserInfoScreen to complete profile
           return const UserInfoScreen();
         }
 
-        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final data = snapshot.data!;
         final String? name = data['name'] as String?;
         final String? nim = data['nim'] as String?;
 
@@ -60,7 +59,6 @@ class _DecisionGateState extends State<DecisionGate> {
         }
 
         // 2. Profile complete, navigate to main dashboard
-        // Users can now enter even if email is not verified.
         return const HomeDashboard();
       },
     );

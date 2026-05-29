@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class PredictionService {
   // --- 1. PERSONALIZED KNOWLEDGE BASE (Markov Chain) ---
   final Map<String, Map<String, int>> _userMarkovChain = {};
@@ -73,7 +71,7 @@ class PredictionService {
   }
 
   // --- 4. TRENDING ALGORITHM (Document Frequency + Deduplication) ---
-  List<Map<String, dynamic>> analyzeTrendingTopics(List<QueryDocumentSnapshot> posts) {
+  List<Map<String, dynamic>> analyzeTrendingTopics(List<Map<String, dynamic>> posts) {
     final Map<String, Set<String>> phraseDocMap = {};
 
     final Set<String> stopWords = {
@@ -83,10 +81,9 @@ class PredictionService {
       'banget', 'sama', 'sudah', 'lagi', 'apa', 'kapan', 'dimana'
     };
 
-    for (var doc in posts) {
-      final data = doc.data() as Map<String, dynamic>;
-      final text = (data['text'] ?? '').toString().toLowerCase();
-      final postId = doc.id;
+    for (var post in posts) {
+      final text = (post['text'] ?? '').toString().toLowerCase();
+      final postId = post['id'] ?? '';
 
       final cleanText = text.replaceAll(RegExp(r'[^\w\s#]'), '');
       final words = cleanText.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
@@ -144,46 +141,51 @@ class PredictionService {
   }
 
   // --- 5. DISCOVER ALGORITHM ---
-  List<QueryDocumentSnapshot> getDiscoverRecommendations(
-    List<QueryDocumentSnapshot> allPosts,
+  List<Map<String, dynamic>> getDiscoverRecommendations(
+    List<Map<String, dynamic>> allPosts,
     String currentUserId,
     List<dynamic> followingList
   ) {
     List<Map<String, dynamic>> scoredPosts = [];
 
-    for (var doc in allPosts) {
-      final data = doc.data() as Map<String, dynamic>;
-      final authorId = data['userId'];
+    for (var post in allPosts) {
+      final authorId = post['user_uid'] ?? post['userId'];
 
       if (authorId == currentUserId) continue;
       if (followingList.contains(authorId)) continue;
 
       double score = 0.0;
 
-      final int likes = (data['likes'] as Map?)?.length ?? 0;
-      final int comments = data['commentCount'] ?? 0;
+      final int likes = post['like_count'] ?? 0;
+      final int comments = post['comment_count'] ?? post['commentCount'] ?? 0;
       score += (likes * 2.0) + (comments * 3.0);
 
-      final Timestamp? ts = data['timestamp'];
+      final dynamic ts = post['created_at'] ?? post['timestamp'];
       if (ts != null) {
-        final hoursAgo = DateTime.now().difference(ts.toDate()).inHours;
-        if (hoursAgo < 24) score += 20;
-        else score += (100.0 / (hoursAgo + 5));
+        try {
+          final parsedDate = DateTime.parse(ts.toString());
+          final hoursAgo = DateTime.now().difference(parsedDate).inHours;
+          if (hoursAgo < 24) {
+            score += 20;
+          } else {
+            score += (100.0 / (hoursAgo + 5));
+          }
+        } catch (_) {}
       }
 
-      if (data['mediaUrl'] != null) score += 15.0;
+      if (post['media_urls'] != null || post['mediaUrl'] != null) score += 15.0;
 
-      scoredPosts.add({'doc': doc, 'score': score});
+      scoredPosts.add({'post': post, 'score': score});
     }
 
     scoredPosts.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
 
-    return scoredPosts.map((e) => e['doc'] as QueryDocumentSnapshot).toList();
+    return scoredPosts.map((e) => e['post'] as Map<String, dynamic>).toList();
   }
 
   // --- 6. RECOMMENDED ALGORITHM ---
-  List<QueryDocumentSnapshot> getPersonalizedRecommendations(
-    List<QueryDocumentSnapshot> allPosts,
+  List<Map<String, dynamic>> getPersonalizedRecommendations(
+    List<Map<String, dynamic>> allPosts,
     Map<String, dynamic> userProfile,
     String currentUserId
   ) {
@@ -202,9 +204,8 @@ class PredictionService {
 
     List<Map<String, dynamic>> scoredPosts = [];
 
-    for (var doc in allPosts) {
-      final data = doc.data() as Map<String, dynamic>;
-      final authorId = data['userId'];
+    for (var post in allPosts) {
+      final authorId = post['user_uid'] ?? post['userId'];
 
       if (authorId == currentUserId) continue;
 
@@ -212,7 +213,7 @@ class PredictionService {
 
       if (following.contains(authorId)) score += 50.0;
 
-      final text = (data['text'] ?? '').toString().toLowerCase();
+      final text = (post['text'] ?? '').toString().toLowerCase();
       for (var keyword in interests) {
         if (text.contains(keyword)) {
           score += 30.0;
@@ -220,52 +221,51 @@ class PredictionService {
         }
       }
 
-      final Timestamp? ts = data['timestamp'];
+      final dynamic ts = post['created_at'] ?? post['timestamp'];
       if (ts != null) {
-        final hoursAgo = DateTime.now().difference(ts.toDate()).inHours;
-        score += (80.0 / (hoursAgo + 1));
+        try {
+          final parsedDate = DateTime.parse(ts.toString());
+          final hoursAgo = DateTime.now().difference(parsedDate).inHours;
+          score += (80.0 / (hoursAgo + 1));
+        } catch (_) {}
       }
 
-      scoredPosts.add({'doc': doc, 'score': score});
+      scoredPosts.add({'post': post, 'score': score});
     }
 
     scoredPosts.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
-    return scoredPosts.map((e) => e['doc'] as QueryDocumentSnapshot).toList();
+    return scoredPosts.map((e) => e['post'] as Map<String, dynamic>).toList();
   }
 
   // --- 7. COMMUNITY RECOMMENDATIONS (Social Score) ---
-  List<QueryDocumentSnapshot> getRecommendedCommunities(
-    List<QueryDocumentSnapshot> allCommunities,
+  List<Map<String, dynamic>> getRecommendedCommunities(
+    List<Map<String, dynamic>> allCommunities,
     String currentUserId,
     List<dynamic> followingList
   ) {
     List<Map<String, dynamic>> scored = [];
 
-    for (var doc in allCommunities) {
-      final data = doc.data() as Map<String, dynamic>;
-      final List followers = data['followers'] ?? [];
+    for (var community in allCommunities) {
+      final List followers = community['followers'] ?? [];
 
-      // Skip if already a member
       if (followers.contains(currentUserId)) continue;
 
       double score = 0.0;
 
-      // Score +10 for every person I follow who is in this community
       int mutualsCount = 0;
       for (var uid in followingList) {
         if (followers.contains(uid)) mutualsCount++;
       }
       score += (mutualsCount * 10.0);
 
-      // Score +1 for total popularity
-      score += (followers.length * 0.5);
+      final popularity = community['follower_count'] ?? followers.length;
+      score += (popularity * 0.5);
 
-      scored.add({'doc': doc, 'score': score});
+      scored.add({'community': community, 'score': score});
     }
 
-    // Sort descending by score
     scored.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
 
-    return scored.map((e) => e['doc'] as QueryDocumentSnapshot).toList();
+    return scored.map((e) => e['community'] as Map<String, dynamic>).toList();
   }
 }

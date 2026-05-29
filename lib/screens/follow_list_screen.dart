@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../main.dart';
@@ -47,9 +47,8 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   Future<void> _fetchLists() async {
     setState(() { _isLoading = true; _hasError = false; });
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
+      final data = await ApiService().getUser(widget.userId);
+      if (data != null) {
         if (mounted) {
           setState(() {
             _followingIds = List<String>.from(data['following'] ?? []);
@@ -95,17 +94,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
         _followersIds.remove(followerId);
       });
 
-      final batch = FirebaseFirestore.instance.batch();
-
-      // 1. Remove from my 'followers'
-      final myRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
-      batch.update(myRef, {'followers': FieldValue.arrayRemove([followerId])});
-
-      // 2. Remove me from their 'following'
-      final followerRef = FirebaseFirestore.instance.collection('users').doc(followerId);
-      batch.update(followerRef, {'following': FieldValue.arrayRemove([widget.userId])});
-
-      await batch.commit();
+      await ApiService().removeFollower(followerId);
 
       if(mounted) OverlayService().showTopNotification(context, t.translate('follow_removed_msg'), Icons.person_remove, (){});
 
@@ -118,15 +107,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
 
   // Cleanup ghosts (Users that have been deleted but whose IDs are still stuck)
   void _cleanupDeadUser(String deadUserId, String listType) {
-    if (!_isMe) return;
-
-    final docRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
-
-    if (listType == 'following') {
-      docRef.update({'following': FieldValue.arrayRemove([deadUserId])});
-    } else if (listType == 'followers') {
-      docRef.update({'followers': FieldValue.arrayRemove([deadUserId])});
-    }
+    // Handled automatically by database ON DELETE CASCADE foreign key constraints
   }
 
   @override
@@ -259,29 +240,28 @@ class _UserTile extends StatelessWidget {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
 
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: ApiService().getUser(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(height: 60, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
         }
 
-        if (!snapshot.hasData || !snapshot.data!.exists) {
+        if (!snapshot.hasData || snapshot.data == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             onDeadUser();
           });
           return SizedBox.shrink();
         }
 
-        final data = snapshot.data!.data() as Map<String, dynamic>?;
-        if (data == null) return SizedBox.shrink();
+        final data = snapshot.data!;
 
         final name = data['name'] ?? 'User';
         final email = data['email'] ?? '';
         final handle = email.isNotEmpty ? "@${email.split('@')[0]}" : "";
-        final profileImageUrl = data['profileImageUrl'];
-        final int iconId = data['avatarIconId'] ?? 0;
-        final String? colorHex = data['avatarHex'];
+        final profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+        final int iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
+        final String? colorHex = data['avatar_hex'] ?? data['avatarHex'];
 
         return InkWell(
           onTap: () {

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../main.dart'; // SisapaTheme
+import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 
 class PostActionBar extends StatelessWidget {
   final String postId;
@@ -12,6 +9,7 @@ class PostActionBar extends StatelessWidget {
   final int likeCount;
   final bool isReposted;
   final bool isLiked;
+  final bool isBookmarked;
   final bool isSharing;
   final bool isDetailView;
   final VoidCallback onCommentTap;
@@ -33,6 +31,7 @@ class PostActionBar extends StatelessWidget {
     required this.likeCount,
     required this.isReposted,
     required this.isLiked,
+    required this.isBookmarked,
     required this.isSharing,
     required this.isDetailView,
     required this.onCommentTap,
@@ -78,23 +77,12 @@ class PostActionBar extends StatelessWidget {
   }
 
   Widget _buildBookmarkButton(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return _buildActionButton(context, Icons.bookmark_border, null, null, () => onBookmarkTap(false));
-    }
-
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).collection('bookmarks').doc(postId).snapshots(),
-      builder: (context, snapshot) {
-        final bool isBookmarked = snapshot.hasData && snapshot.data!.exists;
-        return _buildActionButton(
-          context,
-          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-          null,
-          isBookmarked ? SisapaTheme.blue : null,
-          () => onBookmarkTap(isBookmarked),
-        );
-      },
+    return _buildActionButton(
+      context,
+      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+      null,
+      isBookmarked ? SisapaTheme.blue : null,
+      () => onBookmarkTap(isBookmarked),
     );
   }
 

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
-import '../../screens/dashboard/profile_page.dart'; // Untuk AvatarHelper
 
 class PostHeader extends StatelessWidget {
   final Map<String, dynamic> postData;
@@ -26,18 +24,23 @@ class PostHeader extends StatelessWidget {
     required this.onMenuAction,
   });
 
-  String _formatTimestamp(Timestamp? timestamp) {
+  String _formatTimestamp(dynamic timestamp) {
     if (timestamp == null) return "just now";
     if (postData['isUploading'] == true) return "Uploading...";
     if (postData['uploadFailed'] == true) return "Failed";
-    return timeago.format(timestamp.toDate(), locale: 'en_short');
+    try {
+      final parsedDate = DateTime.parse(timestamp.toString());
+      return timeago.format(parsedDate, locale: 'en_short');
+    } catch (_) {
+      return "just now";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final t = AppLocalizations.of(context)!;
-    final timeAgo = _formatTimestamp(postData['timestamp'] as Timestamp?);
+    final timeAgo = _formatTimestamp(postData['created_at'] ?? postData['timestamp']);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,175 +72,138 @@ class PostHeader extends StatelessWidget {
   }
 
   Widget _buildAvatar(BuildContext context) {
-    final bool isCommunityPost = postData['isCommunityPost'] ?? false;
-    final String? communityId = postData['communityId'];
+    final bool isCommunityPost = postData['is_community_identity'] == 1 ||
+        postData['is_community_identity'] == true ||
+        postData['isCommunityPost'] == true;
+    final String? communityId = postData['community_id'] ?? postData['communityId'];
 
     if (communityId != null && isCommunityPost) {
-      return StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('communities').doc(communityId).snapshots(),
-        builder: (context, snapshot) {
-          String? displayImg = postData['communityIcon'];
-          if (snapshot.hasData && snapshot.data!.exists) {
-            final data = snapshot.data!.data() as Map<String, dynamic>;
-            displayImg = data['imageUrl'] ?? displayImg;
-          }
+      final String? displayImg = postData['community_image_url'] ?? postData['communityIcon'];
 
-          return GestureDetector(
-            onTap: onNavigateToSource,
-            child: CircleAvatar(
-              radius: 24,
-              backgroundColor: SisapaTheme.blue.withOpacity(0.1),
-              backgroundImage: displayImg != null ? CachedNetworkImageProvider(displayImg) : null,
-              child: displayImg == null ? const Icon(Icons.groups, size: 26, color: SisapaTheme.blue) : null,
-            ),
-          );
-        },
+      return GestureDetector(
+        onTap: onNavigateToSource,
+        child: CircleAvatar(
+          radius: 24,
+          backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+          backgroundImage: displayImg != null && displayImg.isNotEmpty ? CachedNetworkImageProvider(displayImg) : null,
+          child: displayImg == null || displayImg.isEmpty
+              ? const Icon(Icons.groups, size: 26, color: SisapaTheme.blue)
+              : null,
+        ),
       );
     }
 
-    final String authorId = postData['userId'];
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(authorId).snapshots(),
-      builder: (context, snapshot) {
-        int iconId = 0;
-        String? colorHex;
-        String? profileImageUrl;
+    final String? profileImageUrl = postData['profile_image_url'] ?? postData['profileImageUrl'];
+    final int iconId = postData['avatar_icon_id'] ?? postData['avatarIconId'] ?? 0;
+    final String? colorHex = postData['avatar_hex'] ?? postData['avatarHex'];
+    final Color avatarBgColor = AvatarHelper.getColor(colorHex);
 
-        if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
-          final userData = snapshot.data!.data() as Map<String, dynamic>;
-          iconId = userData['avatarIconId'] ?? 0;
-          colorHex = userData['avatarHex'];
-          profileImageUrl = userData['profileImageUrl'];
-        } else {
-          iconId = postData['avatarIconId'] ?? 0;
-          colorHex = postData['avatarHex'];
-          profileImageUrl = postData['profileImageUrl'];
-        }
-
-        final Color avatarBgColor = AvatarHelper.getColor(colorHex);
-
-        return GestureDetector(
-          onTap: onNavigateToSource,
-          child: CircleAvatar(
-            radius: 24,
-            backgroundColor: profileImageUrl != null ? Colors.transparent : avatarBgColor,
-            backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
-            child: profileImageUrl == null ? Icon(AvatarHelper.getIcon(iconId), size: 26, color: Colors.white) : null,
-          ),
-        );
-      },
+    return GestureDetector(
+      onTap: onNavigateToSource,
+      child: CircleAvatar(
+        radius: 24,
+        backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : avatarBgColor,
+        backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+        child: profileImageUrl == null || profileImageUrl.isEmpty
+            ? Icon(AvatarHelper.getIcon(iconId), size: 26, color: Colors.white)
+            : null,
+      ),
     );
   }
 
   Widget _buildHeaderContent(BuildContext context, ThemeData theme, String timeAgo) {
-    final String? communityId = postData['communityId'];
-    final bool isCommunityPost = postData['isCommunityPost'] ?? false;
-    final bool isVerifiedFromPost = postData['communityVerified'] ?? false;
+    final String? communityId = postData['community_id'] ?? postData['communityId'];
+    final bool isCommunityPost = postData['is_community_identity'] == 1 ||
+        postData['is_community_identity'] == true ||
+        postData['isCommunityPost'] == true;
+    final bool isVerified = postData['community_verified'] == 1 ||
+        postData['community_verified'] == true ||
+        postData['communityVerified'] == true;
 
     // 1. OFFICIAL COMMUNITY POST
     if (communityId != null && isCommunityPost) {
-      return StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('communities').doc(communityId).snapshots(),
-        builder: (context, snapshot) {
-          String comName = postData['communityName'] ?? 'Community';
-          bool isVerified = isVerifiedFromPost;
+      final String comName = postData['community_name'] ?? postData['communityName'] ?? 'Community';
+      final String userName = postData['user_name'] ?? postData['userName'] ?? 'Member';
 
-          if (snapshot.hasData && snapshot.data!.exists) {
-            final data = snapshot.data!.data() as Map<String, dynamic>;
-            comName = data['name'] ?? comName;
-            isVerified = data['isVerified'] ?? isVerified;
-          }
-          final String userName = postData['userName'] ?? 'Member';
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: GestureDetector(
-                            onTap: onNavigateToSource,
-                            child: Text(comName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                          ),
-                        ),
-                        if (isVerified) ...[
-                          const SizedBox(width: 4),
-                          const Icon(Icons.verified, size: 14, color: SisapaTheme.blue),
-                        ],
-                      ],
-                    ),
-                  ),
-                  _buildMetaRow(context, timeAgo),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
+              Expanded(
                 child: Row(
                   children: [
-                    Icon(Icons.person, size: 12, color: theme.hintColor),
-                    const SizedBox(width: 4),
                     Flexible(
-                      child: Text("Posted by $userName", style: TextStyle(color: theme.hintColor, fontSize: 11), overflow: TextOverflow.ellipsis),
+                      child: GestureDetector(
+                        onTap: onNavigateToSource,
+                        child: Text(comName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                      ),
                     ),
+                    if (isVerified) ...[
+                      const SizedBox(width: 4),
+                      const Icon(Icons.verified, size: 14, color: SisapaTheme.blue),
+                    ],
                   ],
                 ),
               ),
+              _buildMetaRow(context, timeAgo),
             ],
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2.0),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 12, color: theme.hintColor),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text("Posted by $userName", style: TextStyle(color: theme.hintColor, fontSize: 11), overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
     // 2. PERSONAL POST IN COMMUNITY
     if (communityId != null && !isCommunityPost) {
-      final String userName = postData['userName'] ?? 'User';
-      return StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('communities').doc(communityId).snapshots(),
-        builder: (context, snapshot) {
-          String comName = postData['communityName'] ?? 'Community';
-          if (snapshot.hasData && snapshot.data!.exists) {
-            final data = snapshot.data!.data() as Map<String, dynamic>;
-            comName = data['name'] ?? comName;
-          }
+      final String userName = postData['user_name'] ?? postData['userName'] ?? 'User';
+      final String comName = postData['community_name'] ?? postData['communityName'] ?? 'Community';
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: onNavigateToSource,
-                      child: Text(userName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                    ),
-                  ),
-                  _buildMetaRow(context, timeAgo),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text("in $comName", style: TextStyle(color: theme.hintColor, fontSize: 11, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
+              Expanded(
+                child: GestureDetector(
+                  onTap: onNavigateToSource,
+                  child: Text(userName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
                 ),
-              )
+              ),
+              _buildMetaRow(context, timeAgo),
             ],
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2.0),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text("in $comName", style: TextStyle(color: theme.hintColor, fontSize: 11, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ),
+          )
+        ],
       );
     }
 
     // 3. STANDARD USER POST
-    final String userName = postData['userName'] ?? 'User';
-    final String handle = "@${postData['userEmail']?.split('@')[0] ?? 'user'}";
+    final String userName = postData['user_name'] ?? postData['userName'] ?? 'User';
+    final String email = postData['user_email'] ?? postData['userEmail'] ?? 'user';
+    final String handle = "@${email.split('@')[0]}";
     final String visibility = postData['visibility'] ?? 'public';
     final bool isPrivate = visibility == 'private';
     final bool isFollowersOnly = visibility == 'followers';
@@ -339,7 +305,8 @@ class PostHeader extends StatelessWidget {
           ]);
         }
 
-        if (postData['communityId'] != null) {
+        final String? communityId = postData['community_id'] ?? postData['communityId'];
+        if (communityId != null) {
           options.add(PopupMenuItem(value: 'report_community', child: Row(children: [const Icon(Icons.flag, size: 20, color: Colors.orange), const SizedBox(width: 12), Text(t.translate('menu_report_comm'))])));
         }
 

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -16,14 +16,14 @@ import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/prediction_service.dart';
-import '../services/cloudinary_service.dart';
+import '../services/gcs_service.dart';
 import '../services/overlay_service.dart';
 import '../services/draft_service.dart';
 import '../services/bad_word_service.dart';
 import 'video_trimmer_screen.dart';
 import '../services/app_localizations.dart';
 
-final CloudinaryService _cloudinaryService = CloudinaryService();
+final GcsService _cloudinaryService = GcsService();
 
 class CreatePostScreen extends StatefulWidget {
   final String? postId;
@@ -199,21 +199,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Future<void> _loadIdentity() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+    final api = ApiService();
 
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (userDoc.exists) {
-        final data = userDoc.data()!;
-        if (mounted) {
-          setState(() {
-            _myUserName = data['name'] ?? 'User';
-            _myUserEmail = user.email ?? '';
-            _myAvatarIconId = data['avatarIconId'] ?? 0;
-            _myAvatarHex = data['avatarHex'] ?? '';
-            _myAvatarUrl = data['profileImageUrl'];
-            _isAccountPrivate = data['isPrivate'] ?? false;
-          });
-        }
+      final data = await api.getUser(user.uid);
+      if (data != null && mounted) {
+        setState(() {
+          _myUserName = data['name'] ?? 'User';
+          _myUserEmail = user.email ?? '';
+          _myAvatarIconId = data['avatar_icon_id'] ?? 0;
+          _myAvatarHex = data['avatar_hex'] ?? '';
+          _myAvatarUrl = data['profile_image_url'];
+          _isAccountPrivate = data['is_private'] == true;
+        });
       }
     } catch (_) {}
 
@@ -221,12 +219,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _isCommunityContext = true;
       _visibility = 'public';
       try {
-        final comDoc = await FirebaseFirestore.instance.collection('communities').doc(_communityId).get();
-        if (comDoc.exists) {
-          final data = comDoc.data()!;
-          _communityVerified = data['isVerified'] ?? false;
-          final bool allowMembers = data['allowMemberPosts'] ?? false;
-          final String ownerId = data['ownerId'];
+        final data = await api.getCommunity(_communityId!);
+        if (data != null) {
+          _communityVerified = data['is_verified'] == true;
+          final bool allowMembers = data['allow_member_posts'] == true;
+          final String ownerId = data['owner_uid'] ?? '';
           final List admins = data['admins'] ?? [];
           final List editors = data['editors'] ?? [];
           final bool isStaff = ownerId == user.uid || admins.contains(user.uid) || editors.contains(user.uid);
@@ -236,7 +233,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               _hasOfficialAuthority = isStaff;
               _postAsCommunity = isStaff;
               _communityName = data['name'];
-              _communityIcon = data['imageUrl'];
+              _communityIcon = data['image_url'];
             });
           }
 
@@ -265,8 +262,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      final snapshot = await FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: user.uid).limit(20).get();
-      List<String> postHistory = snapshot.docs.map((doc) => (doc.data()['text'] ?? '').toString()).toList();
+      final posts = await ApiService().getPosts(userUid: user.uid, limit: 20);
+      List<String> postHistory = posts.map((p) => (p['text'] ?? '').toString()).toList();
       _predictionService.learnFromUserPosts(postHistory);
     } catch (_) {}
   }
@@ -1135,7 +1132,7 @@ class _BackgroundUploader {
                if (info != null && info.file != null) fileToUp = info.file!;
              } catch(e) {}
           }
-          String? url = await CloudinaryService().uploadMedia(fileToUp);
+          String? url = await GcsService().uploadMedia(fileToUp);
           if (url != null) finalUrls.add(url);
           count++;
         }
@@ -1143,41 +1140,26 @@ class _BackgroundUploader {
 
       if (finalUrls.isEmpty && text.isEmpty) { onFailure(locStrings['no_content'] ?? "No content"); return; }
 
-      final Map<String, dynamic> postData = {
-        'text': text,
-        'mediaType': type,
-        'visibility': vis,
-        'isUploading': false,
-        'mediaUrls': finalUrls,
-        'mediaUrl': finalUrls.isNotEmpty ? finalUrls.first : null,
-      };
+      final api = ApiService();
 
       if (edit && pid != null) {
-        postData['editedAt'] = FieldValue.serverTimestamp();
-        await FirebaseFirestore.instance.collection('posts').doc(pid).update(postData);
-      } else {
-        postData.addAll({
-          'timestamp': FieldValue.serverTimestamp(),
-          'userId': uid,
-          'userName': uName,
-          'userEmail': uEmail,
-          'avatarIconId': icon,
-          'avatarHex': hex,
-          'profileImageUrl': img,
-          'likes': {},
-          'commentCount': 0,
-          'repostedBy': [],
+        await api.updatePost(pid, {
+          'text': text,
+          'media_urls': finalUrls,
+          'visibility': vis,
         });
-
-        if (comId != null) {
-          postData['communityId'] = comId;
-          postData['communityName'] = comName;
-          postData['communityIcon'] = comIcon;
-          postData['communityVerified'] = comVerified;
-          postData['isCommunityPost'] = isCommunityIdentity;
-        }
-
-        await FirebaseFirestore.instance.collection('posts').add(postData);
+      } else {
+        await api.createPost(
+          text: text,
+          mediaUrls: finalUrls.isNotEmpty ? finalUrls : null,
+          mediaType: type,
+          visibility: vis,
+          communityId: comId,
+          communityName: comName,
+          communityIcon: comIcon,
+          communityVerified: comVerified ?? false,
+          isCommunityIdentity: isCommunityIdentity,
+        );
 
         if (draftId != null) {
           await DraftService().discardDraftAfterPosting(draftId);

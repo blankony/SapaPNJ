@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../dashboard/profile_page.dart';
 import '../../services/overlay_service.dart';
-import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
-import 'dart:math';
+import '../../services/api_service.dart';
+import '../../services/app_localizations.dart';
 
 class CommunityMembersScreen extends StatefulWidget {
   final String communityId;
@@ -28,17 +26,42 @@ class CommunityMembersScreen extends StatefulWidget {
 
 class _CommunityMembersScreenState extends State<CommunityMembersScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _members = [];
+  Map<String, dynamic>? _communityData;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final membersList = await ApiService().getCommunityMembers(widget.communityId);
+      final communityDetails = await ApiService().getCommunity(widget.communityId);
+      if (mounted) {
+        setState(() {
+          _members = membersList;
+          _communityData = communityDetails;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        OverlayService().showTopNotification(context, "Error loading members", Icons.error, (){}, color: Colors.red);
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -49,9 +72,34 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(t.translate('community_members')),
+          centerTitle: true,
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final ownerId = _communityData?['owner_uid'] ?? '';
+    final followers = _members.where((m) => m['role'] == 'follower' && m['uid'] != ownerId).toList();
+    final staff = _members.where((m) => m['role'] != 'follower' || m['uid'] == ownerId).toList();
+
+    // Sort staff: owner first, then admins, then editors, then moderators
+    staff.sort((a, b) {
+      if (a['uid'] == ownerId) return -1;
+      if (b['uid'] == ownerId) return 1;
+
+      final roleOrder = {'admin': 1, 'editor': 2, 'moderator': 3, 'follower': 4};
+      final orderA = roleOrder[a['role']] ?? 5;
+      final orderB = roleOrder[b['role']] ?? 5;
+      return orderA.compareTo(orderB);
+    });
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(t.translate('community_members')), // "Anggota" / "Members"
+        title: Text(t.translate('community_members')),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -59,28 +107,30 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
           unselectedLabelColor: theme.hintColor,
           indicatorSize: TabBarIndicatorSize.label,
           tabs: [
-            Tab(text: t.translate('profile_followers')), // "Pengikut" / "Followers"
-            Tab(text: "Admins & Staff"), // Belum ada key khusus, biarkan dulu atau gunakan 'comm_admins' jika sudah ditambahkan
+            Tab(text: t.translate('profile_followers')),
+            Tab(text: "Admins & Staff"),
           ],
         ),
       ),
       body: Stack(
         children: [
-           // Blobs for vibe
-           Positioned(top: 50, right: -50, child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: SisapaTheme.blue.withOpacity(isDark ? 0.05 : 0.03)))),
-
-           TabBarView(
+          Positioned(
+            top: 50,
+            right: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: SisapaTheme.blue.withOpacity(isDark ? 0.05 : 0.03),
+              ),
+            ),
+          ),
+          TabBarView(
             controller: _tabController,
             children: [
-              _FollowersList(
-                communityId: widget.communityId,
-                followersList: widget.communityData['followers'] ?? [],
-              ),
-              _AdminsList(
-                communityId: widget.communityId,
-                communityData: widget.communityData,
-                isStaff: widget.isStaff,
-              ),
+              _FollowersList(followersList: followers),
+              _StaffList(staffList: staff, ownerId: ownerId),
             ],
           ),
         ],
@@ -90,185 +140,96 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
 }
 
 class _FollowersList extends StatelessWidget {
-  final String communityId;
-  final List followersList;
+  final List<Map<String, dynamic>> followersList;
 
-  const _FollowersList({required this.communityId, required this.followersList});
+  const _FollowersList({required this.followersList});
 
   @override
   Widget build(BuildContext context) {
     var t = AppLocalizations.of(context)!;
 
-    // No followers yet
-    if (followersList.isEmpty) return Center(child: Text("${t.translate('search_no_results')} ${t.translate('profile_followers')}", style: TextStyle(color: Colors.grey)));
+    if (followersList.isEmpty) {
+      return Center(
+        child: Text(
+          "${t.translate('search_no_results')} ${t.translate('profile_followers')}",
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
 
     return ListView.builder(
       itemCount: followersList.length,
       itemBuilder: (context, index) {
-        final userId = followersList[index];
-        // Custom Manual Animation
+        final member = followersList[index];
         return _DelayedSlideFade(
-          delay: index * 50, // 50ms stagger
-          child: _UserTile(userId: userId),
+          delay: index * 50,
+          child: _UserTile(userData: member),
         );
       },
     );
   }
 }
 
-class _AdminsList extends StatefulWidget {
-  final String communityId;
-  final Map<String, dynamic> communityData;
-  final bool isStaff;
+class _StaffList extends StatelessWidget {
+  final List<Map<String, dynamic>> staffList;
+  final String ownerId;
 
-  const _AdminsList({required this.communityId, required this.communityData, required this.isStaff});
-
-  @override
-  State<_AdminsList> createState() => _AdminsListState();
-}
-
-class _AdminsListState extends State<_AdminsList> {
-  // --- ANIMATED DIALOG (MATCHING SETTINGS SCREEN) ---
-  void _showEditRoleDialog(BuildContext context, String userId, String currentTitle, Color currentColor) {
-    final TextEditingController titleController = TextEditingController(text: currentTitle);
-    Color selectedColor = currentColor;
-    var t = AppLocalizations.of(context)!;
-
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: t.translate('general_close'),
-      transitionDuration: Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Align(
-              alignment: Alignment.center,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  margin: EdgeInsets.all(20),
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,4))],
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text("Customize Role", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        SizedBox(height: 20),
-                        TextField(
-                          controller: titleController,
-                          decoration: InputDecoration(labelText: "Role Title", filled: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
-                        ),
-                        SizedBox(height: 20),
-                        Wrap(
-                          spacing: 12,
-                          children: [
-                            ...AvatarHelper.presetColors.take(5).map((c) => GestureDetector(
-                              onTap: () => setState(() => selectedColor = c),
-                              child: Container(width: 32, height: 32, decoration: BoxDecoration(color: c, shape: BoxShape.circle, border: selectedColor == c ? Border.all(width: 3, color: Colors.black) : null)),
-                            )),
-                            IconButton(
-                              icon: Icon(Icons.colorize),
-                              onPressed: () {
-                                showDialog(context: context, builder: (c) => AlertDialog(content: SingleChildScrollView(child: ColorPicker(pickerColor: selectedColor, onColorChanged: (c) => selectedColor = c)), actions: [ElevatedButton(onPressed: () { setState((){}); Navigator.of(c).pop(); }, child: Text("Select"))]));
-                              },
-                            )
-                          ],
-                        ),
-                        SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('general_cancel'))),
-                            ElevatedButton(
-                              onPressed: () async {
-                                Navigator.pop(context);
-                                await _updateRole(userId, titleController.text, selectedColor);
-                              },
-                              child: Text(t.translate('general_save')),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) => ScaleTransition(scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack), child: child),
-    );
-  }
-
-  Future<void> _updateRole(String userId, String title, Color color) async {
-    // Localization
-    // Note: since this is async, check mounted or context
-    if (!mounted) return;
-    var t = AppLocalizations.of(context)!;
-
-    try {
-      final hex = '0x${color.value.toRadixString(16).toUpperCase()}';
-      await FirebaseFirestore.instance.collection('communities').doc(widget.communityId).set({
-        'adminRoles': {userId: {'title': title, 'color': hex}}
-      }, SetOptions(merge: true));
-      if(mounted) OverlayService().showTopNotification(context, t.translate('general_success'), Icons.check, (){});
-    } catch(e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('post_failed'), Icons.error, (){}, color: Colors.red);
-    }
-  }
+  const _StaffList({required this.staffList, required this.ownerId});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('communities').doc(widget.communityId).snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-        final data = snapshot.data!.data() as Map<String, dynamic>;
+    if (staffList.isEmpty) {
+      return Center(
+        child: Text(
+          "No staff members found",
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
 
-        final String ownerId = data['ownerId'];
-        final List admins = data['admins'] ?? [];
-        final Map<String, dynamic> roles = data['adminRoles'] ?? {};
+    return ListView.separated(
+      padding: EdgeInsets.all(16),
+      itemCount: staffList.length,
+      separatorBuilder: (_, __) => Divider(height: 1),
+      itemBuilder: (context, index) {
+        final member = staffList[index];
+        final String userId = member['uid'] ?? '';
+        final bool isOwner = userId == ownerId;
+        final String role = member['role'] ?? 'follower';
 
-        final List<String> allStaff = [ownerId, ...admins.map((e)=>e.toString())];
+        String roleTitle = isOwner ? 'Owner' : 'Member';
+        Color roleColor = Colors.grey;
 
-        return ListView.separated(
-          padding: EdgeInsets.all(16),
-          itemCount: allStaff.length,
-          separatorBuilder: (_,__) => Divider(height: 1),
-          itemBuilder: (context, index) {
-            final userId = allStaff[index];
-            final bool isOwner = userId == ownerId;
-            final roleData = roles[userId] ?? {};
-            final String roleTitle = roleData['title'] ?? (isOwner ? 'Owner' : 'Admin');
-            final Color roleColor = AvatarHelper.getColor(roleData['color']);
+        if (isOwner) {
+          roleTitle = 'Owner';
+          roleColor = Colors.red;
+        } else if (role == 'admin') {
+          roleTitle = 'Admin';
+          roleColor = Colors.blue;
+        } else if (role == 'editor') {
+          roleTitle = 'Editor';
+          roleColor = Colors.green;
+        } else if (role == 'moderator') {
+          roleTitle = 'Moderator';
+          roleColor = Colors.orange;
+        }
 
-            return _DelayedSlideFade(
-              delay: index * 50,
-              child: _UserTile(
-                userId: userId,
-                roleBadge: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: roleColor, borderRadius: BorderRadius.circular(8)),
-                  child: Text(roleTitle, style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-                onEdit: (widget.isStaff) ? () => _showEditRoleDialog(context, userId, roleTitle, roleColor) : null,
-              ),
-            );
-          },
+        return _DelayedSlideFade(
+          delay: index * 50,
+          child: _UserTile(
+            userData: member,
+            roleBadge: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: roleColor, borderRadius: BorderRadius.circular(8)),
+              child: Text(roleTitle, style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+          ),
         );
-      }
+      },
     );
   }
 }
 
-// --- HELPER FOR ANIMATION ---
 class _DelayedSlideFade extends StatefulWidget {
   final Widget child;
   final int delay;
@@ -315,42 +276,35 @@ class _DelayedSlideFadeState extends State<_DelayedSlideFade> with SingleTickerP
 }
 
 class _UserTile extends StatelessWidget {
-  final String userId;
+  final Map<String, dynamic> userData;
   final Widget? roleBadge;
-  final VoidCallback? onEdit;
 
-  const _UserTile({required this.userId, this.roleBadge, this.onEdit});
+  const _UserTile({required this.userData, this.roleBadge});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return SizedBox(height: 60);
-        final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-        final name = data['name'] ?? 'User';
-        final url = data['profileImageUrl'];
-        final iconId = data['avatarIconId'] ?? 0;
-        final colorHex = data['avatarHex'];
+    final String userId = userData['uid'] ?? '';
+    final String name = userData['name'] ?? 'User';
+    final String email = userData['email'] ?? '';
+    final String? url = userData['profile_image_url'];
+    final int iconId = userData['avatar_icon_id'] ?? userData['avatarIconId'] ?? 0;
+    final String? colorHex = userData['avatar_hex'] ?? userData['avatarHex'];
 
-        return ListTile(
-          contentPadding: EdgeInsets.symmetric(vertical: 4),
-          leading: CircleAvatar(
-            backgroundImage: url != null ? CachedNetworkImageProvider(url) : null,
-            backgroundColor: AvatarHelper.getColor(colorHex),
-            child: url == null ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white) : null,
-          ),
-          title: Row(
-            children: [
-              Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-              if (roleBadge != null) ...[SizedBox(width: 8), roleBadge!],
-            ],
-          ),
-          subtitle: Text("@${(data['email'] ?? '').split('@')[0]}"),
-          trailing: onEdit != null ? IconButton(icon: Icon(Icons.edit, size: 18), onPressed: onEdit) : null,
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage(userId: userId, includeScaffold: true))),
-        );
-      },
+    return ListTile(
+      contentPadding: EdgeInsets.symmetric(vertical: 4),
+      leading: CircleAvatar(
+        backgroundImage: url != null && url.isNotEmpty ? CachedNetworkImageProvider(url) : null,
+        backgroundColor: AvatarHelper.getColor(colorHex),
+        child: url == null || url.isEmpty ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white) : null,
+      ),
+      title: Row(
+        children: [
+          Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+          if (roleBadge != null) ...[SizedBox(width: 8), roleBadge!],
+        ],
+      ),
+      subtitle: Text("@${email.split('@')[0]}"),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage(userId: userId, includeScaffold: true))),
     );
   }
 }

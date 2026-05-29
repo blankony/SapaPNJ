@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/cloudinary_service.dart';
+import '../services/gcs_service.dart';
 import '../services/overlay_service.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
@@ -19,7 +19,7 @@ class KtmVerificationScreen extends StatefulWidget {
 class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
   File? _ktmImage;
   bool _isUploading = false;
-  final CloudinaryService _cloudinaryService = CloudinaryService();
+  final GcsService _cloudinaryService = GcsService();
 
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
@@ -46,11 +46,9 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
       final String? url = await _cloudinaryService.uploadImage(_ktmImage!);
 
       if (url != null && user != null) {
-        // 2. Update Firestore
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'ktmUrl': url,
-          'verificationStatus': 'pending', // pending, verified, rejected
-          'submittedAt': FieldValue.serverTimestamp(),
+        // 2. Update via ApiService
+        await ApiService().updateUser(user.uid, {
+          'verification_status': 'pending', // pending, verified, rejected
         });
 
         if (mounted) {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'create_community_screen.dart';
@@ -33,6 +33,39 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
         return SlideTransition(position: animation.drive(tween), child: child);
       },
     );
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchCommunityBroadcasts() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return [];
+
+      final communities = await ApiService().getMyCommunities();
+      if (communities.isEmpty) return [];
+
+      final List<Future<List<Map<String, dynamic>>>> futures = [];
+      for (var c in communities) {
+        futures.add(ApiService().getPosts(communityId: c['id'], limit: 20));
+      }
+
+      final results = await Future.wait(futures);
+      final List<Map<String, dynamic>> allPosts = [];
+      for (var list in results) {
+        allPosts.addAll(list);
+      }
+
+      // Sort by created_at descending
+      allPosts.sort((a, b) {
+        final aTime = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime(0);
+        final bTime = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime(0);
+        return bTime.compareTo(aTime);
+      });
+
+      return allPosts.take(50).toList();
+    } catch (e) {
+      debugPrint("Error fetching broadcasts: $e");
+      return [];
+    }
   }
 
   @override
@@ -92,17 +125,18 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
           ),
 
           // 2. YOUR CHANNELS
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('communities')
-                .where('ownerId', isEqualTo: user.uid)
-                .snapshots(),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: ApiService().getMyCommunities(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return SliverToBoxAdapter(child: SizedBox.shrink());
               }
 
-              final myCommunities = snapshot.data!.docs;
+              final myCommunities = snapshot.data!.where((c) => c['owner_uid'] == user.uid).toList();
+
+              if (myCommunities.isEmpty) {
+                return SliverToBoxAdapter(child: SizedBox.shrink());
+              }
 
               return SliverToBoxAdapter(
                 child: Column(
@@ -122,8 +156,8 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         itemCount: myCommunities.length,
                         itemBuilder: (context, index) {
-                          final doc = myCommunities[index];
-                          final data = doc.data() as Map<String, dynamic>;
+                          final data = myCommunities[index];
+                          final id = data['id'];
 
                           // Manual Staggered Animation (Without external package)
                           return TweenAnimationBuilder<Offset>(
@@ -131,7 +165,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
                             duration: Duration(milliseconds: 400 + (index * 100)),
                             curve: Curves.easeOutQuart,
                             builder: (context, offset, child) => Transform.translate(offset: offset, child: child),
-                            child: _buildMyChannelItem(context, doc.id, data),
+                            child: _buildMyChannelItem(context, id, data),
                           );
                         },
                       ),
@@ -159,80 +193,47 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
           ),
 
           // 4. FEED CONTENT
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('communities').where('followers', arrayContains: user.uid).snapshots(),
-            builder: (context, communitySnap) {
-              if (!communitySnap.hasData) return SliverToBoxAdapter(child: SizedBox(height: 200, child: Center(child: CircularProgressIndicator())));
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _fetchCommunityBroadcasts(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) return SliverToBoxAdapter(child: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())));
 
-              final followedCommunityIds = communitySnap.data!.docs.map((doc) => doc.id).toList();
+              final communityPosts = snapshot.data ?? [];
 
-              if (followedCommunityIds.isEmpty) {
+              if (communityPosts.isEmpty) {
                 return SliverToBoxAdapter(
-                  child: Container(
+                  child: Padding(
                     padding: EdgeInsets.all(40),
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [
-                        Icon(Icons.feed_outlined, size: 48, color: theme.disabledColor),
-                        SizedBox(height: 16),
-                        Text(t.translate('community_join_prompt'), // "Join communities to see updates here."
-                            style: TextStyle(color: theme.hintColor), textAlign: TextAlign.center),
-                      ],
-                    ),
-                  ),
+                    child: Center(child: Text(t.translate('community_no_broadcasts'), // "No recent broadcasts."
+                        style: TextStyle(color: theme.hintColor)))
+                  )
                 );
               }
 
-              return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('posts')
-                    .orderBy('timestamp', descending: true)
-                    .limit(50)
-                    .snapshots(),
-                builder: (context, postSnap) {
-                  if (postSnap.connectionState == ConnectionState.waiting) return SliverToBoxAdapter(child: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())));
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final pData = communityPosts[index];
+                    final pId = pData['id'] ?? '';
 
-                  final allPosts = postSnap.data?.docs ?? [];
-                  final communityPosts = allPosts.where((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    return data['communityId'] != null && followedCommunityIds.contains(data['communityId']);
-                  }).toList();
-
-                  if (communityPosts.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Center(child: Text(t.translate('community_no_broadcasts'), // "No recent broadcasts."
-                            style: TextStyle(color: theme.hintColor)))
-                      )
+                    // Entrance Animation for Feed
+                    return TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: Duration(milliseconds: 500),
+                      curve: Curves.easeOut,
+                      builder: (context, val, child) => Opacity(opacity: val, child: Transform.translate(offset: Offset(0, 50 * (1-val)), child: child)),
+                      child: RepaintBoundary(
+                        child: BlogPostCard(
+                          postId: pId,
+                          postData: pData,
+                          isOwner: pData['user_uid'] == user.uid,
+                          heroContextId: 'community_feed',
+                        ),
+                      ),
                     );
-                  }
-
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final post = communityPosts[index];
-                        final pData = post.data() as Map<String, dynamic>;
-
-                        // Entrance Animation for Feed
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 500),
-                          curve: Curves.easeOut,
-                          builder: (context, val, child) => Opacity(opacity: val, child: Transform.translate(offset: Offset(0, 50 * (1-val)), child: child)),
-                          child: RepaintBoundary(
-                            child: BlogPostCard(
-                              postId: post.id,
-                              postData: pData,
-                              isOwner: pData['userId'] == user.uid,
-                              heroContextId: 'community_feed',
-                            ),
-                          ),
-                        );
-                      },
-                      childCount: communityPosts.length,
-                    ),
-                  );
-                },
+                  },
+                  childCount: communityPosts.length,
+                ),
               );
             },
           ),

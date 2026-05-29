@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../main.dart'; // Ensure this path is correct for SisapaTheme access
+import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
+import '../services/api_service.dart';
 
-class AiHistoryDrawer extends StatelessWidget {
+class AiHistoryDrawer extends StatefulWidget {
   final Function(String sessionId) onChatSelected;
   final VoidCallback onNewChat;
 
@@ -17,10 +17,62 @@ class AiHistoryDrawer extends StatelessWidget {
   });
 
   @override
+  State<AiHistoryDrawer> createState() => _AiHistoryDrawerState();
+}
+
+class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
+  final User? _user = FirebaseAuth.instance.currentUser;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _sessions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessions();
+  }
+
+  Future<void> _loadSessions() async {
+    if (_user == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final sessionsList = await ApiService().getChatSessions();
+      if (mounted) {
+        setState(() {
+          _sessions = sessionsList;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _deleteSession(String sessionId) async {
+    try {
+      final success = await ApiService().deleteChatSession(sessionId);
+      if (success) {
+        _loadSessions();
+      }
+    } catch (e) {
+      debugPrint("Error deleting session: $e");
+    }
+  }
+
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp == null) return "";
+    try {
+      final parsedDate = DateTime.parse(timestamp.toString());
+      return timeago.format(parsedDate, locale: 'en_short');
+    } catch (_) {
+      return "";
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -56,8 +108,8 @@ class AiHistoryDrawer extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pop(context); // Tutup drawer dulu
-                      onNewChat();
+                      Navigator.pop(context);
+                      widget.onNewChat();
                     },
                     icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
                     label: const Text("New Chat"),
@@ -77,87 +129,72 @@ class AiHistoryDrawer extends StatelessWidget {
 
           // --- LIST HISTORY ---
           Expanded(
-            child: user == null
+            child: _user == null
                 ? const Center(child: Text("Please log in."))
-                : StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .collection('chat_sessions')
-                        .orderBy('lastUpdated', descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.history_toggle_off, size: 64, color: theme.hintColor.withOpacity(0.3)),
-                              const SizedBox(height: 16),
-                              Text("No history yet", style: TextStyle(color: theme.hintColor)),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: snapshot.data!.docs.length,
-                        separatorBuilder: (context, index) => Divider(height: 1, color: theme.dividerColor.withOpacity(0.3)),
-                        itemBuilder: (context, index) {
-                          final doc = snapshot.data!.docs[index];
-                          final data = doc.data() as Map<String, dynamic>;
-                          final String title = data['title'] ?? 'New Conversation';
-                          final Timestamp? timestamp = data['lastUpdated'];
-
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            title: Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w500),
+                : _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _sessions.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.history_toggle_off, size: 64, color: theme.hintColor.withOpacity(0.3)),
+                                const SizedBox(height: 16),
+                                Text("No history yet", style: TextStyle(color: theme.hintColor)),
+                              ],
                             ),
-                            subtitle: Text(
-                              timestamp != null ? timeago.format(timestamp.toDate(), locale: 'en_short') : '',
-                              style: TextStyle(fontSize: 12, color: theme.hintColor),
-                            ),
-                            onTap: () {
-                              Navigator.pop(context);
-                              onChatSelected(doc.id);
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: _sessions.length,
+                            separatorBuilder: (context, index) => Divider(height: 1, color: theme.dividerColor.withOpacity(0.3)),
+                            itemBuilder: (context, index) {
+                              final session = _sessions[index];
+                              final String sessionId = session['id'];
+                              final String title = session['title'] ?? 'New Conversation';
+                              final dynamic timestamp = session['last_updated'] ?? session['lastUpdated'];
+
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                title: Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                subtitle: Text(
+                                  _formatTimestamp(timestamp),
+                                  style: TextStyle(fontSize: 12, color: theme.hintColor),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  widget.onChatSelected(sessionId);
+                                },
+                                trailing: IconButton(
+                                  icon: Icon(Icons.delete_outline, size: 20, color: theme.hintColor),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text("Delete Chat?"),
+                                        content: const Text("This conversation will be deleted permanently."),
+                                        actions: [
+                                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+                                          TextButton(
+                                            onPressed: () {
+                                              _deleteSession(sessionId);
+                                              Navigator.pop(ctx);
+                                            },
+                                            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                          )
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
                             },
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete_outline, size: 20, color: theme.hintColor),
-                              onPressed: () {
-                                // Hapus Sesi
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text("Delete Chat?"),
-                                    content: const Text("This conversation will be deleted permanently."),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
-                                      TextButton(
-                                        onPressed: () {
-                                          doc.reference.delete();
-                                          Navigator.pop(ctx);
-                                        },
-                                        child: const Text("Delete", style: TextStyle(color: Colors.red)),
-                                      )
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                          ),
           ),
         ],
       ),

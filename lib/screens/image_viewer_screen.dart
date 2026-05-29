@@ -5,7 +5,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -214,14 +214,16 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     if (widget.postData == null) return;
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final bool apiLiked = widget.postData!['is_liked'] == true;
+    final int apiLikeCount = widget.postData!['like_count'] ?? 0;
     final likes = widget.postData!['likes'] as Map<String, dynamic>? ?? {};
     final reposts = widget.postData!['repostedBy'] as List? ?? [];
 
     setState(() {
-      _likeCount = likes.length;
-      _isLiked = uid != null && likes.containsKey(uid);
-      _repostCount = reposts.length;
+      _isLiked = apiLiked || (uid != null && likes.containsKey(uid));
+      _likeCount = apiLikeCount > 0 ? apiLikeCount : likes.length;
       _isReposted = uid != null && reposts.contains(uid);
+      _repostCount = widget.postData!['repost_count'] ?? reposts.length;
     });
   }
 
@@ -295,24 +297,57 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     if (!_isPostContent) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    setState(() { _isLiked = !_isLiked; _isLiked ? _likeCount++ : _likeCount--; });
+    final targetId = widget.postId!;
+
+    setState(() {
+      _isLiked = !_isLiked;
+      if (_isLiked) { _likeCount++; } else { _likeCount--; }
+    });
+
     try {
-      final docRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
-      if (_isLiked) await docRef.update({'likes.${user.uid}': true});
-      else await docRef.update({'likes.${user.uid}': FieldValue.delete()});
-    } catch (e) { setState(() { _isLiked = !_isLiked; _isLiked ? _likeCount++ : _likeCount--; }); }
+      await ApiService().toggleLike(targetId);
+    } catch (e) {
+      setState(() {
+        _isLiked = !_isLiked;
+        if (_isLiked) { _likeCount++; } else { _likeCount--; }
+      });
+    }
   }
 
   Future<void> _toggleRepost() async {
     if (!_isPostContent) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    setState(() { _isReposted = !_isReposted; _isReposted ? _repostCount++ : _repostCount--; });
+    final targetId = widget.postId!;
+
+    setState(() {
+      _isReposted = !_isReposted;
+      if (_isReposted) { _repostCount++; } else { _repostCount--; }
+    });
+
     try {
-      final docRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
-      if (_isReposted) await docRef.update({'repostedBy': FieldValue.arrayUnion([user.uid])});
-      else await docRef.update({'repostedBy': FieldValue.arrayRemove([user.uid])});
-    } catch (e) { setState(() { _isReposted = !_isReposted; _isReposted ? _repostCount++ : _repostCount--; }); }
+      final api = ApiService();
+      if (_isReposted) {
+        await api.createPost(
+          isRepost: true,
+          originalPostId: targetId,
+          visibility: widget.postData?['visibility'] ?? 'public',
+        );
+      } else {
+        final reposts = await api.getReposts(user.uid);
+        for (final r in reposts) {
+          if (r['original_post_id'] == targetId) {
+            await api.deletePost(r['id']);
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isReposted = !_isReposted;
+        if (_isReposted) { _repostCount++; } else { _repostCount--; }
+      });
+    }
   }
 
   Future<void> _shareImage() async {

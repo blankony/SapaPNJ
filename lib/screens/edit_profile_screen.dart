@@ -1,20 +1,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import 'change_password_screen.dart';
-import '../services/cloudinary_service.dart';
+import '../services/gcs_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/pnj_data.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart';
 
-final CloudinaryService _cloudinaryService = CloudinaryService();
+final GcsService _cloudinaryService = GcsService();
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -50,23 +50,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _loadCurrentData() async {
     if (_user == null) return;
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(_user!.uid).get();
-    if (userDoc.exists) {
-      final data = userDoc.data() as Map<String, dynamic>;
-      if (mounted) {
+    try {
+      final data = await ApiService().getUser(_user!.uid);
+      if (data != null && mounted) {
         setState(() {
           _nameController.text = data['name'] ?? '';
           _bioController.text = data['bio'] ?? '';
-          _profileImageUrl = data['profileImageUrl'];
-          _bannerImageUrl = data['bannerImageUrl'];
-          _selectedIconId = data['avatarIconId'] ?? 0;
-          _selectedColor = AvatarHelper.getColor(data['avatarHex']);
+          _profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+          _bannerImageUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
+          _selectedIconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
+          _selectedColor = AvatarHelper.getColor(data['avatar_hex'] ?? data['avatarHex']);
           if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
             _selectedIconId = -1;
           }
 
           _selectedDepartment = data['department'];
-          final savedProdiName = data['studyProgram'];
+          final savedProdiName = data['study_program'] ?? data['studyProgram'];
 
           if (_selectedDepartment != null && savedProdiName != null) {
             final prodis = PnjData.departments[_selectedDepartment];
@@ -83,6 +82,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           }
         });
       }
+    } catch (e) {
+      debugPrint("Error loading profile: $e");
     }
   }
 
@@ -280,29 +281,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final Map<String, dynamic> userUpdateData = {
         'name': _nameController.text.trim(),
         'bio': _bioController.text.trim(),
-        'avatarIconId': finalIconId,
-        'avatarHex': finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null,
-        'profileImageUrl': finalImageUrl,
-        'bannerImageUrl': finalBannerUrl,
+        'avatar_icon_id': finalIconId,
+        'avatar_hex': finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null,
+        'profile_image_url': finalImageUrl,
+        'banner_image_url': finalBannerUrl,
       };
 
       if (_selectedDepartment != null) {
         userUpdateData['department'] = _selectedDepartment;
       }
       if (_selectedProdi != null) {
-        userUpdateData['studyProgram'] = _selectedProdi!['name'];
-        userUpdateData['departmentCode'] = _selectedProdi!['code'];
+        userUpdateData['study_program'] = _selectedProdi!['name'];
+        userUpdateData['department_code'] = _selectedProdi!['code'];
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(_user!.uid).update(userUpdateData);
-
-      await _updateDenormalizedData(
-        _user!.uid,
-        _nameController.text.trim(),
-        finalIconId,
-        finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null,
-        finalImageUrl
-      );
+      await ApiService().updateUser(_user!.uid, userUpdateData);
 
       if (context.mounted) {
         OverlayService().showTopNotification(
@@ -322,42 +315,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         setState(() { _isLoading = false; });
       }
-    }
-  }
-
-  Future<void> _updateDenormalizedData(
-    String userId,
-    String newName,
-    int iconId,
-    String? hex,
-    String? imageUrl,
-  ) async {
-    final Map<String, dynamic> updateData = {
-      'userName': newName,
-      'avatarIconId': iconId,
-      'avatarHex': hex,
-      'profileImageUrl': imageUrl,
-    };
-
-    final postsQuery = FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId);
-    final postsSnapshot = await postsQuery.get();
-
-    final commentsQuery = FirebaseFirestore.instance.collectionGroup('comments').where('userId', isEqualTo: userId);
-    final commentsSnapshot = await commentsQuery.get();
-
-    final allDocs = [...postsSnapshot.docs, ...commentsSnapshot.docs];
-
-    if (allDocs.isEmpty) return;
-
-    const int batchSize = 500;
-    for (var i = 0; i < allDocs.length; i += batchSize) {
-      final batch = FirebaseFirestore.instance.batch();
-      final end = (i + batchSize < allDocs.length) ? i + batchSize : allDocs.length;
-
-      for (var j = i; j < end; j++) {
-        batch.update(allDocs[j].reference, updateData);
-      }
-      await batch.commit();
     }
   }
 
