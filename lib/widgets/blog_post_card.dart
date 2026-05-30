@@ -243,13 +243,16 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     final int apiLikeCount = _resolvedPostData!['like_count'] ?? 0;
     final bool apiBookmarked = _resolvedPostData!['is_bookmarked'] == true;
     // Fallback for Firestore-style data during transition
-    final likes = _resolvedPostData!['likes'] as Map<String, dynamic>? ?? {};
+    final likesRaw = _resolvedPostData!['likes'];
+    final List<dynamic> likesList = (likesRaw is Map) 
+        ? likesRaw.keys.toList() 
+        : (likesRaw as List<dynamic>? ?? []);
     final reposts = _resolvedPostData!['repostedBy'] as List? ?? [];
 
     if (mounted) {
       setState(() {
-        _isLiked = apiLiked || (currentUser != null && likes.containsKey(currentUser.uid));
-        _likeCount = apiLikeCount > 0 ? apiLikeCount : likes.length;
+        _isLiked = apiLiked || (currentUser != null && likesList.contains(currentUser.uid));
+        _likeCount = apiLikeCount > 0 ? apiLikeCount : likesList.length;
         _isReposted = currentUser != null && reposts.contains(currentUser.uid);
         _repostCount = _resolvedPostData!['repost_count'] ?? reposts.length;
         _isBookmarked = apiBookmarked;

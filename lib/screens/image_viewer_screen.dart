@@ -216,12 +216,15 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final bool apiLiked = widget.postData!['is_liked'] == true;
     final int apiLikeCount = widget.postData!['like_count'] ?? 0;
-    final likes = widget.postData!['likes'] as Map<String, dynamic>? ?? {};
+    final likesRaw = widget.postData!['likes'];
+    final List<dynamic> likesList = (likesRaw is Map) 
+        ? likesRaw.keys.toList() 
+        : (likesRaw as List<dynamic>? ?? []);
+    final currentUser = FirebaseAuth.instance.currentUser;
     final reposts = widget.postData!['repostedBy'] as List? ?? [];
-
     setState(() {
-      _isLiked = apiLiked || (uid != null && likes.containsKey(uid));
-      _likeCount = apiLikeCount > 0 ? apiLikeCount : likes.length;
+      _isLiked = apiLiked || (currentUser != null && likesList.contains(currentUser.uid));
+      _likeCount = apiLikeCount > 0 ? apiLikeCount : likesList.length;
       _isReposted = uid != null && reposts.contains(uid);
       _repostCount = widget.postData!['repost_count'] ?? reposts.length;
     });
