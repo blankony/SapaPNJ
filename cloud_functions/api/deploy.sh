@@ -5,7 +5,7 @@ echo "Deploying SapaPNJ API to Google Cloud Functions (Gen 2)..."
 gcloud functions deploy sapapnjapi \
   --gen2 \
   --region=asia-southeast2 \
-  --runtime=nodejs18 \
+  --runtime=nodejs22 \
   --entry-point=sapapnjApi \
   --source=. \
   --trigger-http \
