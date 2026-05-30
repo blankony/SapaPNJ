@@ -95,9 +95,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        hostedDomain: 'pnj.ac.id',
-      );
+      final GoogleSignIn googleSignIn = GoogleSignIn();
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
