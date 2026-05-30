@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'forgot_password_screen.dart';
 import 'register_page.dart';
 import '../main.dart';
@@ -83,6 +84,57 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         setState(() { _isLoading = false; });
       }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        hostedDomain: 'pnj.ac.id',
+      );
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      if (!googleUser.email.endsWith('@pnj.ac.id')) {
+        await googleSignIn.signOut();
+        setState(() => _errorMessage = 'Access Denied: Must use @pnj.ac.id email');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      if (userCredential.user?.email?.endsWith('@pnj.ac.id') != true) {
+        await userCredential.user?.delete();
+        await FirebaseAuth.instance.signOut();
+        await googleSignIn.signOut();
+        setState(() => _errorMessage = 'Access Denied: Invalid email domain.');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      if (context.mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Google Sign-In Error: $e');
+      setState(() => _isLoading = false);
     }
   }
 
@@ -260,7 +312,22 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-
+                      SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          icon: Icon(Icons.g_mobiledata, size: 28),
+                          label: Text("Sign in with Google (@pnj.ac.id)"),
+                          onPressed: _signInWithGoogle,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: theme.colorScheme.onSurface,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 24),
 
                       Row(
