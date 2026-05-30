@@ -43,17 +43,19 @@ class _DecisionGateState extends State<DecisionGate> {
           );
         }
 
-        // User not found in DB
         if (!snapshot.hasData || snapshot.data == null) {
+          debugPrint('DecisionGate - User data is null. Routing to UserInfoScreen.');
            // Navigate to UserInfoScreen to complete profile
           return const UserInfoScreen(isSetupWizard: true);
         }
 
         final data = snapshot.data!;
+        debugPrint('DecisionGate - Fetched User Data: $data');
         final String? name = data['name'] as String?;
         final String? nim = data['nim'] as String?;
 
         if (name == null || name.isEmpty || nim == null || nim.isEmpty) {
+          debugPrint('DecisionGate - Name or NIM is empty. Routing to UserInfoScreen.');
            // Navigate to UserInfoScreen to complete profile
           return const UserInfoScreen(isSetupWizard: true);
         }

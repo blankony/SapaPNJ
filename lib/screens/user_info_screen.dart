@@ -37,6 +37,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       if (user == null) return;
 
       bool success = false;
+      debugPrint('UserInfoScreen - Attempting createUser Name: ${_nameController.text.trim()} NIM: ${_nimController.text.trim()}');
       try {
         success = await ApiService().createUser(
           uid: user.uid,
@@ -44,15 +45,19 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           name: _nameController.text.trim(),
           nim: _nimController.text.trim(),
         );
+        debugPrint('UserInfoScreen - createUser returned: $success');
       } on ApiException catch (e) {
+        debugPrint('UserInfoScreen - createUser threw ApiException: ${e.code} ${e.message}');
         // If it's NIM in use, rethrow so the user sees it
         if (e.code == 'nim-already-in-use') rethrow;
       } catch (e) {
+        debugPrint('UserInfoScreen - createUser threw exception: $e');
         // Suppress other network errors here, we will try updating instead
       }
 
       // If createUser failed (user already exists), try updateUser
       if (!success) {
+        debugPrint('UserInfoScreen - createUser failed or returned false. Attempting updateUser.');
         success = await ApiService().updateUser(
           user.uid,
           {
@@ -64,6 +69,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       }
 
       if (success && mounted) {
+        debugPrint('UserInfoScreen - Save successful. Routing next. isSetupWizard: ${widget.isSetupWizard}');
         OverlayService().showTopNotification(
           context,
           "Profile saved.",

@@ -46,6 +46,7 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode({'uid': uid, 'email': email, 'name': name, 'nim': nim}),
     );
+    debugPrint('ApiService - POST /api/users Response: ${resp.statusCode} ${resp.body}');
     if (resp.statusCode == 409) {
       throw ApiException('nim-already-in-use', 'NIM already registered');
     }
@@ -58,6 +59,7 @@ class ApiService {
       Uri.parse('$_baseUrl/api/users/$uid'),
       headers: await _headers(),
     );
+    debugPrint('ApiService - GET /api/users/$uid Response: ${resp.statusCode} ${resp.body}');
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) throw _error(resp);
     return jsonDecode(resp.body);
@@ -70,6 +72,7 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode(fields),
     );
+    debugPrint('ApiService - PATCH /api/users/$uid Response: ${resp.statusCode} ${resp.body}');
     return resp.statusCode == 200;
   }
 
