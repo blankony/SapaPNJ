@@ -13,7 +13,7 @@ class ApiService {
 
   String get _baseUrl => (dotenv.env['API_BASE_URL']?.isNotEmpty == true)
       ? dotenv.env['API_BASE_URL']!
-      : 'https://sapapnjapi-squd7hdv6q-et.a.run.app';
+      : 'https://sapapnjapi-173197562227.asia-southeast2.run.app';
 
   /// Get Firebase Auth ID token for authenticated requests.
   Future<String?> _getToken() async {
