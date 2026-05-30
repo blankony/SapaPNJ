@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../services/app_cache_manager.dart';
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -355,7 +357,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
 
   Future<void> _shareImage() async {
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.imageUrl);
+      final file = await AppCacheManager.instance.getSingleFile(widget.imageUrl);
       await Share.shareXFiles([XFile(file.path)], text: 'Check out this media from Sapa PNJ!');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to share.')));
@@ -444,7 +446,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
 
                      // 2. PhotoView Utama (High Res/Network)
                      PhotoView(
-                        imageProvider: CachedNetworkImageProvider(widget.imageUrl),
+                        imageProvider: CachedNetworkImageProvider(widget.imageUrl, cacheManager: AppCacheManager.instance),
                         scaleStateController: _scaleStateController,
                         backgroundDecoration: BoxDecoration(color: Colors.transparent), // Transparan agar thumbnail bawah terlihat
                         initialScale: PhotoViewComputedScale.contained,
@@ -781,7 +783,7 @@ class _DownloadManager {
     required Function(dynamic) onFailure,
   }) async {
     try {
-      final File cacheFile = await DefaultCacheManager().getSingleFile(url);
+      final File cacheFile = await AppCacheManager.instance.getSingleFile(url);
       final String dateStr = DateFormat('ddMMyy').format(DateTime.now());
       final String ext = p.extension(url).isEmpty ? (isImage ? '.jpg' : '.mp4') : p.extension(url);
       final String fileName = "SapaPNJ_$dateStr$ext";

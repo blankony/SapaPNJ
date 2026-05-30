@@ -1,4 +1,6 @@
 import 'dart:ui';
+import '../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -194,7 +196,7 @@ class _SidePanelState extends State<SidePanel> {
           Widget avatarWidget = CircleAvatar(
             radius: 30,
             backgroundColor: profileImageUrl != null ? Colors.transparent : (Colors.blue),
-            backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+            backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
             child: profileImageUrl == null || profileImageUrl.isEmpty ?
               Icon(Icons.person, size: 30, color: Colors.white)
               : null,
@@ -204,7 +206,7 @@ class _SidePanelState extends State<SidePanel> {
              avatarWidget = CircleAvatar(
               radius: 30,
               backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : AvatarHelper.getColor(colorHex),
-              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
               child: profileImageUrl == null || profileImageUrl.isEmpty ?
                 Icon(AvatarHelper.getIcon(iconId), size: 30, color: Colors.white)
                 : null,
@@ -223,7 +225,7 @@ class _SidePanelState extends State<SidePanel> {
                   fit: StackFit.expand,
                   children: [
                     if (bannerImageUrl != null && bannerImageUrl.isNotEmpty)
-                      CachedNetworkImage(
+                      CachedNetworkImage(cacheManager: AppCacheManager.instance, 
                         imageUrl: bannerImageUrl,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(color: theme.primaryColor.withOpacity(0.2)),

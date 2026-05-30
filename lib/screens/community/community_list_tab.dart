@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/app_cache_manager.dart';
+
 import '../../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -300,7 +302,7 @@ class _CommunityListTabState extends State<CommunityListTab> with AutomaticKeepA
               child: CircleAvatar(
                 radius: 32,
                 backgroundColor: theme.cardColor,
-                backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
+                backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
                 child: imageUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: SisapaTheme.blue)) : null,
               ),
             ),

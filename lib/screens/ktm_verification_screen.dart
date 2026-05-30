@@ -23,7 +23,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 80);
+    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 80);
 
     if (pickedFile != null) {
       setState(() {

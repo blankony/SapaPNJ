@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/app_cache_manager.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -257,7 +259,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
               CircleAvatar(
                 radius: 22,
                 backgroundColor: theme.dividerColor,
-                backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl) : null,
+                backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl, cacheManager: AppCacheManager.instance) : null,
                 child: profileUrl == null || profileUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
               ),
               SizedBox(width: 16),
@@ -447,7 +449,7 @@ class _NotificationTile extends StatelessWidget {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: theme.dividerColor,
-                  backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl) : null,
+                  backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl, cacheManager: AppCacheManager.instance) : null,
                   child: profileUrl == null || profileUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
                 ),
                 Positioned(

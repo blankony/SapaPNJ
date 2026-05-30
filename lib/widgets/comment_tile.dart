@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/app_cache_manager.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -48,7 +50,7 @@ class _CommentTileState extends State<CommentTile> {
 
     try {
       if (mediaUrl != null && mediaUrl.isNotEmpty) {
-        final file = await DefaultCacheManager().getSingleFile(mediaUrl);
+        final file = await AppCacheManager.instance.getSingleFile(mediaUrl);
         await Share.shareXFiles([XFile(file.path)], text: shareText);
       } else {
         await Share.share(shareText);
@@ -186,7 +188,7 @@ class _CommentTileState extends State<CommentTile> {
       parentAvatarWidget = CircleAvatar(
         radius: 16,
         backgroundColor: Colors.transparent,
-        backgroundImage: CachedNetworkImageProvider(parentProfileImageUrl),
+        backgroundImage: CachedNetworkImageProvider(parentProfileImageUrl, cacheManager: AppCacheManager.instance),
       );
     } else {
       parentAvatarWidget = CircleAvatar(
@@ -262,7 +264,7 @@ class _CommentTileState extends State<CommentTile> {
       avatarWidget = CircleAvatar(
         radius: 18,
         backgroundColor: Colors.transparent,
-        backgroundImage: CachedNetworkImageProvider(profileImageUrl),
+        backgroundImage: CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance),
       );
     } else {
       avatarWidget = CircleAvatar(
@@ -356,7 +358,7 @@ class _CommentTileState extends State<CommentTile> {
                                     ? Center(child: Icon(Icons.play_circle_fill, color: Colors.white, size: 40))
                                     : Hero(
                                         tag: '${widget.heroContextId}_${widget.commentId}_$mediaUrl',
-                                        child: CachedNetworkImage(
+                                        child: CachedNetworkImage(cacheManager: AppCacheManager.instance, 
                                           imageUrl: mediaUrl,
                                           fit: BoxFit.cover,
                                           memCacheWidth: 400,

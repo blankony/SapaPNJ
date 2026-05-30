@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -333,7 +335,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
     final theme = Theme.of(context);
     try {
       if (path.startsWith('http') || path.startsWith('https')) {
-        return CachedNetworkImage(
+        return CachedNetworkImage(cacheManager: AppCacheManager.instance, 
           imageUrl: path,
           fit: BoxFit.cover,
           memCacheWidth: 400,

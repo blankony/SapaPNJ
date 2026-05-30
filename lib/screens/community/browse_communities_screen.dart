@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/app_cache_manager.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../main.dart';
@@ -148,7 +150,7 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
                     leading: CircleAvatar(
                       radius: 28,
                       backgroundColor: badgeColor.withOpacity(0.1),
-                      backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl) : null,
+                      backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
                       child: imageUrl == null ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold)) : null,
                     ),
                     title: Row(

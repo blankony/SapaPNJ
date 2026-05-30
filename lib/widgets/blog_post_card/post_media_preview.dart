@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
@@ -202,7 +204,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                           onTap: () => _navigateToViewer(context, url),
                           child: Hero(
                             tag: tag,
-                            child: CachedNetworkImage(
+                            child: CachedNetworkImage(cacheManager: AppCacheManager.instance, 
                               imageUrl: url,
                               fit: BoxFit.cover,
                               memCacheWidth: 600,
@@ -220,7 +222,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                       onTap: () => _navigateToViewer(context, widget.mediaUrls.first),
                       child: Hero(
                         tag: '${widget.heroContextId}_${widget.postId}_${widget.mediaUrls.first}',
-                        child: CachedNetworkImage(
+                        child: CachedNetworkImage(cacheManager: AppCacheManager.instance, 
                           imageUrl: widget.mediaUrls.first,
                           fit: BoxFit.cover,
                           memCacheWidth: 600,

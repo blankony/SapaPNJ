@@ -83,7 +83,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           setState(() { _selectedMediaFile = File(pickedFile!.path); _mediaType = 'video'; });
         }
       } else {
-        pickedFile = await picker.pickImage(source: source, imageQuality: 70);
+        pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 70);
         if (pickedFile != null) {
           setState(() { _selectedMediaFile = File(pickedFile!.path); _mediaType = 'image'; });
         }

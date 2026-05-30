@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../../services/app_cache_manager.dart';
+
 import 'dart:ui';
 import 'dart:math';
 import 'dart:io';
@@ -823,7 +825,7 @@ class _UserAvatar extends StatelessWidget {
         }
         return CircleAvatar(
           radius: 18, backgroundColor: profileUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
-          backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
+          backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl, cacheManager: AppCacheManager.instance) : null,
           child: profileUrl == null ? Icon(AvatarHelper.getIcon(iconId), size: 18, color: Colors.white) : null,
         );
       },

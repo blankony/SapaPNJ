@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/app_cache_manager.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../main.dart';
@@ -85,7 +87,7 @@ class PostHeader extends StatelessWidget {
         child: CircleAvatar(
           radius: 24,
           backgroundColor: SisapaTheme.blue.withOpacity(0.1),
-          backgroundImage: displayImg != null && displayImg.isNotEmpty ? CachedNetworkImageProvider(displayImg) : null,
+          backgroundImage: displayImg != null && displayImg.isNotEmpty ? CachedNetworkImageProvider(displayImg, cacheManager: AppCacheManager.instance) : null,
           child: displayImg == null || displayImg.isEmpty
               ? const Icon(Icons.groups, size: 26, color: SisapaTheme.blue)
               : null,
@@ -103,7 +105,7 @@ class PostHeader extends StatelessWidget {
       child: CircleAvatar(
         radius: 24,
         backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : avatarBgColor,
-        backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+        backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
         child: profileImageUrl == null || profileImageUrl.isEmpty
             ? Icon(AvatarHelper.getIcon(iconId), size: 26, color: Colors.white)
             : null,

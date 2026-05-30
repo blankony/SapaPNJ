@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../../services/app_cache_manager.dart';
+
 import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -420,7 +422,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                           leading: CircleAvatar(
                             backgroundColor: SisapaTheme.blue.withOpacity(0.1),
                             backgroundImage: icon != null
-                                ? CachedNetworkImageProvider(icon)
+                                ? CachedNetworkImageProvider(icon, cacheManager: AppCacheManager.instance)
                                 : null,
                             child: icon == null
                                 ? Icon(Icons.groups, color: SisapaTheme.blue)
@@ -907,7 +909,7 @@ class _AppBarAvatar extends StatelessWidget {
               ? Colors.transparent
               : AvatarHelper.getColor(colorHex),
           backgroundImage: profileImageUrl != null
-              ? CachedNetworkImageProvider(profileImageUrl)
+              ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance)
               : null,
           child: profileImageUrl == null
               ? Icon(AvatarHelper.getIcon(iconId), size: 20, color: Colors.white)

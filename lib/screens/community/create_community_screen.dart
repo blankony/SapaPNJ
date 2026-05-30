@@ -31,7 +31,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
 
   Future<void> _pickVerificationDoc() async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: ImageSource.gallery, imageQuality: 80);
     if (pickedFile != null) {
       setState(() {
         _verificationDoc = File(pickedFile.path);

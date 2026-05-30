@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/app_cache_manager.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/moderation_service.dart';
 import '../../services/api_service.dart';
@@ -57,7 +59,7 @@ class BlockedUsersPage extends StatelessWidget {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : AvatarHelper.getColor(colorHex),
-                      backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+                      backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
                       child: profileImageUrl == null || profileImageUrl.isEmpty ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white, size: 20) : null,
                     ),
                     title: Text(name),

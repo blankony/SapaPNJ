@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -594,7 +596,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                       CircleAvatar(
                                         radius: 28,
                                         backgroundColor: SisapaTheme.blue.withOpacity(0.1),
-                                        backgroundImage: imageUrl != null && imageUrl.toString().isNotEmpty ? CachedNetworkImageProvider(imageUrl) : null,
+                                        backgroundImage: imageUrl != null && imageUrl.toString().isNotEmpty ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
                                         child: imageUrl == null || imageUrl.toString().isEmpty ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'C', style: const TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)) : null,
                                       ),
                                       const SizedBox(height: 8),
@@ -866,7 +868,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
             return ListTile(
               leading: CircleAvatar(
-                backgroundImage: imageUrl != null && imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl) : null,
+                backgroundImage: imageUrl != null && imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
                 backgroundColor: SisapaTheme.blue.withOpacity(0.1),
                 child: imageUrl == null || imageUrl.isEmpty ? const Icon(Icons.groups, color: SisapaTheme.blue) : null,
               ),
@@ -977,7 +979,7 @@ class _UserSearchTileState extends State<_UserSearchTile> {
             CircleAvatar(
                 radius: 24,
                 backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : AvatarHelper.getColor(colorHex),
-                backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl) : null,
+                backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
                 child: profileImageUrl == null || profileImageUrl.isEmpty ? Icon(AvatarHelper.getIcon(iconId), size: 24, color: Colors.white) : null
             ),
             const SizedBox(width: 12),

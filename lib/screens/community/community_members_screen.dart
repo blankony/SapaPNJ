@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/app_cache_manager.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
@@ -293,7 +295,7 @@ class _UserTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.symmetric(vertical: 4),
       leading: CircleAvatar(
-        backgroundImage: url != null && url.isNotEmpty ? CachedNetworkImageProvider(url) : null,
+        backgroundImage: url != null && url.isNotEmpty ? CachedNetworkImageProvider(url, cacheManager: AppCacheManager.instance) : null,
         backgroundColor: AvatarHelper.getColor(colorHex),
         child: url == null || url.isEmpty ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white) : null,
       ),

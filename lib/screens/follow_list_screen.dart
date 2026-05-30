@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/app_cache_manager.dart';
+
 import '../services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -279,7 +281,7 @@ class _UserTile extends StatelessWidget {
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: profileImageUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
-                  backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl) : null,
+                  backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
                   child: profileImageUrl == null ? Icon(AvatarHelper.getIcon(iconId), size: 24, color: Colors.white) : null,
                 ),
                 SizedBox(width: 12),

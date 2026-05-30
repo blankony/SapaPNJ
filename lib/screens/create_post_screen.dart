@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../services/app_cache_manager.dart';
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -499,7 +501,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             }
           }
         } else {
-          final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 80);
+          final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 80);
           if (pickedFile != null) {
              File? cropped = await _cropImage(File(pickedFile.path));
              if (cropped != null) {
@@ -894,7 +896,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         CircleAvatar(
                           radius: 24,
                           backgroundColor: currentAvatarUrl != null ? Colors.transparent : AvatarHelper.getColor(_myAvatarHex),
-                          backgroundImage: currentAvatarUrl != null ? CachedNetworkImageProvider(currentAvatarUrl) : null,
+                          backgroundImage: currentAvatarUrl != null ? CachedNetworkImageProvider(currentAvatarUrl, cacheManager: AppCacheManager.instance) : null,
                           child: currentAvatarUrl == null
                               ? (_postAsCommunity
                                   ? const Icon(Icons.groups, color: Colors.white)
@@ -942,7 +944,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
                                     children: [
-                                      ..._existingMediaUrls.asMap().entries.map((e) => _buildPreviewItem(CachedNetworkImageProvider(e.value), () => _removeExistingUrl(e.key), _mediaType == 'video')),
+                                      ..._existingMediaUrls.asMap().entries.map((e) => _buildPreviewItem(CachedNetworkImageProvider(e.value, cacheManager: AppCacheManager.instance), () => _removeExistingUrl(e.key), _mediaType == 'video')),
                                       ..._selectedMediaFiles.asMap().entries.map((e) => _buildPreviewItem(FileImage(e.value), () => _removeFile(e.key), _mediaType == 'video')),
                                     ],
                                   ),

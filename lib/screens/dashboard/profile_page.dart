@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -247,7 +249,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     var t = AppLocalizations.of(context)!;
 
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 70);
+    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 70);
     if (pickedFile == null) return;
 
     final croppedFile = await ImageCropper().cropImage(
@@ -677,7 +679,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               child: Container(
                 color: SisapaTheme.darkGrey,
                 child: bannerImageUrl != null
-                  ? CachedNetworkImage(imageUrl: bannerImageUrl, fit: BoxFit.cover, memCacheWidth: 800, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey))
+                  ? CachedNetworkImage(cacheManager: AppCacheManager.instance, imageUrl: bannerImageUrl, fit: BoxFit.cover, memCacheWidth: 800, errorWidget: (context, url, error) => Container(color: SisapaTheme.darkGrey))
                   : (isMyProfile ? Center(child: Icon(Icons.camera_alt, color: Colors.white)) : null)
               )
             ),
@@ -949,7 +951,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   Widget _buildAvatarImage(Map<String, dynamic> data) {
     final url = data['profile_image_url'] ?? data['profileImageUrl'];
-    if (url != null) return CircleAvatar(radius: 45, backgroundImage: CachedNetworkImageProvider(url));
+    if (url != null) return CircleAvatar(radius: 45, backgroundImage: CachedNetworkImageProvider(url, cacheManager: AppCacheManager.instance));
     return CircleAvatar(radius: 45, backgroundColor: AvatarHelper.getColor(data['avatar_hex'] ?? data['avatarHex']), child: Icon(AvatarHelper.getIcon(data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0), size: 50, color: Colors.white));
   }
 

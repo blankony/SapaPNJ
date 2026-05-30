@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -131,7 +133,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
   Future<void> _pickAndUploadImage({required bool isBanner, required ImageSource source}) async {
     final picker = ImagePicker();
     try {
-      final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 70);
+      final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 70);
       if (pickedFile == null) return;
 
       final croppedFile = await ImageCropper().cropImage(
@@ -302,7 +304,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey[800] : Colors.grey[300],
                       image: bannerUrl.isNotEmpty
-                          ? DecorationImage(image: CachedNetworkImageProvider(bannerUrl), fit: BoxFit.cover)
+                          ? DecorationImage(image: CachedNetworkImageProvider(bannerUrl, cacheManager: AppCacheManager.instance), fit: BoxFit.cover)
                           : null,
                     ),
                     child: bannerUrl.isEmpty && (widget.isOwner || widget.isAdmin)
@@ -323,7 +325,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                       ),
                       child: CircleAvatar(
                         radius: 40,
-                        backgroundImage: imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl) : null,
+                        backgroundImage: imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
                         child: imageUrl.isEmpty ? Icon(Icons.groups, size: 40) : null,
                       ),
                     ),
@@ -486,7 +488,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
 
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? CachedNetworkImageProvider(avatarUrl) : null,
+            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? CachedNetworkImageProvider(avatarUrl, cacheManager: AppCacheManager.instance) : null,
             child: avatarUrl == null || avatarUrl.isEmpty ? Icon(Icons.person) : null,
           ),
           title: Text(name),

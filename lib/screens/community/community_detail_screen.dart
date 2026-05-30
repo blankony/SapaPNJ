@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -192,7 +194,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     var t = AppLocalizations.of(context)!;
 
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile == null) return;
     final croppedFile = await ImageCropper().cropImage(sourcePath: pickedFile.path, compressQuality: 70, aspectRatio: isBanner ? CropAspectRatio(ratioX: 3, ratioY: 1) : CropAspectRatio(ratioX: 1, ratioY: 1));
     if (croppedFile == null) return;
@@ -263,7 +265,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   children: [
                     GestureDetector(
                       onTap: () => _showImageOptions(context, bannerUrl, true, hasFullControl),
-                      child: Hero(tag: 'community_banner', child: bannerUrl != null ? CachedNetworkImage(imageUrl: bannerUrl, fit: BoxFit.cover, memCacheWidth: 800) : Container(color: isDarkMode ? Colors.grey[800] : Colors.grey[300], child: hasFullControl ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo, color: Colors.white), Text(t.translate('edit_banner_add'), style: TextStyle(color: Colors.white, fontSize: 12))])) : null)),
+                      child: Hero(tag: 'community_banner', child: bannerUrl != null ? CachedNetworkImage(cacheManager: AppCacheManager.instance, imageUrl: bannerUrl, fit: BoxFit.cover, memCacheWidth: 800) : Container(color: isDarkMode ? Colors.grey[800] : Colors.grey[300], child: hasFullControl ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo, color: Colors.white), Text(t.translate('edit_banner_add'), style: TextStyle(color: Colors.white, fontSize: 12))])) : null)),
                     ),
                     Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.8)]))),
                     Positioned(
@@ -273,7 +275,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         children: [
                           GestureDetector(
                             onTap: () => _showImageOptions(context, avatarUrl, false, hasFullControl),
-                            child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: SisapaTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
+                            child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: SisapaTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl, cacheManager: AppCacheManager.instance) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
                           ),
                           SizedBox(width: 12),
                           Expanded(

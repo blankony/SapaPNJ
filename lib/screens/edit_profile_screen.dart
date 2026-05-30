@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../services/app_cache_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
@@ -212,7 +214,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     var t = AppLocalizations.of(context)!;
     final picker = ImagePicker();
 
-    final pickedFile = await picker.pickImage(
+    final pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, 
       source: source,
       imageQuality: 70,
       maxWidth: 1000,
@@ -330,7 +332,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return CircleAvatar(
         radius: 45,
         backgroundColor: Colors.grey,
-        backgroundImage: CachedNetworkImageProvider(_profileImageUrl!),
+        backgroundImage: CachedNetworkImageProvider(_profileImageUrl!, cacheManager: AppCacheManager.instance),
       );
     }
     return CircleAvatar(
@@ -401,7 +403,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             if (_selectedBannerFile != null)
                               Image.file(_selectedBannerFile!, fit: BoxFit.cover)
                             else if (_bannerImageUrl != null && _bannerImageUrl!.isNotEmpty)
-                              CachedNetworkImage(
+                              CachedNetworkImage(cacheManager: AppCacheManager.instance, 
                                 imageUrl: _bannerImageUrl!,
                                 fit: BoxFit.cover,
                                 memCacheWidth: 800,
