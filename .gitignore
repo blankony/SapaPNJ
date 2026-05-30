@@ -186,4 +186,4 @@ GEMINI.md
 .env
 
 # Cloud Functions dependencies
-cloud_functions/**/node_modules/
+cloud_functions/**/node_modules/env

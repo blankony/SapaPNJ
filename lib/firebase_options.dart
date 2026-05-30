@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '102926395042',
     projectId: 'myfirebaseproject-c8c85',
     storageBucket: 'myfirebaseproject-c8c85.firebasestorage.app',
-    iosBundleId: 'com.example.myfirebaseflutterapp',
+    iosBundleId: 'com.sapapnj.arnold.arya',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '102926395042',
     projectId: 'myfirebaseproject-c8c85',
     storageBucket: 'myfirebaseproject-c8c85.firebasestorage.app',
-    iosBundleId: 'com.example.myfirebaseflutterapp',
+    iosBundleId: 'com.sapapnj.arnold.arya',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
