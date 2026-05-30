@@ -214,7 +214,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     var t = AppLocalizations.of(context)!;
     final picker = ImagePicker();
 
-    final pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, 
+    final pickedFile = await picker.pickImage(
       source: source,
       imageQuality: 70,
       maxWidth: 1000,

@@ -84,7 +84,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
 
   Future<void> _pickImage({required bool isAvatar}) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, 
+    final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 1200,
       maxHeight: 1200,
