@@ -54,8 +54,18 @@ class ApiService {
     return resp.statusCode == 201;
   }
 
-  /// Get user profile by UID.
-  Future<Map<String, dynamic>?> getUser(String uid) async {
+  static final Map<String, Map<String, dynamic>> _userCache = {};
+  static final Map<String, DateTime> _userCacheTime = {};
+
+  /// Get user profile (using MySQL backend).
+  Future<Map<String, dynamic>?> getUser(String uid, {bool forceRefresh = false}) async {
+    final now = DateTime.now();
+    if (!forceRefresh && _userCache.containsKey(uid)) {
+      if (now.difference(_userCacheTime[uid]!) < const Duration(minutes: 5)) {
+        return Map<String, dynamic>.from(_userCache[uid]!);
+      }
+    }
+
     final resp = await http.get(
       Uri.parse('$_baseUrl/api/users/$uid'),
       headers: await _headers(),
@@ -63,7 +73,10 @@ class ApiService {
     debugPrint('ApiService - GET /api/users/$uid Response: ${resp.statusCode} ${resp.body}');
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) throw _error(resp);
-    return jsonDecode(resp.body);
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    _userCache[uid] = data;
+    _userCacheTime[uid] = now;
+    return data;
   }
 
   /// Update user profile fields.
@@ -74,7 +87,11 @@ class ApiService {
       body: jsonEncode(fields),
     );
     debugPrint('ApiService - PATCH /api/users/$uid Response: ${resp.statusCode} ${resp.body}');
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(uid);
+      return true;
+    }
+    return false;
   }
 
   /// Delete user account.
