@@ -34,12 +34,32 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      final success = await ApiService().createUser(
-        uid: user.uid,
-        email: user.email ?? '',
-        name: _nameController.text.trim(),
-        nim: _nimController.text.trim(),
-      );
+      bool success = false;
+      try {
+        success = await ApiService().createUser(
+          uid: user.uid,
+          email: user.email ?? '',
+          name: _nameController.text.trim(),
+          nim: _nimController.text.trim(),
+        );
+      } on ApiException catch (e) {
+        // If it's NIM in use, rethrow so the user sees it
+        if (e.code == 'nim-already-in-use') rethrow;
+      } catch (e) {
+        // Suppress other network errors here, we will try updating instead
+      }
+
+      // If createUser failed (user already exists), try updateUser
+      if (!success) {
+        success = await ApiService().updateUser(
+          user.uid,
+          {
+            'name': _nameController.text.trim(),
+            'nim': _nimController.text.trim(),
+            'email': user.email ?? '',
+          }
+        );
+      }
 
       if (success && mounted) {
         OverlayService().showTopNotification(
@@ -49,10 +69,19 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           (){},
           color: Colors.green
         );
-         Navigator.of(context).pushAndRemoveUntil(
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const AuthGate()),
           (route) => false,
         );
+      } else if (mounted) {
+        OverlayService().showTopNotification(
+          context,
+          "Failed to save profile.",
+          Icons.error,
+          (){},
+          color: Colors.red
+        );
+        setState(() { _isLoading = false; });
       }
 
     } on ApiException catch (e) {
