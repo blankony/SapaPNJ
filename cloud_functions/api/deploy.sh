@@ -1,14 +1,10 @@
 #!/bin/bash
 cd "$(dirname "$0")" || exit
 
-echo "Deploying SapaPNJ API to Google Cloud Functions (Gen 2)..."
-gcloud functions deploy sapapnjapi \
-  --gen2 \
+echo "Deploying SapaPNJ API to Google Cloud Run natively..."
+gcloud run deploy sapapnjapi \
   --region=asia-southeast2 \
-  --runtime=nodejs22 \
-  --entry-point=sapapnjApi \
   --source=. \
-  --trigger-http \
   --allow-unauthenticated
 
 echo "Deployment pipeline execution complete."
