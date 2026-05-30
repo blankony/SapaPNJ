@@ -103,9 +103,10 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      if (!googleUser.email.endsWith('@pnj.ac.id')) {
+      final String email = googleUser.email;
+      if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
         await googleSignIn.signOut();
-        setState(() => _errorMessage = 'Access Denied: Must use @pnj.ac.id email');
+        setState(() => _errorMessage = 'Access Denied: Must use a valid PNJ email');
         setState(() => _isLoading = false);
         return;
       }
@@ -118,7 +119,8 @@ class _LoginPageState extends State<LoginPage> {
 
       final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
-      if (userCredential.user?.email?.endsWith('@pnj.ac.id') != true) {
+      final String? fbEmail = userCredential.user?.email;
+      if (fbEmail == null || !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
         await userCredential.user?.delete();
         await FirebaseAuth.instance.signOut();
         await googleSignIn.signOut();
