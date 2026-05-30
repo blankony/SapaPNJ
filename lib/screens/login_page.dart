@@ -4,9 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'forgot_password_screen.dart';
 import 'register_page.dart';
-import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart'; // Import Localization
 import '../widgets/decorative_background.dart';
 class LoginPage extends StatefulWidget {

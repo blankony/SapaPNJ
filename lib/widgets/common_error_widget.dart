@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 
 class CommonErrorWidget extends StatelessWidget {
   final String message;

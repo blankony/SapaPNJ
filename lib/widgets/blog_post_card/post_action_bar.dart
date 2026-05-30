@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
 
 class PostActionBar extends StatelessWidget {

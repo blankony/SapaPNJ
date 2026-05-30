@@ -5,7 +5,6 @@ import 'login_page.dart';
 import 'register_page.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 import '../services/app_localizations.dart';
 import '../widgets/decorative_background.dart';
 

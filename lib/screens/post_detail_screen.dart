@@ -5,16 +5,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
 import '../widgets/blog_post_card.dart';
 import '../widgets/comment_tile.dart';
 import '../widgets/common_error_widget.dart'; // REQUIRED
 import '../services/prediction_service.dart';
 import '../services/gcs_service.dart';
-import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 import '../services/overlay_service.dart';
 
 final GcsService _cloudinaryService = GcsService();

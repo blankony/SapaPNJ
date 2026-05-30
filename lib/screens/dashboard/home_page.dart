@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/blog_post_card.dart';
 import '../../widgets/common_error_widget.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 
 import '../../services/app_localizations.dart';
 import '../../services/api_service.dart';

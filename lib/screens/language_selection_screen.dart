@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart'; // Import for SisapaTheme and languageNotifier
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 import '../auth_gate.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {

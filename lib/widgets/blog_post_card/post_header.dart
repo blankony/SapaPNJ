@@ -3,7 +3,6 @@ import '../../services/app_cache_manager.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';

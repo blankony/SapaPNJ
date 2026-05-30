@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 
 class OverlayService {
   static final OverlayService _instance = OverlayService._internal();

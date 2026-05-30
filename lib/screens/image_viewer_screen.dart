@@ -8,13 +8,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
-import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 
 class ImageViewerScreen extends StatefulWidget {
   final String imageUrl;

@@ -7,8 +7,6 @@ import '../screens/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../screens/image_viewer_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../main.dart';
-import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/overlay_service.dart';

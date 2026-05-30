@@ -7,16 +7,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../../widgets/blog_post_card.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 import 'community_settings_screen.dart';
 import 'community_members_screen.dart';
 import '../create_post_screen.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
 import '../image_viewer_screen.dart';
-import '../../services/moderation_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 import '../../services/api_service.dart';
 

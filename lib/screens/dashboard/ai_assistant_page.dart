@@ -2,7 +2,6 @@ import 'dart:async';
 import '../../services/app_cache_manager.dart';
 
 import 'dart:ui';
-import 'dart:math';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

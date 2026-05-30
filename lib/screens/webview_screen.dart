@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../main.dart'; // For SisapaTheme access
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;

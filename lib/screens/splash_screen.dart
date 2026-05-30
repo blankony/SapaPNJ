@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart'; // IMPORT SHARED PREFERENCES
 import '../auth_gate.dart';
-import '../main.dart'; // For SisapaTheme
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 import 'language_selection_screen.dart'; // IMPORT LANGUAGE SELECTION SCREEN
 import '../widgets/decorative_background.dart';
 

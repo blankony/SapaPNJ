@@ -3,9 +3,7 @@ import '../../services/app_cache_manager.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 import 'community_detail_screen.dart';
 import '../../services/app_localizations.dart';
 import '../../services/api_service.dart';

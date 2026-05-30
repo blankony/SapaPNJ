@@ -16,10 +16,8 @@ import '../services/app_localizations.dart';
 import '../services/gcs_service.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 
 // IMPORT COMPONENTS
-import 'blog_post_card/video_player_widget.dart';
 import 'blog_post_card/post_media_preview.dart';
 import 'blog_post_card/post_header.dart';
 import 'blog_post_card/post_action_bar.dart';

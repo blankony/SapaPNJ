@@ -9,7 +9,6 @@ import 'package:image_cropper/image_cropper.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
 import '../../services/api_service.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
 
 class CommunitySettingsScreen extends StatefulWidget {

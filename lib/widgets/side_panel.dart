@@ -6,13 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
-import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../screens/dashboard/account_center_page.dart';
 import '../screens/dashboard/settings_page.dart';
 import '../screens/saved_posts_screen.dart';
 import '../screens/webview_screen.dart';
-import '../screens/drafts_screen.dart';
 import '../services/api_service.dart';
 import '../services/app_localizations.dart';
 

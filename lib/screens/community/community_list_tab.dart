@@ -8,9 +8,7 @@ import 'create_community_screen.dart';
 import 'community_detail_screen.dart';
 import 'browse_communities_screen.dart';
 import '../../widgets/blog_post_card.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
 
 class CommunityListTab extends StatefulWidget {

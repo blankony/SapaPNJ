@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 import '../../data/pnj_data.dart';
 import 'setup_verification_screen.dart';
 import '../../services/overlay_service.dart';

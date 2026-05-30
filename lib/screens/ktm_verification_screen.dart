@@ -5,9 +5,7 @@ import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/gcs_service.dart';
 import '../services/overlay_service.dart';
-import '../main.dart';
 import '../theme/app_theme.dart';
-import '../theme/avatar_helper.dart';
 
 class KtmVerificationScreen extends StatefulWidget {
   const KtmVerificationScreen({super.key});
