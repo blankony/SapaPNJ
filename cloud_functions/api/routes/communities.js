@@ -265,3 +265,28 @@ router.delete('/:id/members/:uid', async (req, res) => {
 });
 
 module.exports = router;
+
+// GET /api/communities/recommended
+router.get('/recommended', async (req, res) => {
+  const { getPool } = require('../db');
+  const pool = await getPool();
+  try {
+    const query = `
+      SELECT c.*,
+        (
+          SELECT COUNT(*) FROM community_members cm
+          JOIN follows f ON f.following_uid = cm.user_uid AND f.follower_uid = ?
+          WHERE cm.community_id = c.id
+        ) AS mutual_count,
+        (SELECT COUNT(*) FROM community_members cm2 WHERE cm2.community_id = c.id) AS member_count
+      FROM communities c
+      WHERE c.id NOT IN (SELECT community_id FROM community_members WHERE user_uid = ?)
+      ORDER BY mutual_count DESC, member_count DESC LIMIT 20
+    `;
+    const [rows] = await pool.execute(query, [req.uid, req.uid]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Community recommended error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});

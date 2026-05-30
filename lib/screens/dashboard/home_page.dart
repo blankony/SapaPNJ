@@ -156,7 +156,9 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final results = await Future.wait([
-          _api.getPosts(limit: 50),
+          widget.feedType == 'recommended' 
+            ? _api.getPersonalizedRecommendations() 
+            : _api.getPosts(limit: 50),
           _api.getUser(user.uid),
         ]);
         if (mounted) {

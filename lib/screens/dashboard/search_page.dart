@@ -111,8 +111,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Future<List<Map<String, dynamic>>> _fetchTrendingTopics() async {
      try {
-       final allPosts = await ApiService().getPosts(limit: 50);
-       return _predictionService.analyzeTrendingTopics(allPosts);
+       return await ApiService().getTrendingTopics();
      } catch (e) {
        return [];
      }
@@ -120,16 +119,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Future<List<Map<String, dynamic>>> _fetchDiscoverContent() async {
      try {
-        final posts = await ApiService().getPosts(limit: 100);
-        final publicPosts = posts.where((p) {
-          final authorId = p['user_uid'] ?? p['userId'];
-          return (p['visibility'] ?? 'public') == 'public' &&
-                 !_blockedUserIds.contains(authorId);
-        }).toList();
-
-        return _predictionService.getDiscoverRecommendations(
-           publicPosts, FirebaseAuth.instance.currentUser?.uid ?? '', _followingIds
-        );
+        return await ApiService().getDiscoverRecommendations();
      } catch (e) {
        return [];
      }
@@ -137,10 +127,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Future<List<Map<String, dynamic>>> _fetchCommunityRecs() async {
     try {
-      final list = await ApiService().getCommunities();
-      return _predictionService.getRecommendedCommunities(
-        list, FirebaseAuth.instance.currentUser?.uid ?? '', _followingIds
-      );
+      return await ApiService().getRecommendedCommunities();
     } catch(e) {
       return [];
     }

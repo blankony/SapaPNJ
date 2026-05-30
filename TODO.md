@@ -18,8 +18,8 @@
 - [x] Implement a RESTful/gRPC API gateway to mediate all CRUD operations between the client and MySQL.
 
 ## Phase 3: Computational Offloading (On-Device -> Google Cloud Functions)
-- [ ] Identify all in-app recommendation, sorting, and trending evaluation algorithms currently executing on the Dart thread (e.g., chronological sorting mapped against user preferences).
-- [ ] Strip these hardcoded heuristic loops out of the Flutter client.
-- [ ] Deploy serverless Cloud Functions (Node.js/Python) to handle heavy graph processing and relevance scoring.
-- [ ] Reroute the Flutter frontend to trigger these Cloud Functions via HTTPS to fetch pre-calculated, sorted pagination data.
+- [x] Identify all in-app recommendation, sorting, and trending evaluation algorithms currently executing on the Dart thread (e.g., chronological sorting mapped against user preferences).
+- [x] Strip these hardcoded heuristic loops out of the Flutter client.
+- [x] Deploy serverless Cloud Functions (Node.js/Python) to handle heavy graph processing and relevance scoring.
+- [x] Reroute the Flutter frontend to trigger these Cloud Functions via HTTPS to fetch pre-calculated, sorted pagination data.
 - [ ] Implement Redis/Memcached layer (Optional) at the Cloud Function level to cache heavy trending results.

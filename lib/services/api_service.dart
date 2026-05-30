@@ -326,6 +326,30 @@ class ApiService {
     return resp.statusCode == 200;
   }
 
+  Future<List<Map<String, dynamic>>> getTrendingTopics() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/api/explore/trending'), headers: await _headers());
+    if (resp.statusCode != 200) throw _error(resp);
+    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+  }
+
+  Future<List<Map<String, dynamic>>> getDiscoverRecommendations() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/api/explore/discover'), headers: await _headers());
+    if (resp.statusCode != 200) throw _error(resp);
+    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+  }
+
+  Future<List<Map<String, dynamic>>> getPersonalizedRecommendations() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/api/explore/recommended'), headers: await _headers());
+    if (resp.statusCode != 200) throw _error(resp);
+    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+  }
+
+  Future<List<Map<String, dynamic>>> getRecommendedCommunities() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/api/communities/recommended'), headers: await _headers());
+    if (resp.statusCode != 200) throw _error(resp);
+    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+  }
+
   /// Delete a post.
   Future<bool> deletePost(String postId) async {
     final resp = await http.delete(

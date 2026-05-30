@@ -4,8 +4,9 @@ const functions = require('@google-cloud/functions-framework');
 const { authMiddleware } = require('./middleware/auth');
 
 const usersRouter = require('./routes/users');
-const postsRouter = require('./routes/posts');
-const communitiesRouter = require('./routes/communities');
+const postRoutes = require('./routes/posts');
+const communityRoutes = require('./routes/communities');
+const exploreRoutes = require('./routes/explore');
 
 const app = express();
 
@@ -20,8 +21,9 @@ app.get('/api/health', (req, res) => {
 
 // All API routes require auth
 app.use('/api/users', authMiddleware, usersRouter);
-app.use('/api/posts', authMiddleware, postsRouter);
-app.use('/api/communities', authMiddleware, communitiesRouter);
+app.use('/api/posts', authMiddleware, postRoutes);
+app.use('/api/communities', authMiddleware, communityRoutes);
+app.use('/api/explore', authMiddleware, exploreRoutes);
 
 // 404
 app.use((req, res) => {
