@@ -12,10 +12,19 @@ router.post('/', async (req, res) => {
 
   const pool = await getPool();
   try {
+    // If the email already exists under a DIFFERENT uid, it's an orphaned ghost account
+    // (meaning the user deleted their account in Firebase Auth but not in MySQL).
+    // We must cascade delete the old ghost account so the new UID can claim the email.
+    const [existingEmail] = await pool.execute('SELECT uid FROM users WHERE email = ?', [email]);
+    if (existingEmail.length > 0 && existingEmail[0].uid !== uid) {
+      console.log(`Deleting orphaned MySQL account ${existingEmail[0].uid} to make way for new UID ${uid} with same email ${email}`);
+      await pool.execute('DELETE FROM users WHERE email = ?', [email]);
+    }
+
     await pool.execute(
       `INSERT INTO users (uid, email, name, nim, agreed_to_terms, agreed_at, created_at)
        VALUES (?, ?, ?, ?, TRUE, NOW(), NOW())
-       ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+       ON DUPLICATE KEY UPDATE name = VALUES(name), nim = VALUES(nim)`,
       [uid, email, name, nim || null]
     );
     res.status(201).json({ success: true });

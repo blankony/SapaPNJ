@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/api_service.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
@@ -70,6 +72,39 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
         return SlideTransition(position: offsetAnimation, child: child);
       },
     );
+  }
+
+  Future<void> _bindGoogleAccount() async {
+    var t = AppLocalizations.of(context)!;
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return;
+      
+      final String email = googleUser.email;
+      if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id') || email.endsWith('@gmail.com'))) {
+        await googleSignIn.signOut();
+        if (mounted) OverlayService().showTopNotification(context, 'Must use a valid PNJ email', Icons.error, () {}, color: Colors.red);
+        return;
+      }
+      
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.linkWithCredential(credential);
+        if (mounted) OverlayService().showTopNotification(context, 'Google account linked successfully', Icons.check_circle, () {}, color: Colors.green);
+        _refreshUser();
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) OverlayService().showTopNotification(context, 'Failed to link: ${e.message}', Icons.error, () {}, color: Colors.red);
+    } catch (e) {
+      if (mounted) OverlayService().showTopNotification(context, 'Error: $e', Icons.error, () {}, color: Colors.red);
+    }
   }
 
   Future<void> _promptPasswordForDeletion() async {
@@ -298,6 +333,33 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                       },
                     ),
               ),
+
+              // --- 1.5. GOOGLE ACCOUNT BINDING ---
+              (() {
+                final bool isGoogleBound = user?.providerData.any((provider) => provider.providerId == 'google.com') ?? false;
+                return ListTile(
+                  leading: Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isGoogleBound ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle
+                    ),
+                    child: FaIcon(
+                      FontAwesomeIcons.google,
+                      color: isGoogleBound ? Colors.green : Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text('Google Account'),
+                  subtitle: Text(isGoogleBound ? 'Linked to Google' : 'Not linked to Google'),
+                  trailing: isGoogleBound
+                    ? Icon(Icons.check_circle, color: Colors.green)
+                    : TextButton(
+                        child: Text('Bind Now'),
+                        onPressed: _bindGoogleAccount,
+                      ),
+                );
+              })(),
 
               // --- 2. KTM VERIFICATION (Only shows if Email Verified) ---
               if (isEmailVerified)
