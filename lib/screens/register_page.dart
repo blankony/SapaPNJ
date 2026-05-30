@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -158,6 +160,108 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // --- VALIDATORS ---
+
+  Future<void> _signUpWithGoogle() async {
+    setState(() { _errorMessage = ''; _isLoading = true; });
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final String email = googleUser.email;
+      if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
+        await googleSignIn.signOut();
+        setState(() => _errorMessage = 'Access Denied: Must use a valid PNJ email');
+        setState(() => _isLoading = false);
+        return;
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      
+      UserCredential userCredential;
+      try {
+        userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          final String? existingEmail = e.email;
+          if (existingEmail == null) {
+            await googleSignIn.signOut();
+            setState(() => _errorMessage = 'Account merge failed: Unknown email.');
+            setState(() => _isLoading = false);
+            return;
+          }
+          final String? password = await _showPasswordPromptDialog(existingEmail);
+          if (password == null || password.isEmpty) {
+            await googleSignIn.signOut();
+            setState(() => _isLoading = false);
+            return;
+          }
+          setState(() => _isLoading = true);
+          final AuthCredential emailCred = EmailAuthProvider.credential(email: existingEmail, password: password);
+          final UserCredential existingUser = await FirebaseAuth.instance.signInWithCredential(emailCred);
+          userCredential = await existingUser.user!.linkWithCredential(credential);
+        } else {
+          rethrow;
+        }
+      }
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const SetupProfileScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Google Sign-In Error: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<String?> _showPasswordPromptDialog(String email) async {
+    final t = AppLocalizations.of(context)!;
+    String? password;
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Account Linking Required', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('An account with $email already exists. Enter your password to merge and link your Google account.'),
+              SizedBox(height: 16),
+              TextField(
+                obscureText: true,
+                onChanged: (val) => password = val,
+                decoration: InputDecoration(
+                  labelText: t.translate('auth_enter_password'),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text(t.translate('general_cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, password),
+              style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
+              child: Text('Link Account'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   String? _validateName(String? value) {
     var t = AppLocalizations.of(context)!;
@@ -475,6 +579,24 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
 
+                      SizedBox(height: 16),
+                      
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          icon: Icon(FontAwesomeIcons.google, size: 20),
+                          label: Text("Sign up with Google (@pnj.ac.id)"),
+                          onPressed: _isLoading ? null : _signUpWithGoogle,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: theme.colorScheme.onSurface,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
                       SizedBox(height: 24),
 
                       Row(

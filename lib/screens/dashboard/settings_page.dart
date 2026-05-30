@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
@@ -113,6 +115,38 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
+  Future<void> _bindGoogleAccount(BuildContext context) async {
+    var t = AppLocalizations.of(context)!;
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return;
+      
+      final String email = googleUser.email;
+      if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
+        await googleSignIn.signOut();
+        if (context.mounted) OverlayService().showTopNotification(context, 'Must use a valid PNJ email', Icons.error, () {}, color: Colors.red);
+        return;
+      }
+      
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.linkWithCredential(credential);
+        if (context.mounted) OverlayService().showTopNotification(context, 'Google account linked successfully', Icons.check_circle, () {}, color: Colors.green);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) OverlayService().showTopNotification(context, 'Failed to link: ${e.message}', Icons.error, () {}, color: Colors.red);
+    } catch (e) {
+      if (context.mounted) OverlayService().showTopNotification(context, 'Error: $e', Icons.error, () {}, color: Colors.red);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // LOCALIZATION INSTANCE
@@ -130,6 +164,14 @@ class SettingsPage extends StatelessWidget {
             title: t.translate('settings_account'), // "Account Center"
             subtitle: t.translate('settings_account_desc'),
             onTap: () => _goToAccountCenter(context),
+          ),
+
+          _buildSettingsTile(
+            context: context,
+            icon: FontAwesomeIcons.google,
+            title: 'Bind Google Account',
+            subtitle: 'Link your PNJ Google account',
+            onTap: () => _bindGoogleAccount(context),
           ),
 
           _buildSettingsTile(

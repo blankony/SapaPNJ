@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'forgot_password_screen.dart';
 import 'register_page.dart';
@@ -117,7 +118,32 @@ class _LoginPageState extends State<LoginPage> {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential userCredential;
+      try {
+        userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          final String? existingEmail = e.email;
+          if (existingEmail == null) {
+            await googleSignIn.signOut();
+            setState(() => _errorMessage = 'Account merge failed: Unknown email.');
+            setState(() => _isLoading = false);
+            return;
+          }
+          final String? password = await _showPasswordPromptDialog(existingEmail);
+          if (password == null || password.isEmpty) {
+            await googleSignIn.signOut();
+            setState(() => _isLoading = false);
+            return;
+          }
+          setState(() => _isLoading = true);
+          final AuthCredential emailCred = EmailAuthProvider.credential(email: existingEmail, password: password);
+          final UserCredential existingUser = await FirebaseAuth.instance.signInWithCredential(emailCred);
+          userCredential = await existingUser.user!.linkWithCredential(credential);
+        } else {
+          rethrow;
+        }
+      }
 
       final String? fbEmail = userCredential.user?.email;
       if (fbEmail == null || !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
@@ -136,6 +162,47 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _errorMessage = 'Google Sign-In Error: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<String?> _showPasswordPromptDialog(String email) async {
+    final t = AppLocalizations.of(context)!;
+    String? password;
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Account Linking Required', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('An account with $email already exists. Enter your password to merge and link your Google account.'),
+              SizedBox(height: 16),
+              TextField(
+                obscureText: true,
+                onChanged: (val) => password = val,
+                decoration: InputDecoration(
+                  labelText: t.translate('auth_enter_password'),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text(t.translate('general_cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, password),
+              style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
+              child: Text('Link Account'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   String? _validateEmail(String? value) {
@@ -316,7 +383,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          icon: Icon(Icons.g_mobiledata, size: 28),
+                          icon: Icon(FontAwesomeIcons.google, size: 20),
                           label: Text("Sign in with Google (@pnj.ac.id)"),
                           onPressed: _signInWithGoogle,
                           style: OutlinedButton.styleFrom(
