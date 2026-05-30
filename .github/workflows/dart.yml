@@ -30,17 +30,22 @@ jobs:
           channel: 'stable' # Mengganti 'flutter-version' dengan 'channel'
           cache: true 
 
-      # 4. Install dependensi
+      # 4. Create dummy .env file
+      - name: Create dummy .env file
+        run: echo "API_KEY=mock_key" > .env
+
+      # 5. Install dependensi
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      # 5. Build APK Debug
+      # 6. Build APK Debug
       - name: Build Debug APK
         run: flutter build apk --debug
 
-      # 6. Upload APK sebagai artifak
+      # 7. Upload APK sebagai artifak
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
+
