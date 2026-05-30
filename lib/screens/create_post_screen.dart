@@ -1133,7 +1133,12 @@ class _BackgroundUploader {
              } catch(e) {}
           }
           String? url = await GcsService().uploadMedia(fileToUp);
-          if (url != null) finalUrls.add(url);
+          if (url != null) {
+            finalUrls.add(url);
+          } else {
+            onFailure(locStrings['uploading_error'] ?? "Failed to upload media. Please check your internet connection.");
+            return;
+          }
           count++;
         }
       }
