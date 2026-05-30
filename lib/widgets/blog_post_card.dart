@@ -13,6 +13,7 @@ import '../screens/community/community_detail_screen.dart';
 import '../services/overlay_service.dart';
 import '../services/moderation_service.dart';
 import '../services/app_localizations.dart';
+import '../services/gcs_service.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
@@ -204,8 +205,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (_isVideoInitialized || _videoController != null || _isVideoLoading) return;
 
     final data = effectivePostData;
-    final String? singleUrl = data['mediaUrl'];
-    final List<dynamic> urls = data['mediaUrls'] ?? [];
+    final String? singleUrl = data['mediaUrl'] ?? data['media_url'];
+    final List<dynamic> urls = data['mediaUrls'] ?? data['media_urls'] ?? [];
     final String? videoUrl = (urls.isNotEmpty) ? urls.first : singleUrl;
 
     if (videoUrl != null) {
@@ -433,6 +434,27 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         false;
     if (confirm) {
       try {
+        List<String> mediaUrls = [];
+        if (effectivePostData['mediaUrls'] != null) {
+          mediaUrls = List<String>.from(effectivePostData['mediaUrls']);
+        } else if (effectivePostData['media_urls'] != null) {
+          mediaUrls = List<String>.from(effectivePostData['media_urls']);
+        } else if (effectivePostData['mediaUrl'] != null) {
+          mediaUrls = [effectivePostData['mediaUrl']];
+        }
+        
+        for (String url in mediaUrls) {
+          try {
+            final match = RegExp(r'sapapnj-media-assets/(.*)').firstMatch(url);
+            if (match != null) {
+              final objectName = match.group(1)!;
+              await GcsService().deleteResource(objectName);
+            }
+          } catch(e) {
+            debugPrint("Failed to parse or delete media URL: $url - $e");
+          }
+        }
+        
         await ApiService().deletePost(widget.postId);
         if (mounted) OverlayService().showTopNotification(context, t.translate('post_deleted'), Icons.delete_outline, () {});
       } catch (e) {
@@ -764,7 +786,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
 
     final text = effectivePostData['text'] ?? '';
-    final mediaType = effectivePostData['mediaType'];
+    final mediaType = effectivePostData['mediaType'] ?? effectivePostData['media_type'];
     final isUploading = effectivePostData['isUploading'] == true;
     final uploadProgress = effectivePostData['uploadProgress'] as double? ?? 0.0;
     final uploadFailed = effectivePostData['uploadFailed'] == true;
@@ -773,6 +795,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     List<String> mediaUrls = [];
     if (effectivePostData['mediaUrls'] != null) {
       mediaUrls = List<String>.from(effectivePostData['mediaUrls']);
+    } else if (effectivePostData['media_urls'] != null) {
+      mediaUrls = List<String>.from(effectivePostData['media_urls']);
     } else if (effectivePostData['mediaUrl'] != null) {
       mediaUrls = [effectivePostData['mediaUrl']];
     }
