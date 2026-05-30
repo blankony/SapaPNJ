@@ -383,7 +383,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          icon: Icon(FontAwesomeIcons.google, size: 20),
+                          icon: FaIcon(FontAwesomeIcons.google, size: 20),
                           label: Text("Sign in with Google (@pnj.ac.id)"),
                           onPressed: _signInWithGoogle,
                           style: OutlinedButton.styleFrom(

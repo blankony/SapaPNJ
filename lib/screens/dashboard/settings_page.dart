@@ -166,11 +166,10 @@ class SettingsPage extends StatelessWidget {
             onTap: () => _goToAccountCenter(context),
           ),
 
-          _buildSettingsTile(
-            context: context,
-            icon: FontAwesomeIcons.google,
-            title: 'Bind Google Account',
-            subtitle: 'Link your PNJ Google account',
+          ListTile(
+            leading: FaIcon(FontAwesomeIcons.google, color: Theme.of(context).primaryColor),
+            title: Text('Bind Google Account', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
+            subtitle: Text('Link your PNJ Google account'),
             onTap: () => _bindGoogleAccount(context),
           ),
 

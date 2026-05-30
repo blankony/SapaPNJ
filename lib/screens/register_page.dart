@@ -584,7 +584,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          icon: Icon(FontAwesomeIcons.google, size: 20),
+                          icon: FaIcon(FontAwesomeIcons.google, size: 20),
                           label: Text("Sign up with Google (@pnj.ac.id)"),
                           onPressed: _isLoading ? null : _signUpWithGoogle,
                           style: OutlinedButton.styleFrom(
