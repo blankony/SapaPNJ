@@ -20,19 +20,19 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       # 3. Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable' # Mengganti 'flutter-version' dengan 'channel'
-          cache: true 
+          channel: "stable" # Mengganti 'flutter-version' dengan 'channel'
+          cache: true
 
-      # 4. Create dummy .env file
-      - name: Create dummy .env file
-        run: echo "API_KEY=mock_key" > .env
+      # 4. Create .env file from GitHub Secrets
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
 
       # 5. Install dependensi
       - name: Install Flutter dependencies
