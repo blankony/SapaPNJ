@@ -510,7 +510,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final name = data['name'] ?? 'User';
 
     final bool isMyProfile = _user?.uid == _userId;
-    final bool isPrivateAccount = data['is_private'] ?? data['isPrivate'] ?? false;
+    final bool isPrivateAccount = data['is_private'] == true || data['is_private'] == 1 || data['isPrivate'] == true || data['isPrivate'] == 1;
     final List<dynamic> followers = data['followers'] ?? [];
     final bool amIFollowing = followers.contains(_user?.uid);
 
@@ -792,7 +792,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             if (isVerified) ...[
               SizedBox(width: 4),
               Icon(Icons.verified, size: 22, color: SisapaTheme.blue),
-            ] else if (data['is_private'] ?? data['isPrivate'] ?? false) ...[
+            ] else if (data['is_private'] == true || data['is_private'] == 1 || data['isPrivate'] == true || data['isPrivate'] == 1) ...[
               SizedBox(width: 6),
               Icon(Icons.lock, size: 22, color: theme.textTheme.titleLarge?.color),
             ],
