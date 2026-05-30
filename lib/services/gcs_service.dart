@@ -52,8 +52,9 @@ class GcsService {
     }
 
     try {
-      // 1. Request a signed upload URL from the Cloud Function.
       final fileName = p.basename(file.path);
+      debugPrint("GCS: Requesting signed URL for $fileName with type $resourceType");
+      // 1. Request a signed upload URL from the Cloud Function.
       final signResponse = await http.post(
         Uri.parse('$_functionBaseUrl/getSignedUploadUrl'),
         headers: {'Content-Type': 'application/json'},
@@ -64,7 +65,7 @@ class GcsService {
       );
 
       if (signResponse.statusCode != 200) {
-        debugPrint('GCS sign URL failed: ${signResponse.statusCode}');
+        debugPrint('GCS sign URL failed: ${signResponse.statusCode} - body: ${signResponse.body}');
         return GcsResponse(error: 'Failed to get upload URL');
       }
 
@@ -73,6 +74,7 @@ class GcsService {
       final String objectName = signData['objectName'];
       final String contentType = signData['contentType'];
 
+      debugPrint("GCS: Got signed URL. Starting PUT request to storage.googleapis.com...");
       // 2. PUT the file directly to GCS.
       final fileBytes = await file.readAsBytes();
       final uploadResponse = await http.put(
@@ -84,16 +86,17 @@ class GcsService {
       if (uploadResponse.statusCode == 200 || uploadResponse.statusCode == 201) {
         final publicUrl =
             'https://storage.googleapis.com/$_bucketName/$objectName';
+        debugPrint("GCS: Upload successful. Public URL: $publicUrl");
         return GcsResponse(
           secureUrl: publicUrl,
           publicId: objectName,
         );
       } else {
-        debugPrint('GCS upload failed: ${uploadResponse.statusCode}');
+        debugPrint('GCS upload failed: ${uploadResponse.statusCode} - body: ${uploadResponse.body}');
         return GcsResponse(error: 'Upload to GCS failed (${uploadResponse.statusCode})');
       }
-    } catch (e) {
-      debugPrint('GCS upload exception: $e');
+    } catch (e, stackTrace) {
+      debugPrint('GCS upload exception: $e\nStacktrace: $stackTrace');
       return GcsResponse(error: e.toString());
     }
   }
