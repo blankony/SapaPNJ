@@ -187,3 +187,4 @@ GEMINI.md
 
 # Cloud Functions dependencies
 cloud_functions/**/node_modules/env
+pubspec.lock
