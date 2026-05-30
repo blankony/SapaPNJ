@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
 import '../auth_gate.dart';
 import '../services/overlay_service.dart';
+import 'setup/setup_profile_screen.dart';
 
 class UserInfoScreen extends StatefulWidget {
-  const UserInfoScreen({super.key});
+  final bool isSetupWizard;
+  const UserInfoScreen({super.key, this.isSetupWizard = false});
 
   @override
   State<UserInfoScreen> createState() => _UserInfoScreenState();
@@ -69,10 +71,17 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           (){},
           color: Colors.green
         );
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const AuthGate()),
-          (route) => false,
-        );
+        if (widget.isSetupWizard) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const SetupProfileScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const AuthGate()),
+            (route) => false,
+          );
+        }
       } else if (mounted) {
         OverlayService().showTopNotification(
           context,

@@ -46,7 +46,7 @@ class _DecisionGateState extends State<DecisionGate> {
         // User not found in DB
         if (!snapshot.hasData || snapshot.data == null) {
            // Navigate to UserInfoScreen to complete profile
-          return const UserInfoScreen();
+          return const UserInfoScreen(isSetupWizard: true);
         }
 
         final data = snapshot.data!;
@@ -55,7 +55,7 @@ class _DecisionGateState extends State<DecisionGate> {
 
         if (name == null || name.isEmpty || nim == null || nim.isEmpty) {
            // Navigate to UserInfoScreen to complete profile
-          return const UserInfoScreen();
+          return const UserInfoScreen(isSetupWizard: true);
         }
 
         // 2. Profile complete, navigate to main dashboard

@@ -13,6 +13,7 @@ import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import 'login_page.dart';
 import 'setup/setup_profile_screen.dart';
+import 'user_info_screen.dart';
 import '../services/app_localizations.dart'; // REQUIRED IMPORT
 import '../widgets/decorative_background.dart';
 
@@ -212,7 +213,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const SetupProfileScreen()),
+          MaterialPageRoute(builder: (context) => const UserInfoScreen(isSetupWizard: true)),
           (route) => false,
         );
       }
