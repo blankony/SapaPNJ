@@ -3,7 +3,6 @@ import '../services/app_cache_manager.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../screens/image_viewer_screen.dart';

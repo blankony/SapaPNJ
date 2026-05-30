@@ -6,7 +6,7 @@ import '../../widgets/common_error_widget.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
-import '../../services/prediction_service.dart';
+
 import '../../services/app_localizations.dart';
 import '../../services/api_service.dart';
 
@@ -131,7 +131,7 @@ class _PostFeedList extends StatefulWidget {
 }
 
 class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveClientMixin {
-  final PredictionService _aiService = PredictionService();
+
   final ApiService _api = ApiService();
   List<Map<String, dynamic>> _posts = [];
   Map<String, dynamic> _userData = {};
