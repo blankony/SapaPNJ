@@ -10,14 +10,14 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.1
+  firebase_core: ^4.10.0
+  firebase_auth: ^6.5.2
   cupertino_icons: ^1.0.8
   timeago: ^3.7.1
-  share_plus: ^7.2.2
+  share_plus: ^13.1.0
   intl: ^0.20.2
   image_picker: ^1.1.2
-  image_cropper: ^8.0.2
+  image_cropper: ^12.2.1
   shared_preferences: ^2.5.3
   path_provider: ^2.1.2
   google_generative_ai: ^0.4.7
@@ -32,25 +32,25 @@ dependencies:
   cached_network_image: ^3.3.1
   flutter_cache_manager: ^3.4.1
   gal: ^2.3.0  
-  permission_handler: ^11.3.0  
-  device_info_plus: ^10.1.0    
+  permission_handler: ^12.0.3  
+  device_info_plus: ^13.1.0    
   video_compress: ^3.1.4
-  flutter_tts: ^3.8.3
+  flutter_tts: ^4.2.5
   speech_to_text: ^7.0.0
   badword_guard: ^1.0.0
   visual_detector_ai: ^1.0.0
   webview_flutter: ^4.13.0
   flutter_colorpicker: ^1.1.0
   open_filex: ^4.3.2
-  google_sign_in: ^6.2.1
+  google_sign_in: ^7.2.0
   font_awesome_flutter: ^10.12.0
 
 
 dev_dependencies:
-  flutter_launcher_icons: "^0.13.1"
+  flutter_launcher_icons: ^0.14.4
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # Add for custom app icon
 flutter_launcher_icons:
