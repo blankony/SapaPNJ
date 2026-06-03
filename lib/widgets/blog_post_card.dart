@@ -252,7 +252,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       setState(() {
         _isLiked = apiLiked || (currentUser != null && likesList.contains(currentUser.uid));
         _likeCount = apiLikeCount > 0 ? apiLikeCount : likesList.length;
-        _isReposted = currentUser != null && reposts.contains(currentUser.uid);
+        _isReposted = _resolvedPostData!['is_reposted'] == true || _resolvedPostData!['is_reposted'] == 1 || (currentUser != null && reposts.contains(currentUser.uid));
         _repostCount = _resolvedPostData!['repost_count'] ?? reposts.length;
         _isBookmarked = apiBookmarked;
       });
@@ -321,6 +321,10 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
             break;
           }
         }
+      }
+      if (mounted) {
+        _resolvedPostData!['is_reposted'] = _isReposted;
+        _resolvedPostData!['repost_count'] = _repostCount;
       }
     } catch (e) {
       debugPrint("Repost Error: $e");

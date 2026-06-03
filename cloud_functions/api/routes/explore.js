@@ -2,6 +2,43 @@ const express = require('express');
 const router = express.Router();
 const { getPool } = require('../db');
 
+// Helper to enrich post objects with likes, bookmarks, and repost state
+async function enrichPosts(posts, myUid, pool) {
+  for (const post of posts) {
+    const [[{ likeCount }]] = await pool.execute(
+      'SELECT COUNT(*) as likeCount FROM post_likes WHERE post_id = ?', [post.id]
+    );
+    const [[{ isLiked }]] = await pool.execute(
+      'SELECT COUNT(*) as isLiked FROM post_likes WHERE post_id = ? AND user_uid = ?',
+      [post.id, myUid]
+    );
+    const [[{ isBookmarked }]] = await pool.execute(
+      'SELECT COUNT(*) as isBookmarked FROM bookmarks WHERE post_id = ? AND user_uid = ?',
+      [post.id, myUid]
+    );
+    const [[{ isReposted }]] = await pool.execute(
+      'SELECT COUNT(*) as isReposted FROM posts WHERE original_post_id = ? AND user_uid = ? AND is_repost = TRUE',
+      [post.id, myUid]
+    );
+    post.like_count = likeCount;
+    post.is_liked = isLiked > 0;
+    post.is_bookmarked = isBookmarked > 0;
+    post.is_reposted = isReposted > 0;
+
+    // Parse media_urls JSON
+    if (post.media_urls && typeof post.media_urls === 'string') {
+      try {
+        post.media_urls = JSON.parse(post.media_urls);
+      } catch (e) {
+        post.media_urls = [];
+      }
+    } else if (!post.media_urls) {
+      post.media_urls = [];
+    }
+  }
+  return posts;
+}
+
 // GET /api/explore/trending
 router.get('/trending', async (req, res) => {
   const pool = await getPool();
@@ -79,6 +116,8 @@ router.get('/discover', async (req, res) => {
   try {
     const query = `
       SELECT p.*,
+             u.name as user_name, u.email as user_email,
+             u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
              u.name as user_name, u.avatar_icon_id as user_avatar_icon_id,
              u.avatar_hex as user_avatar_hex, u.profile_image_url as user_profile_image_url,
              u.department_code,
@@ -92,14 +131,7 @@ router.get('/discover', async (req, res) => {
       ORDER BY score DESC LIMIT 50;
     `;
     const [rows] = await pool.execute(query, [req.uid, req.uid]);
-    
-    // Parse JSON
-    rows.forEach(post => {
-      if (post.media_urls && typeof post.media_urls === 'string') {
-        post.media_urls = JSON.parse(post.media_urls);
-      }
-    });
-
+    await enrichPosts(rows, req.uid, pool);
     res.json(rows);
   } catch (err) {
     console.error('Discover error:', err);
@@ -129,6 +161,8 @@ router.get('/recommended', async (req, res) => {
 
     const query = `
       SELECT p.*,
+             u.name as user_name, u.email as user_email,
+             u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
              u.name as user_name, u.avatar_icon_id as user_avatar_icon_id,
              u.avatar_hex as user_avatar_hex, u.profile_image_url as user_profile_image_url,
              u.department_code,
@@ -142,13 +176,7 @@ router.get('/recommended', async (req, res) => {
       ORDER BY score DESC LIMIT 50;
     `;
     const [rows] = await pool.execute(query, [interestRegex, req.uid, req.uid]);
-
-    rows.forEach(post => {
-      if (post.media_urls && typeof post.media_urls === 'string') {
-        post.media_urls = JSON.parse(post.media_urls);
-      }
-    });
-
+    await enrichPosts(rows, req.uid, pool);
     res.json(rows);
   } catch (err) {
     console.error('Recommended error:', err);

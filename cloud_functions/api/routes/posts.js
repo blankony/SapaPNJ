@@ -3,6 +3,43 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { getPool } = require('../db');
 
+// Helper to enrich post objects with likes, bookmarks, and repost state
+async function enrichPosts(posts, myUid, pool) {
+  for (const post of posts) {
+    const [[{ likeCount }]] = await pool.execute(
+      'SELECT COUNT(*) as likeCount FROM post_likes WHERE post_id = ?', [post.id]
+    );
+    const [[{ isLiked }]] = await pool.execute(
+      'SELECT COUNT(*) as isLiked FROM post_likes WHERE post_id = ? AND user_uid = ?',
+      [post.id, myUid]
+    );
+    const [[{ isBookmarked }]] = await pool.execute(
+      'SELECT COUNT(*) as isBookmarked FROM bookmarks WHERE post_id = ? AND user_uid = ?',
+      [post.id, myUid]
+    );
+    const [[{ isReposted }]] = await pool.execute(
+      'SELECT COUNT(*) as isReposted FROM posts WHERE original_post_id = ? AND user_uid = ? AND is_repost = TRUE',
+      [post.id, myUid]
+    );
+    post.like_count = likeCount;
+    post.is_liked = isLiked > 0;
+    post.is_bookmarked = isBookmarked > 0;
+    post.is_reposted = isReposted > 0;
+
+    // Parse media_urls JSON
+    if (post.media_urls && typeof post.media_urls === 'string') {
+      try {
+        post.media_urls = JSON.parse(post.media_urls);
+      } catch (e) {
+        post.media_urls = [];
+      }
+    } else if (!post.media_urls) {
+      post.media_urls = [];
+    }
+  }
+  return posts;
+}
+
 // GET /api/posts — Home feed with pagination and visibility filtering
 router.get('/', async (req, res) => {
   const myUid = req.uid;
@@ -82,30 +119,7 @@ router.get('/', async (req, res) => {
     }
 
     const [posts] = await pool.query(query, params);
-
-    // Enrich with like/bookmark status and counts
-    for (const post of posts) {
-      const [[{ likeCount }]] = await pool.execute(
-        'SELECT COUNT(*) as likeCount FROM post_likes WHERE post_id = ?', [post.id]
-      );
-      const [[{ isLiked }]] = await pool.execute(
-        'SELECT COUNT(*) as isLiked FROM post_likes WHERE post_id = ? AND user_uid = ?',
-        [post.id, myUid]
-      );
-      const [[{ isBookmarked }]] = await pool.execute(
-        'SELECT COUNT(*) as isBookmarked FROM bookmarks WHERE post_id = ? AND user_uid = ?',
-        [post.id, myUid]
-      );
-      post.like_count = likeCount;
-      post.is_liked = isLiked > 0;
-      post.is_bookmarked = isBookmarked > 0;
-
-      // Parse media_urls JSON
-      if (post.media_urls && typeof post.media_urls === 'string') {
-        post.media_urls = JSON.parse(post.media_urls);
-      }
-    }
-
+    await enrichPosts(posts, myUid, pool);
     res.json(posts);
   } catch (err) {
     console.error('Get posts error:', err);
@@ -135,6 +149,7 @@ router.get('/reposts', async (req, res) => {
   const params = cursor ? [user_uid, cursor, pageLimit] : [user_uid, pageLimit];
 
   const [posts] = await pool.query(query, params);
+  await enrichPosts(posts, req.uid, pool);
   res.json(posts);
 });
 
@@ -159,21 +174,7 @@ router.get('/:id', async (req, res) => {
       post.media_urls = JSON.parse(post.media_urls);
     }
 
-    const [[{ likeCount }]] = await pool.execute(
-      'SELECT COUNT(*) as likeCount FROM post_likes WHERE post_id = ?', [post.id]
-    );
-    const [[{ isLiked }]] = await pool.execute(
-      'SELECT COUNT(*) as isLiked FROM post_likes WHERE post_id = ? AND user_uid = ?',
-      [post.id, req.uid]
-    );
-    const [[{ isBookmarked }]] = await pool.execute(
-      'SELECT COUNT(*) as isBookmarked FROM bookmarks WHERE post_id = ? AND user_uid = ?',
-      [post.id, req.uid]
-    );
-
-    post.like_count = likeCount;
-    post.is_liked = isLiked > 0;
-    post.is_bookmarked = isBookmarked > 0;
+    await enrichPosts([post], req.uid, pool);
 
     // Get likes UIDs
     const [likeRows] = await pool.execute(
