@@ -122,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
 
       debugPrint('[LOGIN] Awaiting googleUser.authentication...');
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      debugPrint('[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}, accessToken: ${googleAuth.accessToken != null ? 'EXISTS' : 'NULL'}');
+      debugPrint('[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}');
       
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
