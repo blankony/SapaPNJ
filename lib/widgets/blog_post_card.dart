@@ -117,11 +117,14 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     _isVideoLoading = false;
 
     // Cek apakah ini Repost Wrapper
-    if (widget.postData['type'] == 'repost' && widget.postData['originalPostId'] != null) {
+    final origId = widget.postData['originalPostId'] ?? widget.postData['original_post_id'];
+    final isRepostType = widget.postData['type'] == 'repost' || widget.postData['is_repost'] == true || widget.postData['is_repost'] == 1 || origId != null;
+
+    if (isRepostType && origId != null) {
       _isRepostWrapper = true;
       _resolvedPostData = null; // Reset resolved data
       _originalError = '';
-      _fetchOriginalPost(widget.postData['originalPostId']);
+      _fetchOriginalPost(origId.toString());
     } else {
       _isRepostWrapper = false;
       _resolvedPostData = widget.postData;
@@ -301,7 +304,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     setState(() {
       _isReposted = !_isReposted;
-      if (_isReposted) { _repostCount++; } else { _repostCount--; }
+      if (_isReposted) { 
+        _repostCount++; 
+      } else { 
+        _repostCount = (_repostCount > 0) ? _repostCount - 1 : 0; 
+      }
     });
 
     try {
@@ -309,15 +316,16 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       if (_isReposted) {
         await api.createPost(
           isRepost: true,
-          originalPostId: targetId,
+          originalPostId: targetId.toString(),
           visibility: effectivePostData['visibility'] ?? 'public',
         );
       } else {
         // Find and delete the repost — the server handles repost_count decrement
         final reposts = await api.getReposts(currentUser.uid);
         for (final r in reposts) {
-          if (r['original_post_id'] == targetId) {
-            await api.deletePost(r['id']);
+          final origId = r['original_post_id'] ?? r['originalPostId'];
+          if (origId != null && origId.toString() == targetId.toString()) {
+            await api.deletePost(r['id'].toString());
             break;
           }
         }
@@ -443,6 +451,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
           mediaUrls = List<String>.from(effectivePostData['media_urls']);
         } else if (effectivePostData['mediaUrl'] != null) {
           mediaUrls = [effectivePostData['mediaUrl']];
+        } else if (effectivePostData['media_url'] != null) {
+          mediaUrls = [effectivePostData['media_url']];
         }
         
         for (String url in mediaUrls) {
@@ -801,6 +811,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       mediaUrls = List<String>.from(effectivePostData['media_urls']);
     } else if (effectivePostData['mediaUrl'] != null) {
       mediaUrls = [effectivePostData['mediaUrl']];
+    } else if (effectivePostData['media_url'] != null) {
+      mediaUrls = [effectivePostData['media_url']];
     }
 
     if (uploadFailed) {

@@ -94,7 +94,13 @@ class PostHeader extends StatelessWidget {
       );
     }
 
-    final String? profileImageUrl = postData['profile_image_url'] ?? postData['profileImageUrl'];
+    final String? profileImageUrl = postData['profile_image_url'] ?? 
+        postData['profileImageUrl'] ?? 
+        postData['user_image'] ?? 
+        postData['userImage'] ??
+        postData['user_image_url'] ??
+        postData['avatar_url'] ??
+        postData['avatarUrl'];
     final int iconId = postData['avatar_icon_id'] ?? postData['avatarIconId'] ?? 0;
     final String? colorHex = postData['avatar_hex'] ?? postData['avatarHex'];
     final Color avatarBgColor = AvatarHelper.getColor(colorHex);
