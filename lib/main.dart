@@ -22,6 +22,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await GoogleSignIn.instance.initialize(
+    clientId: '102926395042-6ffldicj48h5p1qcg1mt88a99sb8mcs7.apps.googleusercontent.com',
     serverClientId: '102926395042-t39hsvfi1bpj1ejnl6e2t1sv15dm51o0.apps.googleusercontent.com',
   );
 
