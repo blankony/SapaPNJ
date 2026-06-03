@@ -1127,8 +1127,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             slivers.add(SliverFillRemaining(child: Center(child: Text(t.translate('profile_no_reposts')))));
           } else {
             slivers.add(SliverList(delegate: SliverChildBuilderDelegate((context, index) {
-              final pData = allPosts[index];
+              final pData = Map<String, dynamic>.from(allPosts[index]);
               final pId = pData['id'] ?? '';
+              
+              // Prevent duplicate repost spam: If viewing own profile, force is_reposted = true
+              if (userId == FirebaseAuth.instance.currentUser?.uid) {
+                pData['is_reposted'] = true;
+              }
+
               return BlogPostCard(
                 key: ValueKey('repost_$pId'),
                 postId: pId,
