@@ -359,36 +359,44 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   void _toggleFollowOptimistic(bool isPrivate) {
     if (_user == null) return;
     var t = AppLocalizations.of(context)!;
+    
+    final myUid = _user.uid;
+    List<dynamic> currentFollowers = List<dynamic>.from(_userData['followers'] ?? []);
 
     if (_followDebounceTimer == null || !_followDebounceTimer!.isActive) {
-      _baselineIsFollowing = _userData['isFollowing'] == true;
+      _baselineIsFollowing = currentFollowers.contains(myUid);
       _baselineHasRequested = _userData['has_follow_request'] == true;
-      _baselineFollowerCount = _userData['followerCount'] ?? 0;
+      _baselineFollowerCount = _userData['follower_count'] ?? _userData['followerCount'] ?? currentFollowers.length;
     }
 
-    final currentOptimisticFollowing = _userData['isFollowing'] == true;
+    final currentOptimisticFollowing = currentFollowers.contains(myUid);
     final currentOptimisticRequested = _userData['has_follow_request'] == true;
-    final currentFollowerCount = _userData['followerCount'] ?? 0;
+    int currentFollowerCount = _userData['follower_count'] ?? _userData['followerCount'] ?? currentFollowers.length;
 
     setState(() {
       if (currentOptimisticFollowing) {
-        _userData['isFollowing'] = false;
-        _userData['followerCount'] = (currentFollowerCount > 0) ? currentFollowerCount - 1 : 0;
+        currentFollowers.remove(myUid);
+        _userData['followers'] = currentFollowers;
+        _userData['follower_count'] = (currentFollowerCount > 0) ? currentFollowerCount - 1 : 0;
+        _userData['followerCount'] = _userData['follower_count'];
       } else if (currentOptimisticRequested) {
         _userData['has_follow_request'] = false;
       } else {
         if (isPrivate) {
           _userData['has_follow_request'] = true;
         } else {
-          _userData['isFollowing'] = true;
-          _userData['followerCount'] = currentFollowerCount + 1;
+          currentFollowers.add(myUid);
+          _userData['followers'] = currentFollowers;
+          _userData['follower_count'] = currentFollowerCount + 1;
+          _userData['followerCount'] = _userData['follower_count'];
         }
       }
     });
 
     _followDebounceTimer?.cancel();
     _followDebounceTimer = Timer(const Duration(milliseconds: 1500), () async {
-      final finalOptimisticFollowing = _userData['isFollowing'] == true;
+      final finalFollowers = List<dynamic>.from(_userData['followers'] ?? []);
+      final finalOptimisticFollowing = finalFollowers.contains(myUid);
       final finalOptimisticRequested = _userData['has_follow_request'] == true;
 
       try {
@@ -405,8 +413,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       } catch (e) {
         if (mounted) {
           setState(() {
-            _userData['isFollowing'] = _baselineIsFollowing;
+            if (_baselineIsFollowing == true && !currentFollowers.contains(myUid)) {
+              currentFollowers.add(myUid);
+            } else if (_baselineIsFollowing == false && currentFollowers.contains(myUid)) {
+              currentFollowers.remove(myUid);
+            }
+            _userData['followers'] = currentFollowers;
             _userData['has_follow_request'] = _baselineHasRequested;
+            _userData['follower_count'] = _baselineFollowerCount;
             _userData['followerCount'] = _baselineFollowerCount;
           });
           OverlayService().showTopNotification(context, "${t.translate('profile_action_fail')}: Gagal mengubah status, periksa jaringan Anda.", Icons.wifi_off, (){}, color: Colors.red);
