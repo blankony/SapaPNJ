@@ -21,10 +21,6 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await GoogleSignIn.instance.initialize(
-    serverClientId: '102926395042-t39hsvfi1bpj1ejnl6e2t1sv15dm51o0.apps.googleusercontent.com',
-  );
-
   runApp(const MyApp());
 }
 

@@ -98,11 +98,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      debugPrint('[LOGIN] Getting GoogleSignIn.instance...');
-      final googleSignIn = GoogleSignIn.instance;
+      debugPrint('[LOGIN] Getting GoogleSignIn instance...');
+      final googleSignIn = GoogleSignIn();
 
-      debugPrint('[LOGIN] Calling googleSignIn.authenticate()...');
-      final GoogleSignInAccount? googleUser = await googleSignIn.authenticate();
+      debugPrint('[LOGIN] Calling googleSignIn.signIn()...');
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       debugPrint('[LOGIN] googleUser result: ${googleUser?.email}');
       if (googleUser == null) {
         debugPrint('[LOGIN] googleUser is null (user canceled or failed silently).');
@@ -121,8 +121,8 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       debugPrint('[LOGIN] Getting googleUser.authentication...');
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-      debugPrint('[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}');
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      debugPrint('[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}, accessToken: ${googleAuth.accessToken != null ? 'EXISTS' : 'NULL'}');
       
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,

@@ -163,8 +163,8 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _signUpWithGoogle() async {
     setState(() { _errorMessage = ''; _isLoading = true; });
     try {
-      final googleSignIn = GoogleSignIn.instance;
-      final GoogleSignInAccount? googleUser = await googleSignIn.authenticate();
+      final googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         setState(() => _isLoading = false);
         return;
@@ -176,7 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
         setState(() => _isLoading = false);
         return;
       }
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
