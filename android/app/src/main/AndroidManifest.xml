@@ -45,6 +45,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="com.google.android.gms.credentials.API_ENABLED"
+            android:value="false" />
     </application>
     <queries>
         <intent>
