@@ -145,6 +145,9 @@ class ApiService {
       headers: await _headers(),
     );
     if (resp.statusCode != 200) throw _error(resp);
+    _userCache.remove(targetUid);
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid != null) _userCache.remove(myUid);
     return jsonDecode(resp.body);
   }
 
@@ -154,7 +157,13 @@ class ApiService {
       Uri.parse('$_baseUrl/api/users/$targetUid/follow'),
       headers: await _headers(),
     );
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(targetUid);
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      if (myUid != null) _userCache.remove(myUid);
+      return true;
+    }
+    return false;
   }
 
   /// Accept a follow request.
@@ -165,7 +174,12 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode({'senderUid': senderUid}),
     );
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(senderUid);
+      _userCache.remove(myUid);
+      return true;
+    }
+    return false;
   }
 
   /// Decline a follow request.
@@ -176,7 +190,12 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode({'senderUid': senderUid}),
     );
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(senderUid);
+      _userCache.remove(myUid);
+      return true;
+    }
+    return false;
   }
 
   /// Remove a follower.
@@ -186,7 +205,12 @@ class ApiService {
       Uri.parse('$_baseUrl/api/users/$myUid/followers/$followerUid'),
       headers: await _headers(),
     );
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(followerUid);
+      _userCache.remove(myUid);
+      return true;
+    }
+    return false;
   }
 
   /// Send follow request (for private accounts).
@@ -195,7 +219,13 @@ class ApiService {
       Uri.parse('$_baseUrl/api/users/$targetUid/follow-request'),
       headers: await _headers(),
     );
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(targetUid);
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      if (myUid != null) _userCache.remove(myUid);
+      return true;
+    }
+    return false;
   }
 
   /// Cancel a pending follow request.
@@ -204,7 +234,13 @@ class ApiService {
       Uri.parse('$_baseUrl/api/users/$targetUid/follow-request'),
       headers: await _headers(),
     );
-    return resp.statusCode == 200;
+    if (resp.statusCode == 200) {
+      _userCache.remove(targetUid);
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      if (myUid != null) _userCache.remove(myUid);
+      return true;
+    }
+    return false;
   }
 
   /// Get comments made by a user (for profile replies tab).

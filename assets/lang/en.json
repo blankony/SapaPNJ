@@ -459,6 +459,7 @@
   "auth_show_password": "Show password",
   "auth_hide_password": "Hide password",
 
+  "follow_title": "Connections",
   "follow_title_me": "My Connections",
   "follow_tab_mutuals": "Mutuals",
   "follow_no_mutuals": "No mutual followers yet.",

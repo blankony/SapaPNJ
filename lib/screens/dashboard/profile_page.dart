@@ -188,9 +188,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     return entry;
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadUserData({bool forceRefresh = false}) async {
     try {
-      final data = await _apiService.getUser(_userId);
+      final data = await _apiService.getUser(_userId, forceRefresh: forceRefresh);
       if (mounted && data != null) {
         setState(() {
           _userData = data;
@@ -363,7 +363,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       } else {
         await _apiService.followUser(_userId);
       }
-      await _loadUserData();
+      await _loadUserData(forceRefresh: true);
     } catch (e) {
        if(mounted) OverlayService().showTopNotification(context, "${t.translate('profile_action_fail')}: $e", Icons.error, (){}, color: Colors.red);
     } finally {
@@ -383,7 +383,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       } else {
         await _apiService.unfollowUser(_userId);
       }
-      await _loadUserData();
+      await _loadUserData(forceRefresh: true);
     } catch (e) {
       if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red);
     } finally {
@@ -486,7 +486,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   Future<void> _handleRefresh() async {
     try { await _user?.reload(); } catch (_) {}
-    await _loadUserData();
+    await _loadUserData(forceRefresh: true);
   }
 
   @override
