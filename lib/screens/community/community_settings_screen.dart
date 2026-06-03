@@ -53,7 +53,10 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    _allowMemberPosts = widget.communityData['allowMemberPosts'] ?? widget.communityData['allow_member_posts'] ?? false;
+    _allowMemberPosts = widget.communityData['allowMemberPosts'] == true ||
+        widget.communityData['allowMemberPosts'] == 1 ||
+        widget.communityData['allow_member_posts'] == true ||
+        widget.communityData['allow_member_posts'] == 1;
     _nameController = TextEditingController(text: widget.communityData['name'] ?? '');
     _descController = TextEditingController(text: widget.communityData['description'] ?? '');
 

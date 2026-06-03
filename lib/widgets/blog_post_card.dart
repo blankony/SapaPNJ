@@ -367,7 +367,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     if (currentVis == 'private') {
       final userData = await ApiService().getUser(user.uid);
-      final bool isPrivateAccount = userData?['is_private'] == true;
+      final bool isPrivateAccount = userData?['is_private'] == true || userData?['is_private'] == 1 || userData?['isPrivate'] == true || userData?['isPrivate'] == 1;
       newVis = isPrivateAccount ? 'followers' : 'public';
     } else {
       newVis = 'private';

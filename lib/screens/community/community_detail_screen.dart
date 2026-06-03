@@ -236,7 +236,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     final String name = data['name'] ?? 'Channel';
     final String? bannerUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
     final String? avatarUrl = data['image_url'] ?? data['imageUrl'];
-    final bool isVerified = data['is_verified'] ?? data['isVerified'] ?? false;
+    final bool isVerified = data['is_verified'] == true || data['is_verified'] == 1 || data['isVerified'] == true || data['isVerified'] == 1;
 
     return Scaffold(
       body: NestedScrollView(

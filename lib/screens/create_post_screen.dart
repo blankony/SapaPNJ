@@ -210,7 +210,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           _myAvatarIconId = data['avatar_icon_id'] ?? 0;
           _myAvatarHex = data['avatar_hex'] ?? '';
           _myAvatarUrl = data['profile_image_url'];
-          _isAccountPrivate = data['is_private'] == true;
+          _isAccountPrivate = data['is_private'] == true || data['is_private'] == 1 || data['isPrivate'] == true || data['isPrivate'] == 1;
         });
       }
     } catch (_) {}
@@ -221,8 +221,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       try {
         final data = await api.getCommunity(_communityId!);
         if (data != null) {
-          _communityVerified = data['is_verified'] == true;
-          final bool allowMembers = data['allow_member_posts'] == true;
+          _communityVerified = data['is_verified'] == true || data['is_verified'] == 1 || data['isVerified'] == true || data['isVerified'] == 1;
+          final bool allowMembers = data['allow_member_posts'] == true || data['allow_member_posts'] == 1 || data['allowMemberPosts'] == true || data['allowMemberPosts'] == 1;
           final String ownerId = data['owner_uid'] ?? '';
           final List admins = data['admins'] ?? [];
           final List editors = data['editors'] ?? [];
