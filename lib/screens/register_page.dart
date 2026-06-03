@@ -176,7 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
         setState(() => _isLoading = false);
         return;
       }
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
