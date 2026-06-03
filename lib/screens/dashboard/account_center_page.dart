@@ -75,8 +75,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
   Future<void> _bindGoogleAccount() async {
     var t = AppLocalizations.of(context)!;
     try {
-      final googleSignIn = GoogleSignIn.instance;
-      final GoogleSignInAccount? googleUser = await googleSignIn.authenticate();
+      final googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) return;
       
       final String email = googleUser.email;
