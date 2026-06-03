@@ -87,38 +87,55 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _signInWithGoogle() async {
-    if (_isLoading) return;
+    debugPrint('[LOGIN] _signInWithGoogle triggered.');
+    if (_isLoading) {
+      debugPrint('[LOGIN] Already loading, returning.');
+      return;
+    }
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
     try {
+      debugPrint('[LOGIN] Getting GoogleSignIn.instance...');
       final googleSignIn = GoogleSignIn.instance;
 
+      debugPrint('[LOGIN] Calling googleSignIn.authenticate()...');
       final GoogleSignInAccount? googleUser = await googleSignIn.authenticate();
+      debugPrint('[LOGIN] googleUser result: ${googleUser?.email}');
       if (googleUser == null) {
+        debugPrint('[LOGIN] googleUser is null (user canceled or failed silently).');
         setState(() => _isLoading = false);
         return;
       }
 
       final String email = googleUser.email;
+      debugPrint('[LOGIN] Extracted email: $email');
       if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
+        debugPrint('[LOGIN] Email not from PNJ, signing out...');
         await googleSignIn.signOut();
         setState(() => _errorMessage = 'Access Denied: Must use a valid PNJ email');
         setState(() => _isLoading = false);
         return;
       }
 
+      debugPrint('[LOGIN] Awaiting googleUser.authentication...');
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      debugPrint('[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}, accessToken: ${googleAuth.accessToken != null ? 'EXISTS' : 'NULL'}');
+      
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
+      debugPrint('[LOGIN] Created GoogleAuthProvider credential.');
 
       UserCredential userCredential;
       try {
+        debugPrint('[LOGIN] Calling FirebaseAuth signInWithCredential...');
         userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        debugPrint('[LOGIN] signInWithCredential success! UID: ${userCredential.user?.uid}');
       } on FirebaseAuthException catch (e) {
+        debugPrint('[LOGIN] FirebaseAuthException caught: ${e.code} | Message: ${e.message}');
         if (e.code == 'account-exists-with-different-credential') {
           final String? existingEmail = e.email;
           if (existingEmail == null) {
@@ -137,6 +154,7 @@ class _LoginPageState extends State<LoginPage> {
           final AuthCredential emailCred = EmailAuthProvider.credential(email: existingEmail, password: password);
           final UserCredential existingUser = await FirebaseAuth.instance.signInWithCredential(emailCred);
           userCredential = await existingUser.user!.linkWithCredential(credential);
+          debugPrint('[LOGIN] Linked credential successfully.');
         } else {
           rethrow;
         }
@@ -155,7 +173,8 @@ class _LoginPageState extends State<LoginPage> {
       if (context.mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[LOGIN] Exception caught in _signInWithGoogle: $e\n$stackTrace');
       setState(() => _errorMessage = 'Google Sign-In Error: $e');
       setState(() => _isLoading = false);
     }
