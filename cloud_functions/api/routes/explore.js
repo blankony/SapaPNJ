@@ -127,6 +127,7 @@ router.get('/discover', async (req, res) => {
       FROM posts p
       JOIN users u ON p.user_uid = u.uid
       WHERE p.user_uid != ? 
+        AND p.is_repost = FALSE
         AND p.user_uid NOT IN (SELECT following_uid FROM follows WHERE follower_uid = ?)
       ORDER BY score DESC LIMIT 50;
     `;
@@ -172,7 +173,7 @@ router.get('/recommended', async (req, res) => {
       FROM posts p
       JOIN users u ON p.user_uid = u.uid
       LEFT JOIN follows f ON f.following_uid = p.user_uid AND f.follower_uid = ?
-      WHERE p.user_uid != ?
+      WHERE p.user_uid != ? AND p.is_repost = FALSE
       ORDER BY score DESC LIMIT 50;
     `;
     const [rows] = await pool.execute(query, [interestRegex, req.uid, req.uid]);

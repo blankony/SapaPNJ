@@ -11,6 +11,38 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
+  static final Set<String> myRepostedPostIds = {};
+  static bool repostsLoaded = false;
+  static String? _cachedUserUid;
+
+  Future<void> loadMyReposts() async {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid == null) {
+      myRepostedPostIds.clear();
+      repostsLoaded = false;
+      _cachedUserUid = null;
+      return;
+    }
+
+    if (_cachedUserUid != myUid) {
+      myRepostedPostIds.clear();
+      repostsLoaded = false;
+      _cachedUserUid = myUid;
+    }
+
+    try {
+      final reposts = await getReposts(myUid);
+      myRepostedPostIds.clear();
+      for (var r in reposts) {
+        final origId = r['original_post_id'] ?? r['originalPostId'];
+        if (origId != null) {
+          myRepostedPostIds.add(origId.toString());
+        }
+      }
+      repostsLoaded = true;
+    } catch (_) {}
+  }
+
   String get _baseUrl => (dotenv.env['API_BASE_URL']?.isNotEmpty == true)
       ? dotenv.env['API_BASE_URL']!
       : 'https://sapapnjapi-173197562227.asia-southeast2.run.app';
@@ -286,6 +318,9 @@ class ApiService {
     String? userUid,
     String? query,
   }) async {
+    if (!repostsLoaded) {
+      loadMyReposts();
+    }
     final params = <String, String>{
       'limit': limit.toString(),
       if (cursor != null) 'cursor': cursor,

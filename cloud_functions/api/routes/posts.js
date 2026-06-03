@@ -60,6 +60,7 @@ router.get('/', async (req, res) => {
         JOIN users u ON p.user_uid = u.uid
         LEFT JOIN communities c ON p.community_id = c.id
         WHERE (p.visibility = 'public' OR p.user_uid = ?)
+          AND p.is_repost = FALSE
           AND p.text LIKE ?
         ${cursor ? 'AND p.created_at < ?' : ''}
         ORDER BY p.created_at DESC
@@ -74,7 +75,7 @@ router.get('/', async (req, res) => {
         FROM posts p
         JOIN users u ON p.user_uid = u.uid
         LEFT JOIN communities c ON p.community_id = c.id
-        WHERE p.community_id = ?
+        WHERE p.community_id = ? AND p.is_repost = FALSE
         ${cursor ? 'AND p.created_at < ?' : ''}
         ORDER BY p.created_at DESC
         LIMIT ?`;
@@ -102,7 +103,7 @@ router.get('/', async (req, res) => {
         FROM posts p
         JOIN users u ON p.user_uid = u.uid
         LEFT JOIN communities c ON p.community_id = c.id
-        WHERE p.community_id IS NULL
+        WHERE p.community_id IS NULL AND p.is_repost = FALSE
           AND (
             p.visibility = 'public'
             OR (p.visibility = 'followers' AND (p.user_uid = ? OR EXISTS(
