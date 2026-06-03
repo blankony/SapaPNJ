@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import '../../services/app_cache_manager.dart';
 
@@ -56,7 +57,11 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   bool _isBlocked = false;
   String? _optimisticPinnedPostId;
 
-  bool _isProcessingFollow = false;
+  // Optimistic UI and Debounce State
+  Timer? _followDebounceTimer;
+  bool? _baselineIsFollowing;
+  bool? _baselineHasRequested;
+  int? _baselineFollowerCount;
 
   // Loaded data
   Map<String, dynamic> _userData = {};
@@ -351,44 +356,63 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     );
   }
 
-  Future<void> _followUser(bool isPrivate) async {
-    if (_user == null || _isProcessingFollow) return;
-    setState(() => _isProcessingFollow = true);
+  void _toggleFollowOptimistic(bool isPrivate) {
+    if (_user == null) return;
     var t = AppLocalizations.of(context)!;
 
-    try {
-      if (isPrivate) {
-        await _apiService.sendFollowRequest(_userId);
-        if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_sent'), Icons.send, (){}, color: Colors.blue);
-      } else {
-        await _apiService.followUser(_userId);
-      }
-      await _loadUserData(forceRefresh: true);
-    } catch (e) {
-       if(mounted) OverlayService().showTopNotification(context, "${t.translate('profile_action_fail')}: $e", Icons.error, (){}, color: Colors.red);
-    } finally {
-      if(mounted) setState(() => _isProcessingFollow = false);
+    if (_followDebounceTimer == null || !_followDebounceTimer!.isActive) {
+      _baselineIsFollowing = _userData['isFollowing'] == true;
+      _baselineHasRequested = _userData['has_follow_request'] == true;
+      _baselineFollowerCount = _userData['followerCount'] ?? 0;
     }
-  }
 
-  Future<void> _unfollowUser(bool isRequestOnly) async {
-    if (_user == null || _isProcessingFollow) return;
-    setState(() => _isProcessingFollow = true);
-    var t = AppLocalizations.of(context)!;
+    final currentOptimisticFollowing = _userData['isFollowing'] == true;
+    final currentOptimisticRequested = _userData['has_follow_request'] == true;
+    final currentFollowerCount = _userData['followerCount'] ?? 0;
 
-    try {
-      if (isRequestOnly) {
-        await _apiService.cancelFollowRequest(_userId);
-        if(mounted) OverlayService().showTopNotification(context, t.translate('profile_req_cancel'), Icons.close, (){});
+    setState(() {
+      if (currentOptimisticFollowing) {
+        _userData['isFollowing'] = false;
+        _userData['followerCount'] = (currentFollowerCount > 0) ? currentFollowerCount - 1 : 0;
+      } else if (currentOptimisticRequested) {
+        _userData['has_follow_request'] = false;
       } else {
-        await _apiService.unfollowUser(_userId);
+        if (isPrivate) {
+          _userData['has_follow_request'] = true;
+        } else {
+          _userData['isFollowing'] = true;
+          _userData['followerCount'] = currentFollowerCount + 1;
+        }
       }
-      await _loadUserData(forceRefresh: true);
-    } catch (e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red);
-    } finally {
-      if(mounted) setState(() => _isProcessingFollow = false);
-    }
+    });
+
+    _followDebounceTimer?.cancel();
+    _followDebounceTimer = Timer(const Duration(milliseconds: 1500), () async {
+      final finalOptimisticFollowing = _userData['isFollowing'] == true;
+      final finalOptimisticRequested = _userData['has_follow_request'] == true;
+
+      try {
+        if (finalOptimisticFollowing && _baselineIsFollowing == false) {
+           await _apiService.followUser(_userId);
+        } else if (!finalOptimisticFollowing && _baselineIsFollowing == true) {
+           await _apiService.unfollowUser(_userId);
+        } else if (finalOptimisticRequested && _baselineHasRequested == false) {
+           await _apiService.sendFollowRequest(_userId);
+        } else if (!finalOptimisticRequested && _baselineHasRequested == true) {
+           await _apiService.cancelFollowRequest(_userId);
+        }
+        await _loadUserData(forceRefresh: true);
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _userData['isFollowing'] = _baselineIsFollowing;
+            _userData['has_follow_request'] = _baselineHasRequested;
+            _userData['followerCount'] = _baselineFollowerCount;
+          });
+          OverlayService().showTopNotification(context, "${t.translate('profile_action_fail')}: Gagal mengubah status, periksa jaringan Anda.", Icons.wifi_off, (){}, color: Colors.red);
+        }
+      }
+    });
   }
 
   void _shareProfile(String name) {
@@ -726,14 +750,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     var t = AppLocalizations.of(context)!;
     if (amIFollowing) {
       return OutlinedButton(
-        onPressed: _isProcessingFollow ? null : () => _unfollowUser(false),
+        onPressed: () => _toggleFollowOptimistic(isPrivate),
         child: Text(t.translate('profile_unfollow'))
       );
     }
 
     if (!isPrivate) {
       return ElevatedButton(
-        onPressed: _isProcessingFollow ? null : () => _followUser(false),
+        onPressed: () => _toggleFollowOptimistic(false),
         style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
         child: Text(t.translate('community_follow')),
       );
@@ -743,7 +767,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final bool hasRequested = _userData['has_follow_request'] == true;
     if (hasRequested) {
       return OutlinedButton(
-        onPressed: _isProcessingFollow ? null : () => _unfollowUser(true),
+        onPressed: () => _toggleFollowOptimistic(true),
         style: OutlinedButton.styleFrom(
           backgroundColor: Theme.of(context).cardColor,
           side: BorderSide(color: Theme.of(context).dividerColor),
@@ -753,7 +777,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     }
 
     return ElevatedButton(
-      onPressed: _isProcessingFollow ? null : () => _followUser(true),
+      onPressed: () => _toggleFollowOptimistic(true),
       style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
       child: Text(t.translate('community_follow')),
     );
