@@ -255,7 +255,18 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       setState(() {
         _isLiked = apiLiked || (currentUser != null && likesList.contains(currentUser.uid));
         _likeCount = apiLikeCount > 0 ? apiLikeCount : likesList.length;
+        
+        // Base isReposted on the resolved original post
         _isReposted = _resolvedPostData!['is_reposted'] == true || _resolvedPostData!['is_reposted'] == 1 || (currentUser != null && reposts.contains(currentUser.uid));
+        
+        // If it's a repost wrapper created by the current user, it must be their repost!
+        if (_isRepostWrapper) {
+          final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'];
+          if (currentUser != null && wrapperUserId == currentUser.uid) {
+            _isReposted = true;
+          }
+        }
+        
         _repostCount = _resolvedPostData!['repost_count'] ?? reposts.length;
         _isBookmarked = apiBookmarked;
       });
@@ -293,6 +304,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
   }
 
+  bool _isDeleted = false; // Add to state variables if not exist
+
   void _toggleRepost() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -301,6 +314,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
     final targetId = effectivePostId;
+    final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'];
+    final isMyOwnWrapper = _isRepostWrapper && currentUser.uid == wrapperUserId;
 
     setState(() {
       _isReposted = !_isReposted;
@@ -308,6 +323,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         _repostCount++; 
       } else { 
         _repostCount = (_repostCount > 0) ? _repostCount - 1 : 0; 
+        if (isMyOwnWrapper) {
+          _isDeleted = true; // Instantly hide from Reposts tab
+        }
       }
     });
 
@@ -338,6 +356,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       debugPrint("Repost Error: $e");
       _syncState();
       if (mounted) {
+         setState(() {
+           _isDeleted = false; // Revert hide if api fails
+         });
          OverlayService().showTopNotification(context, "Failed to update repost", Icons.error, () {}, color: Colors.red);
       }
     }
@@ -765,6 +786,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    
+    if (_isDeleted) {
+      return const SizedBox.shrink();
+    }
+    
     final theme = Theme.of(context);
 
     if (_isRepostWrapper) {
