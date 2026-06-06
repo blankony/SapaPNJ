@@ -398,361 +398,352 @@ class _RegisterPageState extends State<RegisterPage> {
 
     var t = AppLocalizations.of(context)!;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: isDarkMode
-            ? Brightness.light
-            : Brightness.dark,
-        statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(color: theme.primaryColor),
       ),
-      child: Scaffold(
-        body: Stack(
-          children: [
-            // --- BACKGROUND BLOBS ---
-            const Positioned.fill(child: DecorativeBackground()),
+      body: Stack(
+        children: [
+          // --- BACKGROUND BLOBS ---
+          const Positioned.fill(child: DecorativeBackground()),
 
-            // --- CONTENT ---
-            TweenAnimationBuilder(
-              tween: Tween<double>(begin: 1.0, end: 0.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOutQuart,
-              builder: (context, double value, child) {
-                return Transform.translate(
-                  offset: Offset(0, value * 200),
-                  child: Opacity(opacity: 1 - value, child: child),
-                );
-              },
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 16.0,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Rebranding Header
-                        Row(
-                          children: [
-                            Text(
-                              "SAPA",
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: SisapaTheme.blue,
-                                letterSpacing: -1.0,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              "PNJ",
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 40),
-
-                        Text(
-                          t.translate(
-                            'auth_create_title',
-                          ), // "Create your account"
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 32),
-
-                        // NAME
-                        TextFormField(
-                          controller: _namaController,
-                          decoration: InputDecoration(
-                            labelText: t.translate('auth_name'),
-                          ), // "Name"
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) =>
-                              FocusScope.of(context).requestFocus(_nimFocus),
-                          validator: _validateName,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                        ),
-                        SizedBox(height: 16),
-
-                        // NIM / NIP
-                        TextFormField(
-                          controller: _nimController,
-                          focusNode: _nimFocus,
-                          decoration: InputDecoration(
-                            labelText: t.translate('auth_nim'),
-                          ), // "NIM/NIP"
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) =>
-                              FocusScope.of(context).requestFocus(_emailFocus),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(
-                              18,
-                            ), // Supports NIP (18 chars)
-                          ],
-                          validator: _validateIDNumber,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                        ),
-                        SizedBox(height: 16),
-
-                        // EMAIL
-                        TextFormField(
-                          controller: _emailController,
-                          focusNode: _emailFocus,
-                          decoration: InputDecoration(
-                            labelText: t.translate('auth_email_hint'),
-                          ), // "Enter PNJ email..."
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) => FocusScope.of(
-                            context,
-                          ).requestFocus(_passwordFocus),
-                          validator: _validateEmail,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                        ),
-                        SizedBox(height: 16),
-
-                        // PASSWORD
-                        TextFormField(
-                          controller: _passwordController,
-                          focusNode: _passwordFocus,
-                          obscureText: _isPasswordObscured,
-                          decoration: InputDecoration(
-                            labelText: t.translate(
-                              'auth_pass_hint',
-                            ), // "Enter password"
-                            suffixIcon: Tooltip(
-                              message: _isPasswordObscured
-                                  ? t.translate('auth_show_password')
-                                  : t.translate('auth_hide_password'),
-                              child: IconButton(
-                                icon: Icon(
-                                  _isPasswordObscured
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordObscured = !_isPasswordObscured;
-                                  });
-                                },
-                              ),
+          // --- CONTENT ---
+          TweenAnimationBuilder(
+            tween: Tween<double>(begin: 1.0, end: 0.0),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutQuart,
+            builder: (context, double value, child) {
+              return Transform.translate(
+                offset: Offset(0, value * 200),
+                child: Opacity(opacity: 1 - value, child: child),
+              );
+            },
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Rebranding Header
+                      Row(
+                        children: [
+                          Text(
+                            "SAPA",
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: SisapaTheme.blue,
+                              letterSpacing: -1.0,
                             ),
                           ),
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) => FocusScope.of(
-                            context,
-                          ).requestFocus(_confirmPasswordFocus),
-                          validator: _validatePassword,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                        ),
-                        SizedBox(height: 16),
-
-                        // CONFIRM PASSWORD
-                        TextFormField(
-                          controller: _confirmPasswordController,
-                          focusNode: _confirmPasswordFocus,
-                          obscureText: _isConfirmPasswordObscured,
-                          decoration: InputDecoration(
-                            labelText: t.translate(
-                              'auth_confirm_pass_hint',
-                            ), // "Confirm password"
-                            suffixIcon: Tooltip(
-                              message: _isConfirmPasswordObscured
-                                  ? t.translate('auth_show_password')
-                                  : t.translate('auth_hide_password'),
-                              child: IconButton(
-                                icon: Icon(
-                                  _isConfirmPasswordObscured
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isConfirmPasswordObscured =
-                                        !_isConfirmPasswordObscured;
-                                  });
-                                },
-                              ),
+                          SizedBox(width: 8),
+                          Text(
+                            "PNJ",
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.0,
                             ),
                           ),
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _signUp(),
-                          validator: _validateConfirmPassword,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                        ],
+                      ),
+                      SizedBox(height: 40),
+
+                      Text(
+                        t.translate(
+                          'auth_create_title',
+                        ), // "Create your account"
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        SizedBox(height: 24),
+                      ),
+                      SizedBox(height: 32),
 
-                        // --- TERMS AND CONDITIONS CHECKBOX ---
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: Checkbox(
-                                value: _isAgreed,
-                                activeColor: SisapaTheme.blue,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isAgreed = value ?? false;
-                                    if (_isAgreed)
-                                      _errorMessage =
-                                          ''; // Clear error if checked
-                                  });
-                                },
+                      // NAME
+                      TextFormField(
+                        controller: _namaController,
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_name'),
+                        ), // "Name"
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_nimFocus),
+                        validator: _validateName,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      SizedBox(height: 16),
+
+                      // NIM / NIP
+                      TextFormField(
+                        controller: _nimController,
+                        focusNode: _nimFocus,
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_nim'),
+                        ), // "NIM/NIP"
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_emailFocus),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(
+                            18,
+                          ), // Supports NIP (18 chars)
+                        ],
+                        validator: _validateIDNumber,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      SizedBox(height: 16),
+
+                      // EMAIL
+                      TextFormField(
+                        controller: _emailController,
+                        focusNode: _emailFocus,
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_email_hint'),
+                        ), // "Enter PNJ email..."
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_passwordFocus),
+                        validator: _validateEmail,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      SizedBox(height: 16),
+
+                      // PASSWORD
+                      TextFormField(
+                        controller: _passwordController,
+                        focusNode: _passwordFocus,
+                        obscureText: _isPasswordObscured,
+                        decoration: InputDecoration(
+                          labelText: t.translate(
+                            'auth_pass_hint',
+                          ), // "Enter password"
+                          suffixIcon: Tooltip(
+                            message: _isPasswordObscured
+                                ? t.translate('auth_show_password')
+                                : t.translate('auth_hide_password'),
+                            child: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: RichText(
-                                text: TextSpan(
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    height: 1.4,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: t.translate(
-                                        'auth_agree_start',
-                                      ), // "I agree to "
-                                      style: TextStyle(
-                                        color:
-                                            theme.textTheme.bodyMedium?.color,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: t.translate(
-                                        'auth_agree_terms',
-                                      ), // "Terms and Conditions"
-                                      style: TextStyle(
-                                        color: SisapaTheme.blue,
-                                        fontWeight: FontWeight.bold,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = _openTermsAndConditions,
-                                    ),
-                                    TextSpan(
-                                      text: t.translate(
-                                        'auth_agree_end',
-                                      ), // " and privacy policy"
-                                      style: TextStyle(
-                                        color:
-                                            theme.textTheme.bodyMedium?.color,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 24),
-
-                        if (_errorMessage.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Center(
-                              child: Text(
-                                _errorMessage,
-                                style: const TextStyle(color: Colors.red),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _signUp,
-                            child: _isLoading
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(t.translate('auth_signup')), // "Sign up"
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: SisapaTheme.blue,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 16),
-
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            icon: FaIcon(FontAwesomeIcons.google, size: 20),
-                            label: Text("Sign up with Google (@pnj.ac.id)"),
-                            onPressed: _isLoading ? null : _signUpWithGoogle,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: theme.colorScheme.onSurface,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 24),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              t.translate('auth_have_account') + " ",
-                              style: TextStyle(color: theme.hintColor),
-                            ), // "Have an account? "
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.of(context).pushReplacement(
-                                  _createSlideUpRoute(LoginPage()),
-                                );
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordObscured = !_isPasswordObscured;
+                                });
                               },
-                              child: Text(
-                                t.translate('auth_login'), // "Log in"
-                                style: TextStyle(
-                                  color: SisapaTheme.blue,
-                                  fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) => FocusScope.of(
+                          context,
+                        ).requestFocus(_confirmPasswordFocus),
+                        validator: _validatePassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      SizedBox(height: 16),
+
+                      // CONFIRM PASSWORD
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        focusNode: _confirmPasswordFocus,
+                        obscureText: _isConfirmPasswordObscured,
+                        decoration: InputDecoration(
+                          labelText: t.translate(
+                            'auth_confirm_pass_hint',
+                          ), // "Confirm password"
+                          suffixIcon: Tooltip(
+                            message: _isConfirmPasswordObscured
+                                ? t.translate('auth_show_password')
+                                : t.translate('auth_hide_password'),
+                            child: IconButton(
+                              icon: Icon(
+                                _isConfirmPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isConfirmPasswordObscured =
+                                      !_isConfirmPasswordObscured;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _signUp(),
+                        validator: _validateConfirmPassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      SizedBox(height: 24),
+
+                      // --- TERMS AND CONDITIONS CHECKBOX ---
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Checkbox(
+                              value: _isAgreed,
+                              activeColor: SisapaTheme.blue,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  _isAgreed = value ?? false;
+                                  if (_isAgreed)
+                                    _errorMessage =
+                                        ''; // Clear error if checked
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  height: 1.4,
                                 ),
+                                children: [
+                                  TextSpan(
+                                    text: t.translate(
+                                      'auth_agree_start',
+                                    ), // "I agree to "
+                                    style: TextStyle(
+                                      color: theme.textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: t.translate(
+                                      'auth_agree_terms',
+                                    ), // "Terms and Conditions"
+                                    style: TextStyle(
+                                      color: SisapaTheme.blue,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = _openTermsAndConditions,
+                                  ),
+                                  TextSpan(
+                                    text: t.translate(
+                                      'auth_agree_end',
+                                    ), // " and privacy policy"
+                                    style: TextStyle(
+                                      color: theme.textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 24),
+
+                      if (_errorMessage.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Center(
+                            child: Text(
+                              _errorMessage,
+                              style: const TextStyle(color: Colors.red),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                        SizedBox(height: 24),
-                      ],
-                    ),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _signUp,
+                          child: _isLoading
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(t.translate('auth_signup')), // "Sign up"
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: SisapaTheme.blue,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 16),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          icon: FaIcon(FontAwesomeIcons.google, size: 20),
+                          label: Text("Sign up with Google (@pnj.ac.id)"),
+                          onPressed: _isLoading ? null : _signUpWithGoogle,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: theme.colorScheme.onSurface,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            t.translate('auth_have_account') + " ",
+                            style: TextStyle(color: theme.hintColor),
+                          ), // "Have an account? "
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).pushReplacement(
+                                _createSlideUpRoute(LoginPage()),
+                              );
+                            },
+                            child: Text(
+                              t.translate('auth_login'), // "Log in"
+                              style: TextStyle(
+                                color: SisapaTheme.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ),
             ),
-            SafeArea(
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: BackButton(color: theme.primaryColor),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
