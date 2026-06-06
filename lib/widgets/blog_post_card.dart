@@ -163,7 +163,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
   }
 
-  String get effectivePostId => _isRepostWrapper ? (widget.postData['originalPostId'] ?? widget.postId) : widget.postId;
+  String get effectivePostId => _isRepostWrapper ? (widget.postData['originalPostId'] ?? widget.postData['original_post_id'] ?? widget.postId).toString() : widget.postId;
   Map<String, dynamic> get effectivePostData => _resolvedPostData ?? {};
 
   bool get effectiveIsOwner {
@@ -344,7 +344,6 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
           final origId = r['original_post_id'] ?? r['originalPostId'];
           if (origId != null && origId.toString() == targetId.toString()) {
             await api.deletePost(r['id'].toString());
-            break;
           }
         }
       }
