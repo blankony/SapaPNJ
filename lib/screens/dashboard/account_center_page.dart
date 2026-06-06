@@ -11,6 +11,7 @@ import '../../auth_gate.dart';
 import '../../services/overlay_service.dart';
 import '../ktm_verification_screen.dart';
 import '../../services/app_localizations.dart';
+import '../../widgets/frosted_glass.dart';
 
 class AccountCenterPage extends StatefulWidget {
   const AccountCenterPage({super.key});
@@ -287,7 +288,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
     return Stack(
       children: [
         Scaffold(
-          appBar: AppBar(
+          appBar: FrostedAppBar(
             title: Text(t.translate('settings_account')),
           ),
           body: ListView(

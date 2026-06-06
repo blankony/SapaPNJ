@@ -8,6 +8,7 @@ import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'services/app_localizations.dart';
 import 'theme/app_theme.dart';
+import 'widgets/frosted_glass.dart';
 
 // Notifiers Global
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
@@ -111,6 +112,14 @@ class _MyAppState extends State<MyApp> {
                   }
                 }
                 return supportedLocales.first;
+              },
+              builder: (context, child) {
+                return Stack(
+                  children: [
+                    const GlobalBackground(),
+                    if (child != null) child,
+                  ],
+                );
               },
               home: const SplashScreen(),
               debugShowCheckedModeBanner: false,

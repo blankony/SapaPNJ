@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/gcs_service.dart';
 import '../services/overlay_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/frosted_glass.dart';
 
 class KtmVerificationScreen extends StatefulWidget {
   const KtmVerificationScreen({super.key});
@@ -66,7 +67,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Get Verified Badge")),
+      appBar: FrostedAppBar(title: const Text("Get Verified Badge")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(

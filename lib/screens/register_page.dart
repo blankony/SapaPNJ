@@ -14,6 +14,7 @@ import 'setup/setup_profile_screen.dart';
 import 'user_info_screen.dart';
 import '../services/app_localizations.dart'; // REQUIRED IMPORT
 import '../widgets/decorative_background.dart';
+import '../widgets/frosted_glass.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -345,7 +346,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.primaryColor),

@@ -27,6 +27,7 @@ import '../../services/ai_event_bus.dart';
 
 import '../../services/draft_service.dart';
 import '../post_detail_screen.dart';
+import '../../widgets/frosted_glass.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -517,7 +518,7 @@ class _HomeDashboardState extends State<HomeDashboard>
   PreferredSizeWidget? _buildAppBar(bool isDarkMode) {
     if (_currentTabIndex == 4) return null; // No AppBar on Profile
 
-    return AppBar(
+    return FrostedAppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle(
@@ -569,7 +570,7 @@ class _HomeDashboardState extends State<HomeDashboard>
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
-      child: FloatingActionButton(
+      child: FrostedFAB(
         onPressed: _handleFabTap,
         backgroundColor: SisapaTheme.blue,
         elevation: 4,

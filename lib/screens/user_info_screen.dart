@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../auth_gate.dart';
 import '../services/overlay_service.dart';
 import 'setup/setup_profile_screen.dart';
+import '../widgets/frosted_glass.dart';
 
 class UserInfoScreen extends StatefulWidget {
   final bool isSetupWizard;
@@ -134,7 +135,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Complete Your Profile')),
+      appBar: FrostedAppBar(title: const Text('Complete Your Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

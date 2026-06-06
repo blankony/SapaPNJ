@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/draft_service.dart';
 import 'create_post_screen.dart';
+import '../widgets/frosted_glass.dart';
 
 class DraftsScreen extends StatefulWidget {
   const DraftsScreen({super.key});
@@ -112,7 +113,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: const Text('Draft Posts'),
         elevation: 0,
       ),
@@ -216,7 +217,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
     final DateTime date = DateTime.fromMillisecondsSinceEpoch(draft.timestamp);
     final String dateStr = DateFormat('dd/MM/yyyy HH:mm').format(date);
 
-    return Card(
+    return FrostedCard(
       elevation: 2,
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

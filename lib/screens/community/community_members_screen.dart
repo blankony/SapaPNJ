@@ -8,6 +8,7 @@ import '../dashboard/profile_page.dart';
 import '../../services/overlay_service.dart';
 import '../../services/api_service.dart';
 import '../../services/app_localizations.dart';
+import '../../widgets/frosted_glass.dart';
 
 class CommunityMembersScreen extends StatefulWidget {
   final String communityId;
@@ -75,7 +76,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
+        appBar: FrostedAppBar(
           title: Text(t.translate('community_members')),
           centerTitle: true,
         ),
@@ -99,7 +100,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
     });
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(t.translate('community_members')),
         centerTitle: true,
         bottom: TabBar(

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../services/app_localizations.dart';
 import '../../widgets/decorative_background.dart';
+import '../../widgets/frosted_glass.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -30,7 +31,7 @@ class AboutPage extends StatelessWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(t('about_page_title')),
         backgroundColor: Colors.transparent,
         elevation: 0,

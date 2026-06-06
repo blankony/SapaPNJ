@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/moderation_service.dart';
 import '../../services/api_service.dart';
 import '../../theme/avatar_helper.dart';
+import '../widgets/frosted_glass.dart';
 
 class BlockedUsersPage extends StatelessWidget {
   const BlockedUsersPage({super.key});
@@ -12,7 +13,7 @@ class BlockedUsersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text("Blocked Accounts"),
       ),
       body: StreamBuilder<List<String>>(

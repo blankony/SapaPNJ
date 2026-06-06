@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../theme/app_theme.dart';
+import '../widgets/frosted_glass.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
@@ -64,7 +65,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

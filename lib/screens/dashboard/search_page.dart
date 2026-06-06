@@ -15,6 +15,7 @@ import '../../services/overlay_service.dart';
 import '../../services/voice_service.dart';
 import '../../services/api_service.dart';
 import '../../services/app_localizations.dart';
+import '../../widgets/frosted_glass.dart';
 
 class SearchPage extends StatefulWidget {
   final bool isSearching;
@@ -564,7 +565,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                           return Container(
                             width: 140,
                             margin: const EdgeInsets.all(4),
-                            child: Card(
+                            child: FrostedCard(
                               elevation: 2,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               child: InkWell(

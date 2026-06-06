@@ -10,6 +10,7 @@ import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/frosted_glass.dart';
 
 class CommunitySettingsScreen extends StatefulWidget {
   final String communityId;
@@ -279,7 +280,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text("Settings & Roles")),
+        appBar: FrostedAppBar(title: Text("Settings & Roles")),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -289,7 +290,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     final String bannerUrl = _communityData?['banner_image_url'] ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: Text("Settings & Roles")),
+      appBar: FrostedAppBar(title: Text("Settings & Roles")),
       body: Column(
         children: [
           SizedBox(

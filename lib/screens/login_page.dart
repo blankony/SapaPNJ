@@ -7,6 +7,7 @@ import 'register_page.dart';
 import '../theme/app_theme.dart';
 import '../../services/app_localizations.dart'; // Import Localization
 import '../widgets/decorative_background.dart';
+import '../widgets/frosted_glass.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -252,7 +253,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.primaryColor),

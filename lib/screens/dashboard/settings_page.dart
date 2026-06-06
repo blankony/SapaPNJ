@@ -10,6 +10,7 @@ import '../blocked_users_page.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart';
+import '../../widgets/frosted_glass.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -117,7 +118,7 @@ class SettingsPage extends StatelessWidget {
     var t = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(t.translate('settings_title')), // "Settings" / "Pengaturan"
       ),
       body: ListView(

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
+import 'frosted_glass.dart';
 
 class AiHistoryDrawer extends StatefulWidget {
   final Function(String sessionId) onChatSelected;
@@ -72,7 +73,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Drawer(
+    return FrostedDrawer(
       backgroundColor: theme.scaffoldBackgroundColor,
       child: Column(
         children: [
