@@ -256,8 +256,12 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         _isLiked = apiLiked || (currentUser != null && likesList.contains(currentUser.uid));
         _likeCount = apiLikeCount > 0 ? apiLikeCount : likesList.length;
         
-        // Base isReposted on the resolved original post
-        _isReposted = _resolvedPostData!['is_reposted'] == true || _resolvedPostData!['is_reposted'] == 1 || (currentUser != null && reposts.contains(currentUser.uid));
+        // Base isReposted on the resolved original post or local cache
+        if (ApiService.repostsLoaded && currentUser != null) {
+          _isReposted = ApiService.myRepostedPostIds.contains(effectivePostId.toString());
+        } else {
+          _isReposted = _resolvedPostData!['is_reposted'] == true || _resolvedPostData!['is_reposted'] == 1 || (currentUser != null && reposts.contains(currentUser.uid));
+        }
         
         // If it's a repost wrapper created by the current user, it must be their repost!
         if (_isRepostWrapper) {
@@ -268,6 +272,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         }
         
         _repostCount = _resolvedPostData!['repost_count'] ?? reposts.length;
+        if (_isReposted && _repostCount == 0) {
+          _repostCount = 1;
+        }
         _isBookmarked = apiBookmarked;
       });
     }
@@ -320,8 +327,10 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     setState(() {
       _isReposted = !_isReposted;
       if (_isReposted) { 
+        ApiService.myRepostedPostIds.add(targetId.toString());
         _repostCount++; 
       } else { 
+        ApiService.myRepostedPostIds.remove(targetId.toString());
         _repostCount = (_repostCount > 0) ? _repostCount - 1 : 0; 
         if (isMyOwnWrapper) {
           _isDeleted = true; // Instantly hide from Reposts tab
