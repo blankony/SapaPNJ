@@ -60,6 +60,8 @@ class _HomeDashboardState extends State<HomeDashboard>
   Timer? _notificationTimer;
   Map<String, dynamic>? _lastNotification;
 
+  bool _isScrolled = false;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -88,15 +90,19 @@ class _HomeDashboardState extends State<HomeDashboard>
     _homeScrollController.addListener(() {
       if (mounted) {
         PageStorage.of(context).writeState(
-            context, _homeScrollController.offset,
-            identifier: 'scroll_pos_0');
+          context,
+          _homeScrollController.offset,
+          identifier: 'scroll_pos_0',
+        );
       }
     });
     _recommendedScrollController.addListener(() {
       if (mounted) {
         PageStorage.of(context).writeState(
-            context, _recommendedScrollController.offset,
-            identifier: 'scroll_pos_1');
+          context,
+          _recommendedScrollController.offset,
+          identifier: 'scroll_pos_1',
+        );
       }
     });
   }
@@ -111,13 +117,13 @@ class _HomeDashboardState extends State<HomeDashboard>
       CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-          parent: _entranceController, curve: Curves.easeOutQuart),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0.0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
   }
 
   void _restoreState() {
@@ -126,8 +132,9 @@ class _HomeDashboardState extends State<HomeDashboard>
     bool restoredAnyState = false;
 
     // Restore Tab Index
-    final int? savedIndex = PageStorage.of(context)
-        .readState(context, identifier: 'home_tab_index') as int?;
+    final int? savedIndex =
+        PageStorage.of(context).readState(context, identifier: 'home_tab_index')
+            as int?;
     if (savedIndex != null) {
       _currentTabIndex = savedIndex;
       if (_pageController.hasClients) {
@@ -137,10 +144,12 @@ class _HomeDashboardState extends State<HomeDashboard>
     }
 
     // Restore Scroll Positions
-    final double? savedScroll0 = PageStorage.of(context)
-        .readState(context, identifier: 'scroll_pos_0') as double?;
-    final double? savedScroll1 = PageStorage.of(context)
-        .readState(context, identifier: 'scroll_pos_1') as double?;
+    final double? savedScroll0 =
+        PageStorage.of(context).readState(context, identifier: 'scroll_pos_0')
+            as double?;
+    final double? savedScroll1 =
+        PageStorage.of(context).readState(context, identifier: 'scroll_pos_1')
+            as double?;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (savedScroll0 != null && _homeScrollController.hasClients) {
@@ -193,7 +202,8 @@ class _HomeDashboardState extends State<HomeDashboard>
         final newest = notifs.first;
         final isUnread = newest['is_read'] == false || newest['is_read'] == 0;
         if (isUnread) {
-          if (_lastNotification == null || _lastNotification!['id'] != newest['id']) {
+          if (_lastNotification == null ||
+              _lastNotification!['id'] != newest['id']) {
             _lastNotification = newest;
             _handleNotification(newest);
           }
@@ -237,29 +247,28 @@ class _HomeDashboardState extends State<HomeDashboard>
         break;
     }
 
-    OverlayService().showTopNotification(
-      context,
-      message,
-      icon,
-      () {
-        ApiService().markNotificationRead(data['id']);
-        if (postId != null) {
-          Navigator.push(context,
-              _AnimatedRoute(page: PostDetailScreen(postId: postId)));
-        } else if (type == 'follow') {
-          _onTabSelected(4); // Go to profile
-        }
-      },
-    );
+    OverlayService().showTopNotification(context, message, icon, () {
+      ApiService().markNotificationRead(data['id']);
+      if (postId != null) {
+        Navigator.push(
+          context,
+          _AnimatedRoute(page: PostDetailScreen(postId: postId)),
+        );
+      } else if (type == 'follow') {
+        _onTabSelected(4); // Go to profile
+      }
+    });
   }
 
   // --- UI Actions ---
 
   void _scrollToTop() {
     if (_homeScrollController.hasClients) {
-      _homeScrollController.animateTo(0.0,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutQuart);
+      _homeScrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutQuart,
+      );
     }
   }
 
@@ -290,8 +299,9 @@ class _HomeDashboardState extends State<HomeDashboard>
 
     setState(() {
       _currentTabIndex = index;
-      PageStorage.of(context).writeState(context, _currentTabIndex,
-          identifier: 'home_tab_index');
+      PageStorage.of(
+        context,
+      ).writeState(context, _currentTabIndex, identifier: 'home_tab_index');
     });
   }
 
@@ -384,7 +394,8 @@ class _HomeDashboardState extends State<HomeDashboard>
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 16),
@@ -393,8 +404,10 @@ class _HomeDashboardState extends State<HomeDashboard>
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
-                child: Text("Post to Community",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text(
+                  "Post to Community",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
               Expanded(
                 child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -406,7 +419,8 @@ class _HomeDashboardState extends State<HomeDashboard>
                     final list = snapshot.data ?? [];
                     if (list.isEmpty) {
                       return Center(
-                          child: Text("You haven't joined any communities yet."));
+                        child: Text("You haven't joined any communities yet."),
+                      );
                     }
 
                     return ListView.builder(
@@ -421,7 +435,10 @@ class _HomeDashboardState extends State<HomeDashboard>
                           leading: CircleAvatar(
                             backgroundColor: SisapaTheme.blue.withOpacity(0.1),
                             backgroundImage: icon != null
-                                ? CachedNetworkImageProvider(icon, cacheManager: AppCacheManager.instance)
+                                ? CachedNetworkImageProvider(
+                                    icon,
+                                    cacheManager: AppCacheManager.instance,
+                                  )
                                 : null,
                             child: icon == null
                                 ? Icon(Icons.groups, color: SisapaTheme.blue)
@@ -431,11 +448,13 @@ class _HomeDashboardState extends State<HomeDashboard>
                           trailing: Icon(Icons.arrow_forward_ios, size: 14),
                           onTap: () {
                             Navigator.pop(ctx);
-                            _navigateToCreatePost(initialData: {
-                              'communityId': id,
-                              'communityName': name,
-                              'communityIcon': icon,
-                            });
+                            _navigateToCreatePost(
+                              initialData: {
+                                'communityId': id,
+                                'communityName': name,
+                                'communityIcon': icon,
+                              },
+                            );
                           },
                         );
                       },
@@ -450,8 +469,10 @@ class _HomeDashboardState extends State<HomeDashboard>
     );
   }
 
-  void _navigateToCreatePost(
-      {Map<String, dynamic>? initialData, DraftPost? draftData}) {
+  void _navigateToCreatePost({
+    Map<String, dynamic>? initialData,
+    DraftPost? draftData,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute(
         fullscreenDialog: true,
@@ -493,8 +514,9 @@ class _HomeDashboardState extends State<HomeDashboard>
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      systemOverlayStyle:
-          isDarkMode ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      systemOverlayStyle: isDarkMode
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       leading: GestureDetector(
         onTap: () {
           if (hapticNotifier.value) HapticFeedback.lightImpact();
@@ -513,9 +535,15 @@ class _HomeDashboardState extends State<HomeDashboard>
       actions: _buildAppBarActions(),
       flexibleSpace: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-          child: Container(
-            color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.7),
+          filter: ImageFilter.blur(
+            sigmaX: _isScrolled ? 20.0 : 0.001,
+            sigmaY: _isScrolled ? 20.0 : 0.001,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            color: _isScrolled
+                ? Theme.of(context).scaffoldBackgroundColor.withOpacity(0.7)
+                : Colors.transparent,
           ),
         ),
       ),
@@ -524,9 +552,8 @@ class _HomeDashboardState extends State<HomeDashboard>
 
   Widget? _buildFab() {
     // Show FAB on Home (0), Community (1), and Profile (4)
-    bool showFab = _currentTabIndex == 0 ||
-        _currentTabIndex == 1 ||
-        _currentTabIndex == 4;
+    bool showFab =
+        _currentTabIndex == 0 || _currentTabIndex == 1 || _currentTabIndex == 4;
 
     if (!showFab) return null;
 
@@ -550,7 +577,8 @@ class _HomeDashboardState extends State<HomeDashboard>
       KeepAlivePage(
         child: SearchPage(
           isSearching: _isSearchActive,
-          onSearchPressed: () => setState(() => _isSearchActive = !_isSearchActive),
+          onSearchPressed: () =>
+              setState(() => _isSearchActive = !_isSearchActive),
         ),
       ),
       ProfileTabPage(),
@@ -560,28 +588,45 @@ class _HomeDashboardState extends State<HomeDashboard>
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-        child: NotificationListener<OverscrollNotification>(
-          onNotification: (overscroll) {
-            // Overscroll to open drawer logic
-            if (overscroll.metrics.axis == Axis.horizontal) {
-              if (overscroll.metrics.pixels == 0 && overscroll.overscroll < 0) {
-                _scaffoldKey.currentState?.openDrawer();
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (scrollInfo) {
+            if (scrollInfo.metrics.axis == Axis.vertical) {
+              bool scrolled = scrollInfo.metrics.pixels > 10;
+              if (scrolled != _isScrolled) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _isScrolled = scrolled);
+                });
               }
             }
             return false;
           },
-          child: PageView(
-            key: PageStorageKey('home_dashboard_pageview'),
-            controller: _pageController,
-            physics: NeverScrollableScrollPhysics(),
-            onPageChanged: (index) {
-              setState(() {
-                _currentTabIndex = index;
-                PageStorage.of(context).writeState(context, _currentTabIndex,
-                    identifier: 'home_tab_index');
-              });
+          child: NotificationListener<OverscrollNotification>(
+            onNotification: (overscroll) {
+              // Overscroll to open drawer logic
+              if (overscroll.metrics.axis == Axis.horizontal) {
+                if (overscroll.metrics.pixels == 0 &&
+                    overscroll.overscroll < 0) {
+                  _scaffoldKey.currentState?.openDrawer();
+                }
+              }
+              return false;
             },
-            children: pages,
+            child: PageView(
+              key: PageStorageKey('home_dashboard_pageview'),
+              controller: _pageController,
+              physics: NeverScrollableScrollPhysics(),
+              onPageChanged: (index) {
+                setState(() {
+                  _currentTabIndex = index;
+                  PageStorage.of(context).writeState(
+                    context,
+                    _currentTabIndex,
+                    identifier: 'home_tab_index',
+                  );
+                });
+              },
+              children: pages,
+            ),
           ),
         ),
       ),
@@ -592,8 +637,9 @@ class _HomeDashboardState extends State<HomeDashboard>
     final navBarBgColor = isDarkMode
         ? Color(0xFF15202B).withOpacity(0.85)
         : Colors.white.withOpacity(0.85);
-    final inactiveIconColor =
-        isDarkMode ? Colors.white : const Color.fromARGB(170, 0, 0, 0);
+    final inactiveIconColor = isDarkMode
+        ? Colors.white
+        : const Color.fromARGB(170, 0, 0, 0);
     final activeIconColor = SisapaTheme.blue;
 
     return ClipRect(
@@ -603,8 +649,8 @@ class _HomeDashboardState extends State<HomeDashboard>
           decoration: BoxDecoration(
             color: navBarBgColor,
             border: Border(
-                top: BorderSide(
-                    color: Colors.grey.withOpacity(0.1), width: 0.5)),
+              top: BorderSide(color: Colors.grey.withOpacity(0.1), width: 0.5),
+            ),
           ),
           child: CustomAnimatedBottomBar(
             selectedIndex: _currentTabIndex,
@@ -659,10 +705,11 @@ class _HomeDashboardState extends State<HomeDashboard>
       extendBodyBehindAppBar: true,
       endDrawer: _currentTabIndex == 2
           ? AiHistoryDrawer(
-              onNewChat: () => aiPageEventBus
-                  .fire(AiPageEvent(type: AiEventType.newChat)),
+              onNewChat: () =>
+                  aiPageEventBus.fire(AiPageEvent(type: AiEventType.newChat)),
               onChatSelected: (sessionId) => aiPageEventBus.fire(
-                  AiPageEvent(type: AiEventType.loadChat, sessionId: sessionId)),
+                AiPageEvent(type: AiEventType.loadChat, sessionId: sessionId),
+              ),
             )
           : null,
       appBar: _buildAppBar(isDarkMode),
@@ -723,21 +770,24 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
       width: double.infinity,
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: bgColor.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black26, blurRadius: 20, spreadRadius: 5)
-          ]),
+        color: bgColor.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5),
+        ],
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Create Post",
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center),
+          Text(
+            "Create Post",
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
           SizedBox(height: 24),
           _buildNewPostButton(),
           if (_localDrafts.isNotEmpty) ...[
@@ -748,14 +798,17 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
           ] else ...[
             SizedBox(height: 16),
             Center(
-                child: Text("No drafts saved",
-                    style: TextStyle(color: theme.hintColor))),
+              child: Text(
+                "No drafts saved",
+                style: TextStyle(color: theme.hintColor),
+              ),
+            ),
           ],
           SizedBox(height: 12),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Cancel", style: TextStyle(color: theme.hintColor)),
-          )
+          ),
         ],
       ),
     );
@@ -777,16 +830,23 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
   }
 
   Widget _buildDraftsHeader(ThemeData theme) {
-    return Row(children: [
-      Text("Recent Drafts",
+    return Row(
+      children: [
+        Text(
+          "Recent Drafts",
           style: TextStyle(
-              color: theme.hintColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 13)),
-      Spacer(),
-      Text("${_localDrafts.length}/3",
-          style: TextStyle(color: theme.hintColor, fontSize: 12)),
-    ]);
+            color: theme.hintColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+        Spacer(),
+        Text(
+          "${_localDrafts.length}/3",
+          style: TextStyle(color: theme.hintColor, fontSize: 12),
+        ),
+      ],
+    );
   }
 
   Widget _buildDraftsList(ThemeData theme) {
@@ -826,9 +886,13 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
           children: const [
             Icon(Icons.delete, color: Colors.white),
             SizedBox(width: 8),
-            Text("Delete",
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold))
+            Text(
+              "Delete",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -839,12 +903,14 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-              color: SisapaTheme.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8)),
+            color: SisapaTheme.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Icon(
-              draft.mediaUrls.isNotEmpty ? Icons.image : Icons.text_fields,
-              color: SisapaTheme.blue,
-              size: 20),
+            draft.mediaUrls.isNotEmpty ? Icons.image : Icons.text_fields,
+            color: SisapaTheme.blue,
+            size: 20,
+          ),
         ),
         title: Text(
           draft.text.isEmpty ? "Untitled Draft" : draft.text,
@@ -853,10 +919,14 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-            timeago.format(DateTime.fromMillisecondsSinceEpoch(draft.timestamp)),
-            style: TextStyle(fontSize: 11)),
-        trailing:
-            Icon(Icons.arrow_forward_ios, size: 12, color: theme.hintColor),
+          timeago.format(DateTime.fromMillisecondsSinceEpoch(draft.timestamp)),
+          style: TextStyle(fontSize: 11),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 12,
+          color: theme.hintColor,
+        ),
         onTap: () => widget.onOpenDraft(draft),
       ),
     );
@@ -866,18 +936,22 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
 class _AnimatedRoute extends PageRouteBuilder {
   final Widget page;
   _AnimatedRoute({required this.page})
-      : super(
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeOutQuart;
-            var tween = Tween(begin: begin, end: end)
-                .chain(CurveTween(curve: curve));
-            return SlideTransition(
-                position: animation.drive(tween), child: child);
-          },
-        );
+    : super(
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOutQuart;
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      );
 }
 
 class _AppBarAvatar extends StatelessWidget {
@@ -908,10 +982,17 @@ class _AppBarAvatar extends StatelessWidget {
               ? Colors.transparent
               : AvatarHelper.getColor(colorHex),
           backgroundImage: profileImageUrl != null
-              ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance)
+              ? CachedNetworkImageProvider(
+                  profileImageUrl,
+                  cacheManager: AppCacheManager.instance,
+                )
               : null,
           child: profileImageUrl == null
-              ? Icon(AvatarHelper.getIcon(iconId), size: 20, color: Colors.white)
+              ? Icon(
+                  AvatarHelper.getIcon(iconId),
+                  size: 20,
+                  color: Colors.white,
+                )
               : null,
         );
       },
@@ -928,7 +1009,9 @@ class _NotificationButton extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return IconButton(
-          icon: Icon(Icons.notifications_none), onPressed: onPressed);
+        icon: Icon(Icons.notifications_none),
+        onPressed: onPressed,
+      );
     }
 
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -936,14 +1019,17 @@ class _NotificationButton extends StatelessWidget {
       builder: (context, snapshot) {
         bool hasUnread = false;
         if (snapshot.hasData && snapshot.data != null) {
-          hasUnread = snapshot.data!.any((n) => n['is_read'] == false || n['is_read'] == 0);
+          hasUnread = snapshot.data!.any(
+            (n) => n['is_read'] == false || n['is_read'] == 0,
+          );
         }
 
         return Stack(
           children: [
             IconButton(
               icon: Icon(
-                  hasUnread ? Icons.notifications : Icons.notifications_none),
+                hasUnread ? Icons.notifications : Icons.notifications_none,
+              ),
               onPressed: onPressed,
             ),
             if (hasUnread)
@@ -954,7 +1040,9 @@ class _NotificationButton extends StatelessWidget {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                      color: SisapaTheme.blue, shape: BoxShape.circle),
+                    color: SisapaTheme.blue,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
           ],
@@ -998,8 +1086,8 @@ class CustomAnimatedBottomBar extends StatelessWidget {
     required this.items,
     required this.onItemSelected,
     this.curve = Curves.linear,
-  })  : assert(items.length >= 2 && items.length <= 5),
-        super(key: key);
+  }) : assert(items.length >= 2 && items.length <= 5),
+       super(key: key);
 
   final int selectedIndex;
   final double iconSize;
