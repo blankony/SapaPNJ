@@ -74,6 +74,9 @@ class _HomePageState extends State<HomePage>
             floating: true,
             snap: true,
             elevation: 0,
+            scrolledUnderElevation: 0,
+            shadowColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
             backgroundColor: Colors.transparent,
             automaticallyImplyLeading: false,
             toolbarHeight: 0,
@@ -93,6 +96,8 @@ class _HomePageState extends State<HomePage>
                   unselectedLabelColor: theme.hintColor,
                   indicatorColor: SisapaTheme.blue,
                   indicatorSize: TabBarIndicatorSize.label,
+                  dividerColor: Colors.transparent,
+                  dividerHeight: 0,
                   tabs: [
                     Tab(text: t.translate('home_recent')),
                     Tab(text: t.translate('home_recommended')),
