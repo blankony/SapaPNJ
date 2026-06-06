@@ -169,7 +169,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   bool get effectiveIsOwner {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return false;
-    return (effectivePostData['user_uid'] ?? effectivePostData['userId']) == currentUser.uid;
+    return (effectivePostData['user_uid'] ?? effectivePostData['userId'] ?? effectivePostData['user_id']) == currentUser.uid;
   }
 
   Future<void> _fetchOriginalPost(String originalId) async {
@@ -261,7 +261,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         
         // If it's a repost wrapper created by the current user, it must be their repost!
         if (_isRepostWrapper) {
-          final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'];
+          final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'] ?? widget.postData['user_id'];
           if (currentUser != null && wrapperUserId == currentUser.uid) {
             _isReposted = true;
           }
@@ -314,7 +314,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
     final targetId = effectivePostId;
-    final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'];
+    final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'] ?? widget.postData['user_id'];
     final isMyOwnWrapper = _isRepostWrapper && currentUser.uid == wrapperUserId;
 
     setState(() {
@@ -562,7 +562,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       return;
     }
 
-    final postUserId = effectivePostData['user_uid'] ?? effectivePostData['userId'];
+    final postUserId = effectivePostData['user_uid'] ?? effectivePostData['userId'] ?? effectivePostData['user_id'];
     if (postUserId == null) return;
 
     if (effectiveIsOwner) {
@@ -691,7 +691,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         false;
 
     if (didConfirm) {
-      await moderationService.blockUser(effectivePostData['userId']);
+      await moderationService.blockUser(effectivePostData['userId'] ?? effectivePostData['user_uid'] ?? effectivePostData['user_id']);
       if (mounted) OverlayService().showTopNotification(context, t.translate('user_blocked'), Icons.block, () {});
     }
   }
@@ -734,7 +734,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (!_isRepostWrapper) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final reposterId = widget.postData['userId'] ?? widget.postData['user_uid'];
+    final reposterId = widget.postData['userId'] ?? widget.postData['user_uid'] ?? widget.postData['user_id'];
     final createdAt = widget.postData['created_at'] ?? widget.postData['timestamp'];
     String timeStr;
     if (createdAt != null) {
@@ -816,10 +816,10 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       }
     }
 
-    if (widget.blockedUserIds.contains(effectivePostData['userId'])) {
+    if (widget.blockedUserIds.contains(effectivePostData['userId'] ?? effectivePostData['user_uid'] ?? effectivePostData['user_id'])) {
       return const SizedBox.shrink();
     }
-    if (_isRepostWrapper && widget.blockedUserIds.contains(widget.postData['userId'])) {
+    if (_isRepostWrapper && widget.blockedUserIds.contains(widget.postData['userId'] ?? widget.postData['user_uid'] ?? widget.postData['user_id'])) {
       return const SizedBox.shrink();
     }
 
