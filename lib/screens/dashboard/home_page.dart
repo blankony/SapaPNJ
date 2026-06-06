@@ -11,11 +11,13 @@ import '../../services/api_service.dart';
 class HomePage extends StatefulWidget {
   final ScrollController scrollController;
   final ScrollController recommendedScrollController;
+  final ValueChanged<bool>? onScrollChange;
 
   const HomePage({
     super.key,
     required this.scrollController,
     required this.recommendedScrollController,
+    this.onScrollChange,
   });
 
   @override
@@ -37,7 +39,12 @@ class _HomePageState extends State<HomePage>
       if (_localScrollController.hasClients) {
         bool scrolled = _localScrollController.offset > 0;
         if (scrolled != _isScrolled) {
-          setState(() => _isScrolled = scrolled);
+          setState(() {
+            _isScrolled = scrolled;
+          });
+          if (widget.onScrollChange != null) {
+            widget.onScrollChange!(scrolled);
+          }
         }
       }
     });

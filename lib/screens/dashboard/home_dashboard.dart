@@ -83,6 +83,11 @@ class _HomeDashboardState extends State<HomeDashboard>
       child: HomePage(
         scrollController: _homeScrollController,
         recommendedScrollController: _recommendedScrollController,
+        onScrollChange: (scrolled) {
+          if (mounted && _currentTabIndex == 0 && _isScrolled != scrolled) {
+            setState(() => _isScrolled = scrolled);
+          }
+        },
       ),
     );
 
@@ -299,6 +304,7 @@ class _HomeDashboardState extends State<HomeDashboard>
 
     setState(() {
       _currentTabIndex = index;
+      if (index != 0) _isScrolled = false;
       PageStorage.of(
         context,
       ).writeState(context, _currentTabIndex, identifier: 'home_tab_index');
@@ -514,9 +520,13 @@ class _HomeDashboardState extends State<HomeDashboard>
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      systemOverlayStyle: isDarkMode
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDarkMode
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
+      ),
       leading: GestureDetector(
         onTap: () {
           if (hapticNotifier.value) HapticFeedback.lightImpact();
@@ -542,7 +552,7 @@ class _HomeDashboardState extends State<HomeDashboard>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             color: _isScrolled
-                ? Theme.of(context).scaffoldBackgroundColor.withOpacity(0.7)
+                ? Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85)
                 : Colors.transparent,
           ),
         ),
@@ -588,45 +598,31 @@ class _HomeDashboardState extends State<HomeDashboard>
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (scrollInfo) {
-            if (scrollInfo.metrics.axis == Axis.vertical) {
-              bool scrolled = scrollInfo.metrics.pixels > 10;
-              if (scrolled != _isScrolled) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _isScrolled = scrolled);
-                });
+        child: NotificationListener<OverscrollNotification>(
+          onNotification: (overscroll) {
+            // Overscroll to open drawer logic
+            if (overscroll.metrics.axis == Axis.horizontal) {
+              if (overscroll.metrics.pixels == 0 && overscroll.overscroll < 0) {
+                _scaffoldKey.currentState?.openDrawer();
               }
             }
             return false;
           },
-          child: NotificationListener<OverscrollNotification>(
-            onNotification: (overscroll) {
-              // Overscroll to open drawer logic
-              if (overscroll.metrics.axis == Axis.horizontal) {
-                if (overscroll.metrics.pixels == 0 &&
-                    overscroll.overscroll < 0) {
-                  _scaffoldKey.currentState?.openDrawer();
-                }
-              }
-              return false;
+          child: PageView(
+            key: PageStorageKey('home_dashboard_pageview'),
+            controller: _pageController,
+            physics: NeverScrollableScrollPhysics(),
+            onPageChanged: (index) {
+              setState(() {
+                _currentTabIndex = index;
+                PageStorage.of(context).writeState(
+                  context,
+                  _currentTabIndex,
+                  identifier: 'home_tab_index',
+                );
+              });
             },
-            child: PageView(
-              key: PageStorageKey('home_dashboard_pageview'),
-              controller: _pageController,
-              physics: NeverScrollableScrollPhysics(),
-              onPageChanged: (index) {
-                setState(() {
-                  _currentTabIndex = index;
-                  PageStorage.of(context).writeState(
-                    context,
-                    _currentTabIndex,
-                    identifier: 'home_tab_index',
-                  );
-                });
-              },
-              children: pages,
-            ),
+            children: pages,
           ),
         ),
       ),
