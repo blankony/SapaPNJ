@@ -4,6 +4,9 @@
 
 **SAPA PNJ** is a modern, feature-rich social media and communication platform designed exclusively for the Politeknik Negeri Jakarta (PNJ) community. Built with Flutter and backed by Google Cloud Platform (Cloud Run, Cloud SQL MySQL, Cloud Storage), this application serves as a central hub for students and lecturers to connect, share information, and interact in a dynamic academic environment.
 
+## Contributing
+
+If you plan on making PRs or technical contributions to this repository, please ensure you review and strictly follow our **[Commit Rules & Style Guide](documents/COMMIT_RULES.md)** to maintain a clean and standardized commit history.
 
 ## Project Overview
 
