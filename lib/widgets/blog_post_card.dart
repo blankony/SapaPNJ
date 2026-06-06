@@ -362,6 +362,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       }
     } catch (e) {
       debugPrint("Repost Error: $e");
+      if (_isReposted) {
+        ApiService.myRepostedPostIds.remove(targetId.toString());
+      } else {
+        ApiService.myRepostedPostIds.add(targetId.toString());
+      }
       _syncState();
       if (mounted) {
          setState(() {

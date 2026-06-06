@@ -318,8 +318,9 @@ class ApiService {
     String? userUid,
     String? query,
   }) async {
+    Future? loadRepostsFuture;
     if (!repostsLoaded) {
-      loadMyReposts();
+      loadRepostsFuture = loadMyReposts();
     }
     final params = <String, String>{
       'limit': limit.toString(),
@@ -330,6 +331,9 @@ class ApiService {
     };
     final uri = Uri.parse('$_baseUrl/api/posts').replace(queryParameters: params);
     final resp = await http.get(uri, headers: await _headers());
+    if (loadRepostsFuture != null) {
+      await loadRepostsFuture;
+    }
     if (resp.statusCode != 200) return [];
     return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
   }
@@ -346,10 +350,17 @@ class ApiService {
 
   /// Get a single post by ID.
   Future<Map<String, dynamic>?> getPost(String postId) async {
+    Future? loadRepostsFuture;
+    if (!repostsLoaded) {
+      loadRepostsFuture = loadMyReposts();
+    }
     final resp = await http.get(
       Uri.parse('$_baseUrl/api/posts/$postId'),
       headers: await _headers(),
     );
+    if (loadRepostsFuture != null) {
+      await loadRepostsFuture;
+    }
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) throw _error(resp);
     return jsonDecode(resp.body);
