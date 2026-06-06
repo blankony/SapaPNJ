@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -294,225 +295,231 @@ class _LoginPageState extends State<LoginPage> {
     final isDarkMode = theme.brightness == Brightness.dark;
     final t = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        iconTheme: IconThemeData(color: theme.primaryColor),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDarkMode
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: DecorativeBackground()),
+      child: Scaffold(
+        body: Stack(
+          children: [
+            const Positioned.fill(child: DecorativeBackground()),
 
-          TweenAnimationBuilder(
-            tween: Tween<double>(begin: 1.0, end: 0.0),
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeOutQuart,
-            builder: (context, double value, child) {
-              return Transform.translate(
-                offset: Offset(0, value * 200),
-                child: Opacity(opacity: 1 - value, child: child),
-              );
-            },
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 16.0,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Rebranding Header
-                      Row(
-                        children: [
-                          Text(
-                            "SAPA",
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: SisapaTheme.blue,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            "PNJ",
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 40),
-
-                      Text(
-                        t.translate('auth_sign_in_title'), //
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 32),
-
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: t.translate('auth_enter_email'),
-                        ), //
-                        keyboardType: TextInputType.emailAddress,
-
-                        textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) {
-                          FocusScope.of(
-                            context,
-                          ).requestFocus(_passwordFocusNode);
-                        },
-
-                        validator: _validateEmail,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                      ),
-                      SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _passwordController,
-                        focusNode: _passwordFocusNode,
-                        obscureText: _isPasswordObscured,
-                        decoration: InputDecoration(
-                          labelText: t.translate('auth_enter_password'), //
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isPasswordObscured
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _isPasswordObscured = !_isPasswordObscured;
-                              });
-                            },
-                          ),
-                        ),
-
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) {
-                          _signIn();
-                        },
-
-                        validator: _validatePassword,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                      ),
-                      SizedBox(height: 16),
-
-                      if (_errorMessage.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16, top: 8),
-                          child: Center(
-                            child: Text(
-                              _errorMessage,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
+            TweenAnimationBuilder(
+              tween: Tween<double>(begin: 1.0, end: 0.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutQuart,
+              builder: (context, double value, child) {
+                return Transform.translate(
+                  offset: Offset(0, value * 200),
+                  child: Opacity(opacity: 1 - value, child: child),
+                );
+              },
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Rebranding Header
+                        Row(
+                          children: [
+                            Text(
+                              "SAPA",
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: SisapaTheme.blue,
+                                letterSpacing: -1.0,
                               ),
-                              textAlign: TextAlign.center,
                             ),
+                            SizedBox(width: 8),
+                            Text(
+                              "PNJ",
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 40),
+
+                        Text(
+                          t.translate('auth_sign_in_title'), //
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        SizedBox(height: 32),
 
-                      Align(
-                        alignment: Alignment.center,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ForgotPasswordScreen(),
-                              ),
-                            );
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: t.translate('auth_enter_email'),
+                          ), //
+                          keyboardType: TextInputType.emailAddress,
+
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(
+                              context,
+                            ).requestFocus(_passwordFocusNode);
                           },
-                          child: Text(
-                            t.translate('auth_forgot_pass'),
-                            style: TextStyle(color: SisapaTheme.blue),
-                          ), //
-                        ),
-                      ),
-                      SizedBox(height: 24),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _signIn,
-                          child: Text(t.translate('auth_login')), //
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: SisapaTheme.blue,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                          validator: _validateEmail,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                        ),
+                        SizedBox(height: 16),
+
+                        TextFormField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocusNode,
+                          obscureText: _isPasswordObscured,
+                          decoration: InputDecoration(
+                            labelText: t.translate('auth_enter_password'), //
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordObscured = !_isPasswordObscured;
+                                });
+                              },
                             ),
                           ),
+
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) {
+                            _signIn();
+                          },
+
+                          validator: _validatePassword,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                         ),
-                      ),
-                      SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          icon: FaIcon(FontAwesomeIcons.google, size: 20),
-                          label: Text("Sign in with Google (@pnj.ac.id)"),
-                          onPressed: _signInWithGoogle,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: theme.colorScheme.onSurface,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                        SizedBox(height: 16),
+
+                        if (_errorMessage.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16, top: 8),
+                            child: Center(
+                              child: Text(
+                                _errorMessage,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 24),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            t.translate('auth_no_account') + " ",
-                            style: TextStyle(color: theme.hintColor),
-                          ), //
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pushReplacement(
-                                _createSlideUpRoute(RegisterPage()),
+                        Align(
+                          alignment: Alignment.center,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordScreen(),
+                                ),
                               );
                             },
                             child: Text(
-                              t.translate('auth_create_one'), //
-                              style: TextStyle(
-                                color: SisapaTheme.blue,
-                                fontWeight: FontWeight.bold,
+                              t.translate('auth_forgot_pass'),
+                              style: TextStyle(color: SisapaTheme.blue),
+                            ), //
+                          ),
+                        ),
+                        SizedBox(height: 24),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _signIn,
+                            child: Text(t.translate('auth_login')), //
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: SisapaTheme.blue,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-                    ],
+                        ),
+                        SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            icon: FaIcon(FontAwesomeIcons.google, size: 20),
+                            label: Text("Sign in with Google (@pnj.ac.id)"),
+                            onPressed: _signInWithGoogle,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: theme.colorScheme.onSurface,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 24),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              t.translate('auth_no_account') + " ",
+                              style: TextStyle(color: theme.hintColor),
+                            ), //
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pushReplacement(
+                                  _createSlideUpRoute(RegisterPage()),
+                                );
+                              },
+                              child: Text(
+                                t.translate('auth_create_one'), //
+                                style: TextStyle(
+                                  color: SisapaTheme.blue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: Center(child: CircularProgressIndicator()),
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: BackButton(color: theme.primaryColor),
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
