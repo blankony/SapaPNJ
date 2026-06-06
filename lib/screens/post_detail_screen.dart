@@ -13,7 +13,6 @@ import '../services/prediction_service.dart';
 import '../services/gcs_service.dart';
 import '../theme/app_theme.dart';
 import '../services/overlay_service.dart';
-import '../widgets/frosted_glass.dart';
 
 final GcsService _cloudinaryService = GcsService();
 final ApiService _apiService = ApiService();
@@ -139,7 +138,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FrostedAppBar(title: Text("Post")),
+      appBar: AppBar(title: Text("Post")),
       body: Column(
         children: [
           Expanded(

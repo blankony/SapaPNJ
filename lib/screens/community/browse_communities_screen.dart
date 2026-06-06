@@ -7,7 +7,6 @@ import '../../theme/app_theme.dart';
 import 'community_detail_screen.dart';
 import '../../services/app_localizations.dart';
 import '../../services/api_service.dart';
-import '../../widgets/frosted_glass.dart';
 
 class BrowseCommunitiesScreen extends StatefulWidget {
   const BrowseCommunitiesScreen({super.key});
@@ -111,7 +110,7 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
     });
 
     return Scaffold(
-      appBar: FrostedAppBar(title: Text(t.translate('comm_explore_title'))),
+      appBar: AppBar(title: Text(t.translate('comm_explore_title'))),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadCommunities,
@@ -141,7 +140,7 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
               }
 
               return RepaintBoundary(
-                child: FrostedCard(
+                child: Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: ListTile(

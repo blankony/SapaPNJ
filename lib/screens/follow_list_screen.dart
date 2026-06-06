@@ -9,7 +9,6 @@ import 'dashboard/profile_page.dart';
 import '../widgets/common_error_widget.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart';
-import '../widgets/frosted_glass.dart';
 
 class FollowListScreen extends StatefulWidget {
   final String userId;
@@ -129,7 +128,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
     var t = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: FrostedAppBar(
+      appBar: AppBar(
         title: Text(
           _isMe ? t.translate('follow_title_me') : t.translate('follow_title'),
           style: TextStyle(fontWeight: FontWeight.bold),

@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 import '../widgets/blog_post_card.dart';
 import '../widgets/common_error_widget.dart';
 import '../theme/app_theme.dart';
-import '../widgets/frosted_glass.dart';
 
 class SavedPostsScreen extends StatefulWidget {
   const SavedPostsScreen({super.key});
@@ -34,7 +33,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
     if (user == null) return const Scaffold(body: Center(child: Text("Please log in")));
 
     return Scaffold(
-      appBar: FrostedAppBar(
+      appBar: AppBar(
         title: const Text("Saved Posts"),
         centerTitle: true,
       ),

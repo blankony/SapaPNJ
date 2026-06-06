@@ -13,7 +13,6 @@ import '../screens/saved_posts_screen.dart';
 import '../screens/webview_screen.dart';
 import '../services/api_service.dart';
 import '../services/app_localizations.dart';
-import 'frosted_glass.dart';
 
 class SidePanel extends StatefulWidget {
   final VoidCallback onProfileSelected;
@@ -163,7 +162,7 @@ class _SidePanelState extends State<SidePanel> {
     var t = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
-    return FrostedDrawer(
+    return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(

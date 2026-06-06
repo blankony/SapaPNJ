@@ -24,14 +24,14 @@ class SisapaTheme {
     ),
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: Colors.transparent,
-    cardColor: Colors.transparent,
+    scaffoldBackgroundColor: Color(0xFF15202B),
+    cardColor: Color(0xFF15202B),
     primaryColor: blue,
     hintColor: darkGrey,
-    dividerColor: Color(0xFF38444D).withValues(alpha: 0.5),
+    dividerColor: Color(0xFF38444D),
 
     appBarTheme: AppBarTheme(
-      color: Colors.transparent,
+      color: Color(0xFF15202B),
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
       titleTextStyle: TextStyle(color: white, fontSize: 20, fontWeight: FontWeight.bold),
@@ -39,7 +39,7 @@ class SisapaTheme {
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Color(0xFF192734).withValues(alpha: 0.5),
+      fillColor: Color(0xFF192734),
       hintStyle: TextStyle(color: darkGrey),
       labelStyle: TextStyle(color: darkGrey),
       border: OutlineInputBorder(
@@ -53,8 +53,7 @@ class SisapaTheme {
     ),
 
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: Color(0xFF15202B),
       selectedItemColor: blue,
       unselectedItemColor: darkGrey,
       showUnselectedLabels: false,
@@ -63,19 +62,8 @@ class SisapaTheme {
     ),
 
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: blue,
       foregroundColor: white,
-    ),
-
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ),
-
-    dialogTheme: DialogThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
     ),
 
     iconTheme: IconThemeData(
@@ -107,14 +95,14 @@ class SisapaTheme {
     ),
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: Colors.transparent,
-    cardColor: Colors.transparent,
+    scaffoldBackgroundColor: SisapaTheme.white,
+    cardColor: SisapaTheme.white,
     primaryColor: blue,
     hintColor: darkGrey,
-    dividerColor: extraLightGrey.withValues(alpha: 0.5),
+    dividerColor: extraLightGrey,
 
     appBarTheme: AppBarTheme(
-      color: Colors.transparent,
+      color: SisapaTheme.white,
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
       titleTextStyle: TextStyle(color: black, fontSize: 20, fontWeight: FontWeight.bold),
@@ -122,7 +110,7 @@ class SisapaTheme {
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: extraLightGrey.withValues(alpha: 0.5),
+      fillColor: extraLightGrey,
       hintStyle: TextStyle(color: darkGrey),
       labelStyle: TextStyle(color: darkGrey),
       border: OutlineInputBorder(
@@ -136,8 +124,7 @@ class SisapaTheme {
     ),
 
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: SisapaTheme.white,
       selectedItemColor: blue,
       unselectedItemColor: darkGrey,
       showUnselectedLabels: false,
@@ -146,19 +133,8 @@ class SisapaTheme {
     ),
 
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: blue,
       foregroundColor: white,
-    ),
-
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ),
-
-    dialogTheme: DialogThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
     ),
 
     iconTheme: IconThemeData(

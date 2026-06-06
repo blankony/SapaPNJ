@@ -6,8 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
-import '../../services/app_localizations.dart';
-import '../../widgets/frosted_glass.dart'; // IMPORT LOCALIZATION
+import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
 class CreateCommunityScreen extends StatefulWidget {
   const CreateCommunityScreen({super.key});
@@ -92,7 +91,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     final bool isOfficial = _selectedCategory != 'casual';
 
     return Scaffold(
-      appBar: FrostedAppBar(title: Text(t.translate('comm_create_title'))), // "Create Public Channel"
+      appBar: AppBar(title: Text(t.translate('comm_create_title'))), // "Create Public Channel"
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

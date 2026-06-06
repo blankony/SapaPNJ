@@ -14,7 +14,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/pnj_data.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart';
-import '../widgets/frosted_glass.dart';
 
 final GcsService _cloudinaryService = GcsService();
 
@@ -360,7 +359,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        appBar: FrostedAppBar(
+        appBar: AppBar(
           title: Text(t.translate('edit_profile_title'), style: TextStyle(fontWeight: FontWeight.bold)),
           centerTitle: true,
           elevation: 0,

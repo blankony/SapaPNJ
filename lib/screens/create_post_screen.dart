@@ -22,7 +22,6 @@ import '../services/draft_service.dart';
 import '../services/bad_word_service.dart';
 import 'video_trimmer_screen.dart';
 import '../services/app_localizations.dart';
-import '../widgets/frosted_glass.dart';
 
 final GcsService _cloudinaryService = GcsService();
 
@@ -815,7 +814,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: FrostedAppBar(
+        appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.close, color: theme.primaryColor),
             onPressed: () async {

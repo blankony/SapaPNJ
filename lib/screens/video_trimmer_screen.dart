@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../theme/app_theme.dart';
-import '../widgets/frosted_glass.dart';
 
 class VideoTrimmerScreen extends StatefulWidget {
   final File file;
@@ -106,7 +105,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: FrostedAppBar(
+      appBar: AppBar(
         title: Text('Trim Video'),
         actions: [
           TextButton(
