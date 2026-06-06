@@ -83,8 +83,10 @@ class _HomePageState extends State<HomePage>
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(48),
               child: FrostedLayer(
-                blur: FrostedGlassTokens.controlBlurSigma,
-                tint: theme.scaffoldBackgroundColor.withOpacity(0.82),
+                blur: _isScrolled ? FrostedGlassTokens.controlBlurSigma : 0.001,
+                tint: _isScrolled
+                    ? theme.scaffoldBackgroundColor.withOpacity(0.82)
+                    : Colors.transparent,
                 child: TabBar(
                   controller: _tabController,
                   labelColor: SisapaTheme.blue,

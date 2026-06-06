@@ -198,6 +198,7 @@ class FrostedAppBar extends AppBar {
     SystemUiOverlayStyle? systemOverlayStyle,
     FrostedSurfaceTone tone = FrostedSurfaceTone.surface,
     double blur = FrostedGlassTokens.blurSigma,
+    Color? tint,
   }) : super(
          leading: leading,
          automaticallyImplyLeading: automaticallyImplyLeading,
@@ -210,14 +211,15 @@ class FrostedAppBar extends AppBar {
                blur: blur,
                tone: tone,
                tint:
-                   backgroundColor == null ||
-                       backgroundColor == Colors.transparent
-                   ? null
-                   : backgroundColor.withOpacity(
-                       backgroundColor.opacity < 1
-                           ? backgroundColor.opacity
-                           : 0.78,
-                     ),
+                   tint ??
+                   (backgroundColor == null ||
+                           backgroundColor == Colors.transparent
+                       ? null
+                       : backgroundColor.withOpacity(
+                           backgroundColor.opacity < 1
+                               ? backgroundColor.opacity
+                               : 0.78,
+                         )),
              ),
              if (flexibleSpace != null) flexibleSpace,
            ],

@@ -520,7 +520,11 @@ class _HomeDashboardState extends State<HomeDashboard>
   PreferredSizeWidget? _buildAppBar(bool isDarkMode) {
     if (_currentTabIndex == 4) return null; // No AppBar on Profile
 
+    final transparentHomeChrome = _currentTabIndex == 0 && !_isScrolled;
+
     return FrostedAppBar(
+      blur: transparentHomeChrome ? 0.001 : FrostedGlassTokens.blurSigma,
+      tint: transparentHomeChrome ? Colors.transparent : null,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDarkMode
