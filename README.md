@@ -55,13 +55,13 @@ The application leverages various Narrow AI technologies to perform specific int
 
 ## Screenshots
 
-Here is a sneak peek of the application. For the complete list of all 47 screenshots covering every feature, please visit the **[Screenshot Gallery](gallery.md)**.
+Here is a sneak peek of the application. For the complete list of all 47 screenshots covering every feature, please visit the **[Screenshot Gallery](documents/gallery.md)**.
 
 | Home Feed                                     | Community                                               | AI Assistant                                       | User Profile                                           |
 | --------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
 | <img src="screenshots/home.jpg" width="200"/> | <img src="screenshots/community_view.jpg" width="200"/> | <img src="screenshots/spirit_ai.jpg" width="200"/> | <img src="screenshots/profile_posts.jpg" width="200"/> |
 
-**[Click here to view the full Screenshot Gallery](gallery.md)**
+**[Click here to view the full Screenshot Gallery](documents/gallery.md)**
 
 ---
 
