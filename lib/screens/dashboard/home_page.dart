@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/blog_post_card.dart';
@@ -83,29 +82,19 @@ class _HomePageState extends State<HomePage>
 
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(48),
-              child: ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: _isScrolled ? 10.0 : 0.001,
-                    sigmaY: _isScrolled ? 10.0 : 0.001,
-                  ),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    color: _isScrolled
-                        ? theme.scaffoldBackgroundColor.withOpacity(0.85)
-                        : Colors.transparent,
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: SisapaTheme.blue,
-                      unselectedLabelColor: theme.hintColor,
-                      indicatorColor: SisapaTheme.blue,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      tabs: [
-                        Tab(text: t.translate('home_recent')),
-                        Tab(text: t.translate('home_recommended')),
-                      ],
-                    ),
-                  ),
+              child: FrostedLayer(
+                blur: FrostedGlassTokens.controlBlurSigma,
+                tint: theme.scaffoldBackgroundColor.withOpacity(0.82),
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: SisapaTheme.blue,
+                  unselectedLabelColor: theme.hintColor,
+                  indicatorColor: SisapaTheme.blue,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  tabs: [
+                    Tab(text: t.translate('home_recent')),
+                    Tab(text: t.translate('home_recommended')),
+                  ],
                 ),
               ),
             ),

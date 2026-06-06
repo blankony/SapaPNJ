@@ -7,6 +7,7 @@ import 'register_page.dart';
 import '../theme/app_theme.dart';
 import '../../services/app_localizations.dart'; // Import Localization
 import '../widgets/decorative_background.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -32,7 +33,10 @@ class _LoginPageState extends State<LoginPage> {
         const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
         return SlideTransition(position: animation.drive(tween), child: child);
       },
     );
@@ -78,10 +82,12 @@ class _LoginPageState extends State<LoginPage> {
           _errorMessage = t.translate('general_error');
       }
     } catch (e) {
-       _errorMessage = '${t.translate('general_error')}: $e';
+      _errorMessage = '${t.translate('general_error')}: $e';
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -105,7 +111,9 @@ class _LoginPageState extends State<LoginPage> {
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       debugPrint('[LOGIN] googleUser result: ${googleUser?.email}');
       if (googleUser == null) {
-        debugPrint('[LOGIN] googleUser is null (user canceled or failed silently).');
+        debugPrint(
+          '[LOGIN] googleUser is null (user canceled or failed silently).',
+        );
         setState(() => _isLoading = false);
         return;
       }
@@ -115,15 +123,20 @@ class _LoginPageState extends State<LoginPage> {
       if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
         debugPrint('[LOGIN] Email not from PNJ, signing out...');
         await googleSignIn.signOut();
-        setState(() => _errorMessage = 'Access Denied: Must use a valid PNJ email');
+        setState(
+          () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
+        );
         setState(() => _isLoading = false);
         return;
       }
 
       debugPrint('[LOGIN] Getting googleUser.authentication...');
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      debugPrint('[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}');
-      
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      debugPrint(
+        '[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}',
+      );
+
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
@@ -132,28 +145,44 @@ class _LoginPageState extends State<LoginPage> {
       UserCredential userCredential;
       try {
         debugPrint('[LOGIN] Calling FirebaseAuth signInWithCredential...');
-        userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-        debugPrint('[LOGIN] signInWithCredential success! UID: ${userCredential.user?.uid}');
+        userCredential = await FirebaseAuth.instance.signInWithCredential(
+          credential,
+        );
+        debugPrint(
+          '[LOGIN] signInWithCredential success! UID: ${userCredential.user?.uid}',
+        );
       } on FirebaseAuthException catch (e) {
-        debugPrint('[LOGIN] FirebaseAuthException caught: ${e.code} | Message: ${e.message}');
+        debugPrint(
+          '[LOGIN] FirebaseAuthException caught: ${e.code} | Message: ${e.message}',
+        );
         if (e.code == 'account-exists-with-different-credential') {
           final String? existingEmail = e.email;
           if (existingEmail == null) {
             await googleSignIn.signOut();
-            setState(() => _errorMessage = 'Account merge failed: Unknown email.');
+            setState(
+              () => _errorMessage = 'Account merge failed: Unknown email.',
+            );
             setState(() => _isLoading = false);
             return;
           }
-          final String? password = await _showPasswordPromptDialog(existingEmail);
+          final String? password = await _showPasswordPromptDialog(
+            existingEmail,
+          );
           if (password == null || password.isEmpty) {
             await googleSignIn.signOut();
             setState(() => _isLoading = false);
             return;
           }
           setState(() => _isLoading = true);
-          final AuthCredential emailCred = EmailAuthProvider.credential(email: existingEmail, password: password);
-          final UserCredential existingUser = await FirebaseAuth.instance.signInWithCredential(emailCred);
-          userCredential = await existingUser.user!.linkWithCredential(credential);
+          final AuthCredential emailCred = EmailAuthProvider.credential(
+            email: existingEmail,
+            password: password,
+          );
+          final UserCredential existingUser = await FirebaseAuth.instance
+              .signInWithCredential(emailCred);
+          userCredential = await existingUser.user!.linkWithCredential(
+            credential,
+          );
           debugPrint('[LOGIN] Linked credential successfully.');
         } else {
           rethrow;
@@ -161,7 +190,8 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       final String? fbEmail = userCredential.user?.email;
-      if (fbEmail == null || !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
+      if (fbEmail == null ||
+          !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
         await userCredential.user?.delete();
         await FirebaseAuth.instance.signOut();
         await googleSignIn.signOut();
@@ -174,7 +204,9 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e, stackTrace) {
-      debugPrint('[LOGIN] Exception caught in _signInWithGoogle: $e\n$stackTrace');
+      debugPrint(
+        '[LOGIN] Exception caught in _signInWithGoogle: $e\n$stackTrace',
+      );
       setState(() => _errorMessage = 'Google Sign-In Error: $e');
       setState(() => _isLoading = false);
     }
@@ -187,20 +219,27 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Account Linking Required', style: TextStyle(fontWeight: FontWeight.bold)),
+        return FrostedAlertDialog(
+          title: Text(
+            'Account Linking Required',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('An account with $email already exists. Enter your password to merge and link your Google account.'),
+              Text(
+                'An account with $email already exists. Enter your password to merge and link your Google account.',
+              ),
               SizedBox(height: 16),
               TextField(
                 obscureText: true,
                 onChanged: (val) => password = val,
                 decoration: InputDecoration(
                   labelText: t.translate('auth_enter_password'),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
@@ -212,7 +251,10 @@ class _LoginPageState extends State<LoginPage> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, password),
-              style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SisapaTheme.blue,
+                foregroundColor: Colors.white,
+              ),
               child: Text('Link Account'),
             ),
           ],
@@ -223,7 +265,8 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _validateEmail(String? value) {
     final t = AppLocalizations.of(context)!; //
-    if (value == null || value.trim().isEmpty) return t.translate('val_email_empty');
+    if (value == null || value.trim().isEmpty)
+      return t.translate('val_email_empty');
     String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     RegExp regex = RegExp(pattern);
     if (!regex.hasMatch(value)) return t.translate('val_email_invalid');
@@ -232,7 +275,8 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _validatePassword(String? value) {
     final t = AppLocalizations.of(context)!;
-    if (value == null || value.isEmpty) return t.translate('val_password_empty');
+    if (value == null || value.isEmpty)
+      return t.translate('val_password_empty');
     return null;
   }
 
@@ -252,7 +296,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.primaryColor),
@@ -268,15 +312,15 @@ class _LoginPageState extends State<LoginPage> {
             builder: (context, double value, child) {
               return Transform.translate(
                 offset: Offset(0, value * 200),
-                child: Opacity(
-                  opacity: 1 - value,
-                  child: child,
-                ),
+                child: Opacity(opacity: 1 - value, child: child),
               );
             },
             child: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -307,18 +351,24 @@ class _LoginPageState extends State<LoginPage> {
 
                       Text(
                         t.translate('auth_sign_in_title'), //
-                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 32),
 
                       TextFormField(
                         controller: _emailController,
-                        decoration: InputDecoration(labelText: t.translate('auth_enter_email')), //
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_enter_email'),
+                        ), //
                         keyboardType: TextInputType.emailAddress,
 
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) {
-                          FocusScope.of(context).requestFocus(_passwordFocusNode);
+                          FocusScope.of(
+                            context,
+                          ).requestFocus(_passwordFocusNode);
                         },
 
                         validator: _validateEmail,
@@ -334,7 +384,9 @@ class _LoginPageState extends State<LoginPage> {
                           labelText: t.translate('auth_enter_password'), //
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                              _isPasswordObscured
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
                             onPressed: () {
                               setState(() {
@@ -360,7 +412,10 @@ class _LoginPageState extends State<LoginPage> {
                           child: Center(
                             child: Text(
                               _errorMessage,
-                              style: const TextStyle(color: Colors.red, fontSize: 14),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -370,11 +425,16 @@ class _LoginPageState extends State<LoginPage> {
                         alignment: Alignment.center,
                         child: TextButton(
                           onPressed: () {
-                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ForgotPasswordScreen(),
+                              ),
                             );
                           },
-                          child: Text(t.translate('auth_forgot_pass'), style: TextStyle(color: SisapaTheme.blue)), //
+                          child: Text(
+                            t.translate('auth_forgot_pass'),
+                            style: TextStyle(color: SisapaTheme.blue),
+                          ), //
                         ),
                       ),
                       SizedBox(height: 24),
@@ -416,10 +476,15 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(t.translate('auth_no_account') + " ", style: TextStyle(color: theme.hintColor)), //
+                          Text(
+                            t.translate('auth_no_account') + " ",
+                            style: TextStyle(color: theme.hintColor),
+                          ), //
                           GestureDetector(
                             onTap: () {
-                              Navigator.of(context).pushReplacement(_createSlideUpRoute(RegisterPage()));
+                              Navigator.of(context).pushReplacement(
+                                _createSlideUpRoute(RegisterPage()),
+                              );
                             },
                             child: Text(
                               t.translate('auth_create_one'), //
@@ -442,9 +507,7 @@ class _LoginPageState extends State<LoginPage> {
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
 import '../auth_gate.dart';
 import '../services/overlay_service.dart';
+import '../theme/app_theme.dart';
 import 'setup/setup_profile_screen.dart';
 
 class UserInfoScreen extends StatefulWidget {
@@ -20,24 +21,28 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   Future<void> _saveProfile() async {
     if (_nameController.text.isEmpty || _nimController.text.isEmpty) {
-       OverlayService().showTopNotification(
-         context,
-         "Please fill in your name and NIM.",
-         Icons.warning_amber_rounded,
-         (){},
-         color: Colors.orange
-       );
+      OverlayService().showTopNotification(
+        context,
+        "Please fill in your name and NIM.",
+        Icons.warning_amber_rounded,
+        () {},
+        color: Colors.orange,
+      );
       return;
     }
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
       bool success = false;
-      debugPrint('UserInfoScreen - Attempting createUser Name: ${_nameController.text.trim()} NIM: ${_nimController.text.trim()}');
+      debugPrint(
+        'UserInfoScreen - Attempting createUser Name: ${_nameController.text.trim()} NIM: ${_nimController.text.trim()}',
+      );
       try {
         success = await ApiService().createUser(
           uid: user.uid,
@@ -47,7 +52,9 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         );
         debugPrint('UserInfoScreen - createUser returned: $success');
       } on ApiException catch (e) {
-        debugPrint('UserInfoScreen - createUser threw ApiException: ${e.code} ${e.message}');
+        debugPrint(
+          'UserInfoScreen - createUser threw ApiException: ${e.code} ${e.message}',
+        );
         // If it's NIM in use, rethrow so the user sees it
         if (e.code == 'nim-already-in-use') rethrow;
       } catch (e) {
@@ -57,25 +64,26 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
       // If createUser failed (user already exists), try updateUser
       if (!success) {
-        debugPrint('UserInfoScreen - createUser failed or returned false. Attempting updateUser.');
-        success = await ApiService().updateUser(
-          user.uid,
-          {
-            'name': _nameController.text.trim(),
-            'nim': _nimController.text.trim(),
-            'email': user.email ?? '',
-          }
+        debugPrint(
+          'UserInfoScreen - createUser failed or returned false. Attempting updateUser.',
         );
+        success = await ApiService().updateUser(user.uid, {
+          'name': _nameController.text.trim(),
+          'nim': _nimController.text.trim(),
+          'email': user.email ?? '',
+        });
       }
 
       if (success && mounted) {
-        debugPrint('UserInfoScreen - Save successful. Routing next. isSetupWizard: ${widget.isSetupWizard}');
+        debugPrint(
+          'UserInfoScreen - Save successful. Routing next. isSetupWizard: ${widget.isSetupWizard}',
+        );
         OverlayService().showTopNotification(
           context,
           "Profile saved.",
           Icons.check_circle,
-          (){},
-          color: Colors.green
+          () {},
+          color: Colors.green,
         );
         if (widget.isSetupWizard) {
           Navigator.of(context).pushAndRemoveUntil(
@@ -93,34 +101,39 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           context,
           "Failed to save profile.",
           Icons.error,
-          (){},
-          color: Colors.red
+          () {},
+          color: Colors.red,
         );
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
-
     } on ApiException catch (e) {
       if (mounted) {
-         OverlayService().showTopNotification(
-           context,
-           e.message,
-           Icons.error,
-           (){},
-           color: Colors.red
-         );
+        OverlayService().showTopNotification(
+          context,
+          e.message,
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
-      if(mounted) {
-         OverlayService().showTopNotification(
-           context,
-           "Failed to save profile: $e",
-           Icons.error,
-           (){},
-           color: Colors.red
-         );
+      if (mounted) {
+        OverlayService().showTopNotification(
+          context,
+          "Failed to save profile: $e",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -134,7 +147,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Complete Your Profile')),
+      appBar: FrostedAppBar(title: const Text('Complete Your Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -147,16 +160,17 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               decoration: const InputDecoration(labelText: 'Full Name'),
             ),
             const SizedBox(height: 10),
-             TextField(
+            TextField(
               controller: _nimController,
               decoration: const InputDecoration(labelText: 'NIM'),
             ),
             const SizedBox(height: 30),
             if (_isLoading) const CircularProgressIndicator(),
-            if (!_isLoading) ElevatedButton(
-              onPressed: _saveProfile,
-              child: const Text('Save & Continue'),
-            ),
+            if (!_isLoading)
+              ElevatedButton(
+                onPressed: _saveProfile,
+                child: const Text('Save & Continue'),
+              ),
           ],
         ),
       ),

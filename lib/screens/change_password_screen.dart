@@ -11,9 +11,11 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   String _errorMessage = '';
   bool _isLoading = false;
 
@@ -22,15 +24,23 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      setState(() { _errorMessage = 'New passwords do not match.'; });
+      setState(() {
+        _errorMessage = 'New passwords do not match.';
+      });
       return;
     }
 
-    setState(() { _isLoading = true; _errorMessage = ''; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) {
-      setState(() { _isLoading = false; _errorMessage = 'User not found.'; });
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'User not found.';
+      });
       return;
     }
 
@@ -51,7 +61,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         );
         Navigator.of(context).pop();
       }
-
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
         _errorMessage = 'Incorrect current password.';
@@ -62,7 +71,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _errorMessage = 'An unknown error occurred.';
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -78,9 +89,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Change Password'),
-      ),
+      appBar: FrostedAppBar(title: Text('Change Password')),
       body: Stack(
         children: [
           Form(
@@ -103,7 +112,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   SizedBox(height: 16),
                   TextField(
                     controller: _confirmPasswordController,
-                    decoration: InputDecoration(labelText: 'Confirm New Password'),
+                    decoration: InputDecoration(
+                      labelText: 'Confirm New Password',
+                    ),
                     obscureText: true,
                   ),
                   SizedBox(height: 24),

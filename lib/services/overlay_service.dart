@@ -12,7 +12,13 @@ class OverlayService {
   Timer? _timer;
 
   // --- STANDARD NOTIFICATION (AUTO-HIDE) ---
-  void showTopNotification(BuildContext context, String message, IconData icon, VoidCallback onTap, {Color? color}) {
+  void showTopNotification(
+    BuildContext context,
+    String message,
+    IconData icon,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     hideOverlay(); // Clear previous standard notification
 
     OverlayState? overlayState = Overlay.of(context);
@@ -50,26 +56,21 @@ class OverlayService {
     OverlayState? overlayState = Overlay.of(context);
     _audioOverlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: MediaQuery.of(context).padding.top + 60, // Below standard notification
+        top:
+            MediaQuery.of(context).padding.top +
+            60, // Below standard notification
         left: 0,
         right: 0,
         child: Material(
           color: Colors.transparent,
           child: Center(
-            child: Container(
+            child: FrostedSurface(
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: SisapaTheme.blue, // Brand color
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
+              borderRadius: BorderRadius.circular(30),
+              tone: FrostedSurfaceTone.brand,
+              blur: FrostedGlassTokens.blurSigma,
+              boxShadow: FrostedGlassTokens.materialDepth(context),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -78,16 +79,23 @@ class OverlayService {
                   const SizedBox(width: 12),
                   const Text(
                     "Spirit AI Speaking...",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Container(
                     width: 1,
                     height: 20,
-                    color: Colors.white.withOpacity(0.3)
+                    color: Colors.white.withOpacity(0.3),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.stop_circle_outlined, color: Colors.white),
+                    icon: const Icon(
+                      Icons.stop_circle_outlined,
+                      color: Colors.white,
+                    ),
                     iconSize: 24,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(), // Tight layout
@@ -132,7 +140,8 @@ class _TopNotificationWidget extends StatefulWidget {
   State<_TopNotificationWidget> createState() => _TopNotificationWidgetState();
 }
 
-class _TopNotificationWidgetState extends State<_TopNotificationWidget> with SingleTickerProviderStateMixin {
+class _TopNotificationWidgetState extends State<_TopNotificationWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
 
@@ -146,10 +155,7 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget> with Sin
     _offsetAnimation = Tween<Offset>(
       begin: const Offset(0.0, -1.0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
   }
 
@@ -182,22 +188,25 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget> with Sin
               },
               child: GestureDetector(
                 onTap: widget.onTap,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? SisapaTheme.darkGrey : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      )
-                    ],
+                child: FrostedSurface(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
+                  borderRadius: BorderRadius.circular(12),
+                  tint: (isDarkMode ? SisapaTheme.darkGrey : Colors.white)
+                      .withOpacity(isDarkMode ? 0.84 : 0.82),
+                  blur: FrostedGlassTokens.blurSigma,
+                  border: Border.all(
+                    color: FrostedGlassTokens.subtleBorderSide(context).color,
+                  ),
+                  boxShadow: FrostedGlassTokens.materialDepth(context),
                   child: Row(
                     children: [
-                      Icon(widget.icon, color: widget.iconColor ?? SisapaTheme.blue),
+                      Icon(
+                        widget.icon,
+                        color: widget.iconColor ?? SisapaTheme.blue,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -214,9 +223,9 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget> with Sin
                         height: 24,
                         decoration: BoxDecoration(
                           color: Theme.of(context).dividerColor,
-                          borderRadius: BorderRadius.circular(2)
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),

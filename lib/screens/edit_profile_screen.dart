@@ -57,10 +57,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() {
           _nameController.text = data['name'] ?? '';
           _bioController.text = data['bio'] ?? '';
-          _profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+          _profileImageUrl =
+              data['profile_image_url'] ?? data['profileImageUrl'];
           _bannerImageUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
           _selectedIconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
-          _selectedColor = AvatarHelper.getColor(data['avatar_hex'] ?? data['avatarHex']);
+          _selectedColor = AvatarHelper.getColor(
+            data['avatar_hex'] ?? data['avatarHex'],
+          );
           if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
             _selectedIconId = -1;
           }
@@ -73,7 +76,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             if (prodis != null) {
               _selectedProdi = prodis.firstWhere(
                 (p) => p['name'] == savedProdiName,
-                orElse: () => prodis.first
+                orElse: () => prodis.first,
               );
             }
           }
@@ -91,7 +94,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _tryAutoDetectDepartment() {
     final email = _user?.email;
     if (email == null) return;
-    var t = AppLocalizations.of(context); // Bisa null saat init, handle di bawah atau biarkan english default di backend logic
+    var t = AppLocalizations.of(
+      context,
+    ); // Bisa null saat init, handle di bawah atau biarkan english default di backend logic
 
     final RegExp regex = RegExp(r'\.([a-z]+)\d+@');
     final match = regex.firstMatch(email);
@@ -100,7 +105,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final code = match.group(1);
       if (code != null) {
         final detectedDept = _mapEmailCodeToDepartment(code);
-        if (detectedDept != null && PnjData.departments.containsKey(detectedDept)) {
+        if (detectedDept != null &&
+            PnjData.departments.containsKey(detectedDept)) {
           setState(() {
             _selectedDepartment = detectedDept;
             _selectedProdi = null;
@@ -110,7 +116,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               context,
               "${t.translate('edit_auto_detect')}$detectedDept",
               Icons.auto_awesome,
-              (){}
+              () {},
             );
           }
         }
@@ -120,20 +126,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   String? _mapEmailCodeToDepartment(String code) {
     switch (code.toLowerCase()) {
-      case 'te': return 'Teknik Elektro';
-      case 'tm': return 'Teknik Mesin';
-      case 'ts': return 'Teknik Sipil';
+      case 'te':
+        return 'Teknik Elektro';
+      case 'tm':
+        return 'Teknik Mesin';
+      case 'ts':
+        return 'Teknik Sipil';
       case 'ti':
-      case 'tik': return 'Teknik Informatika & Komputer';
-      case 'ak': return 'Akuntansi';
-      case 'an': return 'Administrasi Niaga';
+      case 'tik':
+        return 'Teknik Informatika & Komputer';
+      case 'ak':
+        return 'Akuntansi';
+      case 'an':
+        return 'Administrasi Niaga';
       case 'tg':
-      case 'tgp': return 'Teknik Grafika & Penerbitan';
-      default: return null;
+      case 'tgp':
+        return 'Teknik Grafika & Penerbitan';
+      default:
+        return null;
     }
   }
 
-  Future<File?> _cropImage({required XFile imageFile, required bool isAvatar}) async {
+  Future<File?> _cropImage({
+    required XFile imageFile,
+    required bool isAvatar,
+  }) async {
     var t = AppLocalizations.of(context)!;
     try {
       final dynamic cropped = await ImageCropper().cropImage(
@@ -146,15 +163,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             : CropAspectRatio(ratioX: 3, ratioY: 1),
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: isAvatar ? t.translate('profile_crop_avatar') : t.translate('profile_crop_banner'),
+            toolbarTitle: isAvatar
+                ? t.translate('profile_crop_avatar')
+                : t.translate('profile_crop_banner'),
             toolbarColor: SisapaTheme.blue,
             toolbarWidgetColor: Colors.white,
-            initAspectRatio: isAvatar ? CropAspectRatioPreset.square : CropAspectRatioPreset.ratio3x2,
+            initAspectRatio: isAvatar
+                ? CropAspectRatioPreset.square
+                : CropAspectRatioPreset.ratio3x2,
             lockAspectRatio: true,
             hideBottomControls: false,
           ),
           IOSUiSettings(
-            title: isAvatar ? t.translate('profile_crop_avatar') : t.translate('profile_crop_banner'),
+            title: isAvatar
+                ? t.translate('profile_crop_avatar')
+                : t.translate('profile_crop_banner'),
             aspectRatioLockEnabled: true,
           ),
         ],
@@ -162,7 +185,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (cropped != null) {
         if (cropped is File) return cropped;
-        try { return File((cropped as dynamic).path); } catch (_) {}
+        try {
+          return File((cropped as dynamic).path);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint("Cropping failed: $e");
@@ -175,40 +200,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     var t = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              SizedBox(height: 16),
-              ListTile(
-                leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
-                title: Text(t.translate('profile_camera')),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(isAvatar: isAvatar, source: ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
-                title: Text(t.translate('profile_gallery')),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(isAvatar: isAvatar, source: ImageSource.gallery);
-                },
-              ),
-              SizedBox(height: 12),
-            ],
+        return FrostedBottomSheet(
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ListTile(
+                  leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
+                  title: Text(t.translate('profile_camera')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(isAvatar: isAvatar, source: ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
+                  title: Text(t.translate('profile_gallery')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(isAvatar: isAvatar, source: ImageSource.gallery);
+                  },
+                ),
+                SizedBox(height: 12),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Future<void> _pickImage({required bool isAvatar, required ImageSource source}) async {
+  Future<void> _pickImage({
+    required bool isAvatar,
+    required ImageSource source,
+  }) async {
     FocusScope.of(context).unfocus();
     var t = AppLocalizations.of(context)!;
     final picker = ImagePicker();
@@ -217,22 +257,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       source: source,
       imageQuality: 70,
       maxWidth: 1000,
-      maxHeight: 1000
+      maxHeight: 1000,
     );
 
     if (pickedFile != null) {
-      final processedFile = await _cropImage(imageFile: pickedFile, isAvatar: isAvatar);
+      final processedFile = await _cropImage(
+        imageFile: pickedFile,
+        isAvatar: isAvatar,
+      );
       if (processedFile != null) {
         setState(() {
           if (isAvatar) {
             _selectedImageFile = processedFile;
             _selectedIconId = -1;
             _profileImageUrl = null;
-            OverlayService().showTopNotification(context, t.translate('edit_pic_selected'), Icons.image, (){});
+            OverlayService().showTopNotification(
+              context,
+              t.translate('edit_pic_selected'),
+              Icons.image,
+              () {},
+            );
           } else {
             _selectedBannerFile = processedFile;
             _bannerImageUrl = null;
-            OverlayService().showTopNotification(context, t.translate('edit_banner_selected'), Icons.image, (){});
+            OverlayService().showTopNotification(
+              context,
+              t.translate('edit_banner_selected'),
+              Icons.image,
+              () {},
+            );
           }
         });
       }
@@ -244,20 +297,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     var t = AppLocalizations.of(context)!;
 
     if (_user == null || _nameController.text.isEmpty) {
-      OverlayService().showTopNotification(context, t.translate('edit_error_name'), Icons.warning, (){}, color: Colors.orange);
+      OverlayService().showTopNotification(
+        context,
+        t.translate('edit_error_name'),
+        Icons.warning,
+        () {},
+        color: Colors.orange,
+      );
       return;
     }
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     String? finalImageUrl = _profileImageUrl;
     String? finalBannerUrl = _bannerImageUrl;
 
     if (_selectedImageFile != null) {
-      final uploadUrl = await _cloudinaryService.uploadImage(_selectedImageFile!);
+      final uploadUrl = await _cloudinaryService.uploadImage(
+        _selectedImageFile!,
+      );
       if (uploadUrl == null) {
         if (mounted) {
-          setState(() { _isLoading = false; });
-          OverlayService().showTopNotification(context, t.translate('edit_error_upload'), Icons.error, (){}, color: Colors.red);
+          setState(() {
+            _isLoading = false;
+          });
+          OverlayService().showTopNotification(
+            context,
+            t.translate('edit_error_upload'),
+            Icons.error,
+            () {},
+            color: Colors.red,
+          );
         }
         return;
       }
@@ -265,11 +336,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     if (_selectedBannerFile != null) {
-      final uploadUrl = await _cloudinaryService.uploadImage(_selectedBannerFile!);
+      final uploadUrl = await _cloudinaryService.uploadImage(
+        _selectedBannerFile!,
+      );
       if (uploadUrl == null) {
         if (mounted) {
-          setState(() { _isLoading = false; });
-          OverlayService().showTopNotification(context, t.translate('edit_error_upload'), Icons.error, (){}, color: Colors.red);
+          setState(() {
+            _isLoading = false;
+          });
+          OverlayService().showTopNotification(
+            context,
+            t.translate('edit_error_upload'),
+            Icons.error,
+            () {},
+            color: Colors.red,
+          );
         }
         return;
       }
@@ -283,7 +364,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'name': _nameController.text.trim(),
         'bio': _bioController.text.trim(),
         'avatar_icon_id': finalIconId,
-        'avatar_hex': finalIconId != -1 ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}' : null,
+        'avatar_hex': finalIconId != -1
+            ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}'
+            : null,
         'profile_image_url': finalImageUrl,
         'banner_image_url': finalBannerUrl,
       };
@@ -303,18 +386,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           context,
           t.translate('edit_success'),
           Icons.check_circle,
-          (){},
-          color: Colors.green
+          () {},
+          color: Colors.green,
         );
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (context.mounted) {
-        OverlayService().showTopNotification(context, "${t.translate('edit_update_fail')}$e", Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          "${t.translate('edit_update_fail')}$e",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -331,13 +422,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return CircleAvatar(
         radius: 45,
         backgroundColor: Colors.grey,
-        backgroundImage: CachedNetworkImageProvider(_profileImageUrl!, cacheManager: AppCacheManager.instance),
+        backgroundImage: CachedNetworkImageProvider(
+          _profileImageUrl!,
+          cacheManager: AppCacheManager.instance,
+        ),
       );
     }
     return CircleAvatar(
       radius: 45,
       backgroundColor: _selectedColor,
-      child: Icon(AvatarHelper.getIcon(_selectedIconId), size: 50, color: Colors.white),
+      child: Icon(
+        AvatarHelper.getIcon(_selectedIconId),
+        size: 50,
+        color: Colors.white,
+      ),
     );
   }
 
@@ -353,14 +451,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
 
-    final bool isCustomImageSet = _selectedImageFile != null || (_profileImageUrl != null && _profileImageUrl!.isNotEmpty);
-    final bool isCustomBannerSet = _selectedBannerFile != null || (_bannerImageUrl != null && _bannerImageUrl!.isNotEmpty);
+    final bool isCustomImageSet =
+        _selectedImageFile != null ||
+        (_profileImageUrl != null && _profileImageUrl!.isNotEmpty);
+    final bool isCustomBannerSet =
+        _selectedBannerFile != null ||
+        (_bannerImageUrl != null && _bannerImageUrl!.isNotEmpty);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(t.translate('edit_profile_title'), style: TextStyle(fontWeight: FontWeight.bold)),
+        appBar: FrostedAppBar(
+          title: Text(
+            t.translate('edit_profile_title'),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
           elevation: 0,
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -375,8 +480,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
                 ),
                 child: _isLoading
-                    ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(t.translate('edit_save'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        t.translate('edit_save'),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -400,14 +518,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           fit: StackFit.expand,
                           children: [
                             if (_selectedBannerFile != null)
-                              Image.file(_selectedBannerFile!, fit: BoxFit.cover)
-                            else if (_bannerImageUrl != null && _bannerImageUrl!.isNotEmpty)
-                              CachedNetworkImage(cacheManager: AppCacheManager.instance, 
+                              Image.file(
+                                _selectedBannerFile!,
+                                fit: BoxFit.cover,
+                              )
+                            else if (_bannerImageUrl != null &&
+                                _bannerImageUrl!.isNotEmpty)
+                              CachedNetworkImage(
+                                cacheManager: AppCacheManager.instance,
                                 imageUrl: _bannerImageUrl!,
                                 fit: BoxFit.cover,
                                 memCacheWidth: 800,
-                                placeholder: (context, url) => Center(child: CircularProgressIndicator(color: SisapaTheme.blue)),
-                                errorWidget: (context, url, error) => Icon(Icons.error_outline, color: Colors.grey),
+                                placeholder: (context, url) => Center(
+                                  child: CircularProgressIndicator(
+                                    color: SisapaTheme.blue,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                  Icons.error_outline,
+                                  color: Colors.grey,
+                                ),
                               ),
                             Container(
                               color: Colors.black26,
@@ -415,8 +545,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.add_a_photo_outlined, color: Colors.white.withOpacity(0.8), size: 32),
-                                    Text(t.translate('edit_banner_add'), style: TextStyle(color: Colors.white, fontSize: 12))
+                                    Icon(
+                                      Icons.add_a_photo_outlined,
+                                      color: Colors.white.withOpacity(0.8),
+                                      size: 32,
+                                    ),
+                                    Text(
+                                      t.translate('edit_banner_add'),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -428,19 +568,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                     if (isCustomBannerSet)
                       Positioned(
-                        top: 10, right: 10,
+                        top: 10,
+                        right: 10,
                         child: GestureDetector(
-                          onTap: () => setState(() { _selectedBannerFile = null; _bannerImageUrl = null; }),
+                          onTap: () => setState(() {
+                            _selectedBannerFile = null;
+                            _bannerImageUrl = null;
+                          }),
                           child: Container(
                             padding: EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                            child: Icon(Icons.close, color: Colors.white, size: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ),
 
                     Positioned(
-                      bottom: 0, left: 20,
+                      bottom: 0,
+                      left: 20,
                       child: GestureDetector(
                         onTap: () => _showImageSourceSelection(isAvatar: true),
                         child: Stack(
@@ -454,15 +606,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               child: _buildProfileAvatar(),
                             ),
                             Positioned(
-                              bottom: 0, right: 0,
+                              bottom: 0,
+                              right: 0,
                               child: Container(
                                 padding: EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: SisapaTheme.blue,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: theme.scaffoldBackgroundColor, width: 2)
+                                  border: Border.all(
+                                    color: theme.scaffoldBackgroundColor,
+                                    width: 2,
+                                  ),
                                 ),
-                                child: Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],
@@ -476,18 +636,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               // LAYOUT CHANGE: Preset avatar moved here
               if (!isCustomImageSet) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(t.translate('edit_avatar_preset'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.hintColor)),
+                      Text(
+                        t.translate('edit_avatar_preset'),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.hintColor,
+                        ),
+                      ),
                       SizedBox(height: 12),
                       SizedBox(
                         height: 60,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: 10,
-                          separatorBuilder: (_,__) => SizedBox(width: 16),
+                          separatorBuilder: (_, __) => SizedBox(width: 16),
                           itemBuilder: (context, index) {
                             final isSelected = _selectedIconId == index;
                             return GestureDetector(
@@ -500,13 +669,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 height: 50,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: isSelected ? theme.primaryColor.withOpacity(0.1) : theme.cardColor,
-                                  border: isSelected ? Border.all(color: theme.primaryColor, width: 2) : Border.all(color: theme.dividerColor),
+                                  color: isSelected
+                                      ? theme.primaryColor.withOpacity(0.1)
+                                      : theme.cardColor,
+                                  border: isSelected
+                                      ? Border.all(
+                                          color: theme.primaryColor,
+                                          width: 2,
+                                        )
+                                      : Border.all(color: theme.dividerColor),
                                 ),
                                 child: Icon(
                                   AvatarHelper.getIcon(index),
-                                  color: isSelected ? theme.primaryColor : theme.hintColor,
-                                  size: 24
+                                  color: isSelected
+                                      ? theme.primaryColor
+                                      : theme.hintColor,
+                                  size: 24,
                                 ),
                               ),
                             );
@@ -519,10 +697,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: AvatarHelper.presetColors.length,
-                          separatorBuilder: (_,__) => SizedBox(width: 12),
+                          separatorBuilder: (_, __) => SizedBox(width: 12),
                           itemBuilder: (context, index) {
                             final color = AvatarHelper.presetColors[index];
-                            final isSelected = _selectedColor.value == color.value;
+                            final isSelected =
+                                _selectedColor.value == color.value;
                             return GestureDetector(
                               onTap: () {
                                 FocusScope.of(context).unfocus();
@@ -534,9 +713,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 decoration: BoxDecoration(
                                   color: color,
                                   shape: BoxShape.circle,
-                                  border: isSelected ? Border.all(color: theme.textTheme.bodyLarge!.color!, width: 2) : null,
+                                  border: isSelected
+                                      ? Border.all(
+                                          color:
+                                              theme.textTheme.bodyLarge!.color!,
+                                          width: 2,
+                                        )
+                                      : null,
                                 ),
-                                child: isSelected ? Icon(Icons.check, color: Colors.white, size: 20) : null,
+                                child: isSelected
+                                    ? Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 20,
+                                      )
+                                    : null,
                               ),
                             );
                           },
@@ -557,8 +748,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                         child: GestureDetector(
-                          onTap: () => setState(() { _selectedImageFile = null; _profileImageUrl = null; _selectedIconId = 0; }),
-                          child: Text(t.translate('edit_remove_photo'), style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 13)),
+                          onTap: () => setState(() {
+                            _selectedImageFile = null;
+                            _profileImageUrl = null;
+                            _selectedIconId = 0;
+                          }),
+                          child: Text(
+                            t.translate('edit_remove_photo'),
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       ),
 
@@ -568,8 +770,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       decoration: InputDecoration(
                         labelText: t.translate('edit_display_name'),
                         hintText: t.translate('edit_name_hint'),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -580,8 +787,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       decoration: InputDecoration(
                         labelText: t.translate('edit_bio_label'),
                         hintText: t.translate('edit_bio_hint'),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         alignLabelWithHint: true,
                       ),
                       maxLines: 4,
@@ -590,21 +802,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                     SizedBox(height: 30),
 
-                    Text(t.translate('edit_academic_info'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      t.translate('edit_academic_info'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     SizedBox(height: 16),
 
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         labelText: t.translate('edit_dept_label'),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         filled: true,
                         fillColor: theme.cardColor,
                       ),
                       value: _selectedDepartment,
                       isExpanded: true,
                       items: PnjData.departments.keys.map((String dept) {
-                        return DropdownMenuItem(value: dept, child: Text(dept, overflow: TextOverflow.ellipsis));
+                        return DropdownMenuItem(
+                          value: dept,
+                          child: Text(dept, overflow: TextOverflow.ellipsis),
+                        );
                       }).toList(),
                       onChanged: (val) {
                         setState(() {
@@ -618,26 +843,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     DropdownButtonFormField<Map<String, String>>(
                       decoration: InputDecoration(
                         labelText: t.translate('edit_prodi_label'),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         filled: true,
                         fillColor: theme.cardColor,
                       ),
                       value: _selectedProdi,
                       isExpanded: true,
                       items: _selectedDepartment == null
-                        ? []
-                        : PnjData.departments[_selectedDepartment]!.map((Map<String, String> prodi) {
-                            return DropdownMenuItem<Map<String, String>>(
-                              value: prodi,
-                              child: Text(prodi['name']!, overflow: TextOverflow.ellipsis),
-                            );
-                          }).toList(),
-                      onChanged: _selectedDepartment == null ? null : (val) {
-                        setState(() {
-                          _selectedProdi = val;
-                        });
-                      },
+                          ? []
+                          : PnjData.departments[_selectedDepartment]!.map((
+                              Map<String, String> prodi,
+                            ) {
+                              return DropdownMenuItem<Map<String, String>>(
+                                value: prodi,
+                                child: Text(
+                                  prodi['name']!,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                      onChanged: _selectedDepartment == null
+                          ? null
+                          : (val) {
+                              setState(() {
+                                _selectedProdi = val;
+                              });
+                            },
                     ),
 
                     SizedBox(height: 30),
@@ -647,14 +884,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       contentPadding: EdgeInsets.zero,
                       leading: Container(
                         padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(8)),
-                        child: Icon(Icons.lock_outline, color: theme.primaryColor),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.lock_outline,
+                          color: theme.primaryColor,
+                        ),
                       ),
                       title: Text(t.translate('edit_change_password')),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 14, color: theme.hintColor),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: theme.hintColor,
+                      ),
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => ChangePasswordScreen(),
+                          ),
                         );
                       },
                     ),

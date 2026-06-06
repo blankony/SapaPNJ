@@ -15,10 +15,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isSuccess = false;
 
   Future<void> _sendResetEmail() async {
-    setState(() { _message = ''; });
+    setState(() {
+      _message = '';
+    });
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
       setState(() {
         _message = 'Password reset email sent. Please check your inbox.';
         _isSuccess = true;
@@ -36,10 +40,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Forgot Password'),
-        centerTitle: true,
-      ),
+      appBar: FrostedAppBar(title: Text('Forgot Password'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
@@ -68,7 +69,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   _message,
-                  style: TextStyle(color: _isSuccess ? Colors.green : Colors.red),
+                  style: TextStyle(
+                    color: _isSuccess ? Colors.green : Colors.red,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),

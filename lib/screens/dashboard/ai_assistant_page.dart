@@ -1,7 +1,6 @@
 import 'dart:async';
 import '../../services/app_cache_manager.dart';
 
-import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,29 +25,139 @@ import '../../widgets/decorative_background.dart';
 // --- ENHANCED LANGUAGE DETECTOR ---
 class LanguageDetector {
   static const Set<String> _idWords = {
-    'aku', 'kamu', 'dia', 'kita', 'kami', 'mereka', 'saya', 'anda', 'kalian',
-    'gue', 'lu', 'elo', 'gw', 'lo', 'beliau',
-    'yang', 'nya', 'di', 'ke', 'dari', 'pada', 'untuk', 'buat',
-    'dan', 'atau', 'tapi', 'tetapi', 'karena', 'jika', 'kalau',
-    'ada', 'adalah', 'ialah', 'jadi', 'bisa', 'dapat', 'mau', 'ingin',
-    'akan', 'sudah', 'telah', 'belum', 'pernah', 'harus', 'bantu', 'tolong',
-    'minta', 'ngetes',
-    'tidak', 'tak', 'bukan', 'jangan', 'gak', 'nggak', 'kagak', 'enggak',
-    'apa', 'siapa', 'kapan', 'dimana', 'kemana', 'kenapa', 'mengapa',
-    'bagaimana', 'berapa', 'mana', 'ngapain', 'gimana',
-    'hari', 'besok', 'kemarin', 'sekarang', 'nanti', 'tadi',
-    'banyak', 'sedikit', 'semua',
-    'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam', 'terima', 'kasih',
-    'dong', 'sih', 'deh', 'kok', 'yuk', 'nih', 'tuh', 'lain', 'lainnya'
+    'aku',
+    'kamu',
+    'dia',
+    'kita',
+    'kami',
+    'mereka',
+    'saya',
+    'anda',
+    'kalian',
+    'gue',
+    'lu',
+    'elo',
+    'gw',
+    'lo',
+    'beliau',
+    'yang',
+    'nya',
+    'di',
+    'ke',
+    'dari',
+    'pada',
+    'untuk',
+    'buat',
+    'dan',
+    'atau',
+    'tapi',
+    'tetapi',
+    'karena',
+    'jika',
+    'kalau',
+    'ada',
+    'adalah',
+    'ialah',
+    'jadi',
+    'bisa',
+    'dapat',
+    'mau',
+    'ingin',
+    'akan',
+    'sudah',
+    'telah',
+    'belum',
+    'pernah',
+    'harus',
+    'bantu',
+    'tolong',
+    'minta',
+    'ngetes',
+    'tidak',
+    'tak',
+    'bukan',
+    'jangan',
+    'gak',
+    'nggak',
+    'kagak',
+    'enggak',
+    'apa',
+    'siapa',
+    'kapan',
+    'dimana',
+    'kemana',
+    'kenapa',
+    'mengapa',
+    'bagaimana',
+    'berapa',
+    'mana',
+    'ngapain',
+    'gimana',
+    'hari',
+    'besok',
+    'kemarin',
+    'sekarang',
+    'nanti',
+    'tadi',
+    'banyak',
+    'sedikit',
+    'semua',
+    'halo',
+    'hai',
+    'selamat',
+    'pagi',
+    'siang',
+    'sore',
+    'malam',
+    'terima',
+    'kasih',
+    'dong',
+    'sih',
+    'deh',
+    'kok',
+    'yuk',
+    'nih',
+    'tuh',
+    'lain',
+    'lainnya',
   };
 
   static const Set<String> _enWords = {
-    'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-    'have', 'has', 'had', 'do', 'does', 'did',
-    'will', 'would', 'should', 'could', 'can', 'may', 'might',
-    'what', 'where', 'when', 'why', 'how', 'who', 'which',
-    'this', 'that', 'these', 'those',
-    'not', 'no', 'yes',
+    'the',
+    'is',
+    'are',
+    'was',
+    'were',
+    'be',
+    'been',
+    'being',
+    'have',
+    'has',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'should',
+    'could',
+    'can',
+    'may',
+    'might',
+    'what',
+    'where',
+    'when',
+    'why',
+    'how',
+    'who',
+    'which',
+    'this',
+    'that',
+    'these',
+    'those',
+    'not',
+    'no',
+    'yes',
   };
 
   static String detect(String text) {
@@ -57,7 +166,8 @@ class LanguageDetector {
     int idScore = 0;
     int enScore = 0;
 
-    if (RegExp(r'\b(meng|peng|ber|ter|ke|se)\w+').hasMatch(cleanText)) idScore += 3;
+    if (RegExp(r'\b(meng|peng|ber|ter|ke|se)\w+').hasMatch(cleanText))
+      idScore += 3;
     if (RegExp(r'\w+nya\b').hasMatch(cleanText)) idScore += 3;
     if (RegExp(r'\bdi\s+\w+').hasMatch(cleanText)) idScore += 2;
 
@@ -72,12 +182,16 @@ class LanguageDetector {
       if (_enWords.contains(word)) enScore += 2;
     }
 
-    if (RegExp(r'[bcdfghjklmnpqrstvwxyz]{4,}').hasMatch(cleanText)) enScore += 1;
+    if (RegExp(r'[bcdfghjklmnpqrstvwxyz]{4,}').hasMatch(cleanText))
+      enScore += 1;
 
-    if (idScore > enScore) return 'id-ID';
-    else if (enScore > idScore) return 'en-US';
+    if (idScore > enScore)
+      return 'id-ID';
+    else if (enScore > idScore)
+      return 'en-US';
 
-    if (RegExp(r'\b(yang|nya|di|ke|dari|untuk|dan)\b').hasMatch(cleanText)) return 'id-ID';
+    if (RegExp(r'\b(yang|nya|di|ke|dari|untuk|dan)\b').hasMatch(cleanText))
+      return 'id-ID';
 
     return 'en-US';
   }
@@ -110,7 +224,11 @@ class TTSManager {
   Future<Map<String, dynamic>> _getAvailableVoices() async {
     try {
       final voices = await _tts.getVoices;
-      final Map<String, dynamic> voiceMap = {'id-ID': [], 'en-US': [], 'en-GB': []};
+      final Map<String, dynamic> voiceMap = {
+        'id-ID': [],
+        'en-US': [],
+        'en-GB': [],
+      };
 
       if (voices != null && voices is List) {
         for (var voice in voices) {
@@ -119,7 +237,8 @@ class TTSManager {
             final name = voice['name']?.toString() ?? '';
             if (locale.startsWith('id') || name.contains('Indonesia')) {
               voiceMap['id-ID']!.add(voice);
-            } else if (locale.startsWith('en-US') || name.contains('United States')) {
+            } else if (locale.startsWith('en-US') ||
+                name.contains('United States')) {
               voiceMap['en-US']!.add(voice);
             } else if (locale.startsWith('en')) {
               voiceMap['en-GB']!.add(voice);
@@ -162,7 +281,11 @@ class TTSManager {
   }
 
   Future<bool> _setLanguageWithFallback(String targetLang) async {
-    final fallbackChain = [targetLang, if (targetLang != 'en-US') 'en-US', 'en-GB'];
+    final fallbackChain = [
+      targetLang,
+      if (targetLang != 'en-US') 'en-US',
+      'en-GB',
+    ];
     for (String lang in fallbackChain) {
       try {
         final isAvailable = await _tts.isLanguageAvailable(lang);
@@ -171,7 +294,9 @@ class TTSManager {
           if (Platform.isAndroid && _availableVoices != null) {
             final voices = _availableVoices![lang] as List?;
             if (voices != null && voices.isNotEmpty) {
-              try { await _tts.setVoice(voices.first); } catch (_) {}
+              try {
+                await _tts.setVoice(voices.first);
+              } catch (_) {}
             }
           }
           return true;
@@ -200,7 +325,8 @@ class AiAssistantPage extends StatefulWidget {
   State<AiAssistantPage> createState() => _AiAssistantPageState();
 }
 
-class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderStateMixin {
+class _AiAssistantPageState extends State<AiAssistantPage>
+    with TickerProviderStateMixin {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
@@ -256,7 +382,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     _activeSuggestions = _allSuggestions.take(3).toList();
 
     _typingController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1000),
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
     )..repeat();
 
     _micScaleController = AnimationController(
@@ -269,7 +396,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     _eventBusSubscription = aiPageEventBus.stream.listen((event) {
       if (event.type == AiEventType.newChat) {
         _startNewChat();
-      } else if (event.type == AiEventType.loadChat && event.sessionId != null) {
+      } else if (event.type == AiEventType.loadChat &&
+          event.sessionId != null) {
         _loadChatSession(event.sessionId!);
       }
     });
@@ -304,7 +432,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
         if (!mounted) return;
         setState(() {
           _textController.text = text;
-          _textController.selection = TextSelection.fromPosition(TextPosition(offset: text.length));
+          _textController.selection = TextSelection.fromPosition(
+            TextPosition(offset: text.length),
+          );
         });
       },
     );
@@ -320,7 +450,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     Clipboard.setData(ClipboardData(text: text));
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
-    OverlayService().showTopNotification(context, t.translate('ai_copied'), Icons.copy_rounded, (){}); // "Copied to clipboard"
+    OverlayService().showTopNotification(
+      context,
+      t.translate('ai_copied'),
+      Icons.copy_rounded,
+      () {},
+    ); // "Copied to clipboard"
   }
 
   void _shareResponse(String text) {
@@ -333,7 +468,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       return;
     }
     try {
-      _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: _apiKey, systemInstruction: _systemInstruction);
+      _model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: _apiKey,
+        systemInstruction: _systemInstruction,
+      );
       _chatSession = _model.startChat();
     } catch (e) {
       setState(() => _hasConnectionError = true);
@@ -377,24 +516,29 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
         final isUser = msg['is_user'] == true || msg['isUser'] == true;
         final String currentRole = isUser ? 'user' : 'model';
 
-        loadedUiMessages.add(ChatMessage(
-          text: text,
-          isUser: isUser,
-          timestamp: msg['timestamp'] != null
-              ? DateTime.tryParse(msg['timestamp']) ?? DateTime.now()
-              : DateTime.now(),
-        ));
+        loadedUiMessages.add(
+          ChatMessage(
+            text: text,
+            isUser: isUser,
+            timestamp: msg['timestamp'] != null
+                ? DateTime.tryParse(msg['timestamp']) ?? DateTime.now()
+                : DateTime.now(),
+          ),
+        );
 
         if (lastRole == null) {
-          lastRole = currentRole; bufferParts.add(TextPart(text));
+          lastRole = currentRole;
+          bufferParts.add(TextPart(text));
         } else if (lastRole == currentRole) {
           bufferParts.add(TextPart("\n\n$text"));
         } else {
           geminiHistory.add(Content(lastRole, [...bufferParts]));
-          lastRole = currentRole; bufferParts = [TextPart(text)];
+          lastRole = currentRole;
+          bufferParts = [TextPart(text)];
         }
       }
-      if (lastRole != null && bufferParts.isNotEmpty) geminiHistory.add(Content(lastRole, bufferParts));
+      if (lastRole != null && bufferParts.isNotEmpty)
+        geminiHistory.add(Content(lastRole, bufferParts));
 
       setState(() {
         _messages.addAll(loadedUiMessages);
@@ -403,7 +547,10 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       });
       _scrollToBottom();
     } catch (e) {
-      setState(() { _isLoadingHistory = false; _hasConnectionError = true; });
+      setState(() {
+        _isLoadingHistory = false;
+        _hasConnectionError = true;
+      });
     }
   }
 
@@ -418,7 +565,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     final user = FirebaseAuth.instance.currentUser;
 
     setState(() {
-      _messages.add(ChatMessage(text: text, isUser: true, timestamp: DateTime.now()));
+      _messages.add(
+        ChatMessage(text: text, isUser: true, timestamp: DateTime.now()),
+      );
       _isTyping = true;
       _hasConnectionError = false;
     });
@@ -428,28 +577,43 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
 
     try {
       final response = await _chatSession.sendMessage(Content.text(text));
-      final aiText = response.text ?? t.translate('ai_error_catch'); // "I didn't catch that."
+      final aiText =
+          response.text ??
+          t.translate('ai_error_catch'); // "I didn't catch that."
 
       if (mounted) {
         setState(() {
           _isTyping = false;
-          _messages.add(ChatMessage(text: aiText, isUser: false, timestamp: DateTime.now()));
+          _messages.add(
+            ChatMessage(text: aiText, isUser: false, timestamp: DateTime.now()),
+          );
         });
         _scrollToBottom();
-        if (user != null) await _saveMessageToFirestore(user.uid, aiText, false);
+        if (user != null)
+          await _saveMessageToFirestore(user.uid, aiText, false);
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isTyping = false;
-          _messages.add(ChatMessage(text: t.translate('ai_error_connection'), isUser: false, timestamp: DateTime.now())); // "Connection error..."
+          _messages.add(
+            ChatMessage(
+              text: t.translate('ai_error_connection'),
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          ); // "Connection error..."
         });
         _scrollToBottom();
       }
     }
   }
 
-  Future<void> _saveMessageToFirestore(String uid, String text, bool isUser) async {
+  Future<void> _saveMessageToFirestore(
+    String uid,
+    String text,
+    bool isUser,
+  ) async {
     try {
       if (_currentSessionId == null) {
         String title = text.replaceAll('\n', ' ');
@@ -459,7 +623,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
         _currentSessionId = newSessionId;
         aiPageEventBus.fire(AiPageEvent(type: AiEventType.newChat));
       }
-      await ApiService().saveChatMessage(_currentSessionId!, text: text, isUser: isUser);
+      await ApiService().saveChatMessage(
+        _currentSessionId!,
+        text: text,
+        isUser: isUser,
+      );
     } catch (e) {
       debugPrint("Error saving chat message: $e");
     }
@@ -470,15 +638,18 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 500), curve: Curves.easeOutQuart,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutQuart,
         );
       }
     });
   }
 
   void _handleHorizontalSwipe(DragEndDetails details) {
-    if (details.primaryVelocity! > 0) Scaffold.of(context).openDrawer();
-    else if (details.primaryVelocity! < 0) Scaffold.of(context).openEndDrawer();
+    if (details.primaryVelocity! > 0)
+      Scaffold.of(context).openDrawer();
+    else if (details.primaryVelocity! < 0)
+      Scaffold.of(context).openEndDrawer();
   }
 
   @override
@@ -489,13 +660,16 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
-    if (_isLoadingHistory) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoadingHistory)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (_hasConnectionError && _messages.isEmpty) {
       return Scaffold(
         body: CommonErrorWidget(
-          message: t.translate('ai_error_connect_spirit'), // "Unable to connect..."
+          message: t.translate(
+            'ai_error_connect_spirit',
+          ), // "Unable to connect..."
           isConnectionError: true,
-          onRetry: () => _startNewChat()
+          onRetry: () => _startNewChat(),
         ),
       );
     }
@@ -506,11 +680,15 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
         body: Stack(
           children: [
             if (_messages.isEmpty) ...[
-               const Positioned.fill(child: DecorativeBackground()),
+              const Positioned.fill(child: DecorativeBackground()),
             ],
             Column(
               children: [
-                Expanded(child: _messages.isEmpty ? _buildEmptyState(theme, isDark, t) : _buildChatList(theme, isDark, t)),
+                Expanded(
+                  child: _messages.isEmpty
+                      ? _buildEmptyState(theme, isDark, t)
+                      : _buildChatList(theme, isDark, t),
+                ),
                 _buildInputArea(theme, isDark, t),
               ],
             ),
@@ -532,14 +710,33 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
             Container(
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
-                shape: BoxShape.circle, color: theme.cardColor,
-                boxShadow: [BoxShadow(color: SisapaTheme.blue.withOpacity(0.25), blurRadius: 30, spreadRadius: 2)]
+                shape: BoxShape.circle,
+                color: theme.cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: SisapaTheme.blue.withOpacity(0.25),
+                    blurRadius: 30,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
               child: Image.asset('images/app_icon.png', height: 70, width: 70),
             ),
             const SizedBox(height: 32),
-            Text("Spirit AI", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w900, color: SisapaTheme.blue)),
-            Text(t.translate('ai_subtitle'), style: theme.textTheme.titleMedium?.copyWith(color: theme.hintColor, fontWeight: FontWeight.normal)), // "Your Virtual Assistant"
+            Text(
+              "Spirit AI",
+              style: theme.textTheme.displayMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: SisapaTheme.blue,
+              ),
+            ),
+            Text(
+              t.translate('ai_subtitle'),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.hintColor,
+                fontWeight: FontWeight.normal,
+              ),
+            ), // "Your Virtual Assistant"
             const SizedBox(height: 40),
             Column(
               children: _activeSuggestions.map((suggestion) {
@@ -547,7 +744,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                 String displayText = t.translate(suggestion['text']);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
-                  child: _buildShortcutCard(theme, displayText, suggestion['icon'] as IconData),
+                  child: _buildShortcutCard(
+                    theme,
+                    displayText,
+                    suggestion['icon'] as IconData,
+                  ),
                 );
               }).toList(),
             ),
@@ -562,19 +763,30 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     return InkWell(
       onTap: () => _handleSubmitted(text),
       borderRadius: BorderRadius.circular(16),
-      child: Container(
+      child: FrostedSurface(
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: theme.cardColor, borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: Offset(0, 4))]
+        borderRadius: BorderRadius.circular(16),
+        tint: theme.cardColor.withOpacity(
+          theme.brightness == Brightness.dark ? 0.78 : 0.74,
         ),
+        blur: FrostedGlassTokens.blurSigma,
+        border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+        boxShadow: FrostedGlassTokens.materialDepth(context),
         child: Row(
           children: [
             Icon(icon, color: SisapaTheme.blue, size: 20),
             SizedBox(width: 16),
-            Expanded(child: Text(text, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            Expanded(
+              child: Text(
+                text,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             Icon(Icons.arrow_forward_ios, size: 12, color: theme.hintColor),
           ],
         ),
@@ -589,7 +801,12 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       itemCount: _messages.length + (_isTyping ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _messages.length) return _buildTypingIndicator(theme, t);
-        return _ChatBubble(message: _messages[index], onSpeak: _speak, onCopy: _copyToClipboard, onShare: _shareResponse);
+        return _ChatBubble(
+          message: _messages[index],
+          onSpeak: _speak,
+          onCopy: _copyToClipboard,
+          onShare: _shareResponse,
+        );
       },
     );
   }
@@ -599,16 +816,41 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
       padding: const EdgeInsets.only(bottom: 16, left: 0),
       child: Row(
         children: [
-          CircleAvatar(radius: 16, backgroundColor: SisapaTheme.blue.withOpacity(0.1), child: Image.asset('images/app_icon.png', height: 16, color: SisapaTheme.blue)),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+            child: Image.asset(
+              'images/app_icon.png',
+              height: 16,
+              color: SisapaTheme.blue,
+            ),
+          ),
           SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: theme.cardColor,
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(20), bottomRight: Radius.circular(20), bottomLeft: Radius.circular(20)),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: Offset(0, 2))]
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-            child: FadeTransition(opacity: _typingController, child: Text(t.translate('ai_thinking'), style: TextStyle(color: theme.hintColor, fontSize: 12))), // "Thinking..."
+            child: FadeTransition(
+              opacity: _typingController,
+              child: Text(
+                t.translate('ai_thinking'),
+                style: TextStyle(color: theme.hintColor, fontSize: 12),
+              ),
+            ), // "Thinking..."
           ),
         ],
       ),
@@ -621,20 +863,27 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
     // Show Mic if no text OR if actively recording (so button doesn't switch while holding)
     final bool showMic = !hasText || _isRecording;
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(12, 12, 12, MediaQuery.of(context).padding.bottom + 12),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+    return FrostedSurface(
+      padding: EdgeInsets.fromLTRB(
+        12,
+        12,
+        12,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
+      tint: theme.scaffoldBackgroundColor.withOpacity(isDark ? 0.86 : 0.82),
+      blur: FrostedGlassTokens.strongBlurSigma,
+      border: Border(
+        top: FrostedGlassTokens.subtleBorderSide(context, opacity: 0.24),
       ),
       child: Row(
         children: [
           // Expanded Input
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDark ? SisapaTheme.darkGrey.withOpacity(0.2) : SisapaTheme.extraLightGrey,
-                borderRadius: BorderRadius.circular(30),
-              ),
+            child: FrostedSurface(
+              borderRadius: BorderRadius.circular(30),
+              tint: (isDark ? SisapaTheme.darkGrey : SisapaTheme.extraLightGrey)
+                  .withOpacity(isDark ? 0.36 : 0.68),
+              blur: FrostedGlassTokens.controlBlurSigma,
               child: TextField(
                 controller: _textController,
                 onSubmitted: _isTyping ? null : _handleSubmitted,
@@ -647,13 +896,18 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                 decoration: InputDecoration(
                   hintText: _isRecording
                       ? t.translate('ai_listening') // "Listening..."
-                      : t.translate('ai_hint'),     // "Ask Spirit AI..."
+                      : t.translate('ai_hint'), // "Ask Spirit AI..."
                   hintStyle: TextStyle(
                     color: _isRecording ? SisapaTheme.blue : theme.hintColor,
-                    fontWeight: _isRecording ? FontWeight.bold : FontWeight.normal
+                    fontWeight: _isRecording
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
                   isDense: true,
                 ),
               ),
@@ -664,7 +918,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
           // --- DYNAMIC BUTTON (Mic or Send) ---
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
-            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+            transitionBuilder: (child, animation) =>
+                ScaleTransition(scale: animation, child: child),
             child: showMic
                 ? Listener(
                     key: const ValueKey('mic_btn'),
@@ -673,38 +928,46 @@ class _AiAssistantPageState extends State<AiAssistantPage> with TickerProviderSt
                     onPointerCancel: (_) => _stopRecording(),
                     child: ScaleTransition(
                       scale: _micScaleController,
-                      child: Container(
+                      child: FrostedSurface(
                         padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: _isRecording ? Colors.red : theme.cardColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: _isRecording ? Colors.red : theme.dividerColor),
-                          boxShadow: _isRecording ? [
-                            BoxShadow(color: Colors.red.withOpacity(0.4), blurRadius: 10, spreadRadius: 2)
-                          ] : [],
+                        shape: BoxShape.circle,
+                        tint: (_isRecording ? Colors.red : theme.cardColor)
+                            .withOpacity(
+                              _isRecording ? 0.84 : (isDark ? 0.78 : 0.74),
+                            ),
+                        blur: FrostedGlassTokens.controlBlurSigma,
+                        border: Border.all(
+                          color: _isRecording ? Colors.red : theme.dividerColor,
                         ),
                         child: Icon(
                           _isRecording ? Icons.mic : Icons.mic_none_rounded,
-                          color: _isRecording ? Colors.white : theme.primaryColor,
-                          size: 24
+                          color: _isRecording
+                              ? Colors.white
+                              : theme.primaryColor,
+                          size: 24,
                         ),
                       ),
                     ),
                   )
                 : GestureDetector(
                     key: const ValueKey('send_btn'),
-                    onTap: _isTyping ? null : () => _handleSubmitted(_textController.text),
-                    child: Container(
+                    onTap: _isTyping
+                        ? null
+                        : () => _handleSubmitted(_textController.text),
+                    child: FrostedSurface(
                       padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _isTyping ? theme.disabledColor : SisapaTheme.blue,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          if (!_isTyping)
-                            BoxShadow(color: SisapaTheme.blue.withOpacity(0.4), blurRadius: 10, offset: Offset(0, 4))
-                        ]
+                      shape: BoxShape.circle,
+                      tint: (_isTyping ? theme.disabledColor : SisapaTheme.blue)
+                          .withOpacity(_isTyping ? 0.7 : 0.82),
+                      blur: FrostedGlassTokens.controlBlurSigma,
+                      boxShadow: _isTyping
+                          ? null
+                          : FrostedGlassTokens.materialDepth(context),
+                      child: Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 24,
                       ),
-                      child: Icon(Icons.send_rounded, color: Colors.white, size: 24),
                     ),
                   ),
           ),
@@ -718,7 +981,11 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
-  ChatMessage({required this.text, required this.isUser, required this.timestamp});
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
 }
 
 class _ChatBubble extends StatelessWidget {
@@ -727,7 +994,12 @@ class _ChatBubble extends StatelessWidget {
   final Function(String) onCopy;
   final Function(String) onShare;
 
-  const _ChatBubble({required this.message, required this.onSpeak, required this.onCopy, required this.onShare});
+  const _ChatBubble({
+    required this.message,
+    required this.onSpeak,
+    required this.onCopy,
+    required this.onShare,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -735,44 +1007,94 @@ class _ChatBubble extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final isUser = message.isUser;
 
-    final textColor = isUser ? Colors.white : (theme.textTheme.bodyLarge?.color ?? Colors.black);
+    final textColor = isUser
+        ? Colors.white
+        : (theme.textTheme.bodyLarge?.color ?? Colors.black);
     final bgColor = isUser ? SisapaTheme.blue : theme.cardColor;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(radius: 18, backgroundColor: SisapaTheme.blue.withOpacity(0.1), child: Image.asset('images/app_icon.png', height: 20, color: SisapaTheme.blue)),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+              child: Image.asset(
+                'images/app_icon.png',
+                height: 20,
+                color: SisapaTheme.blue,
+              ),
+            ),
             SizedBox(width: 10),
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: bgColor,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24), topRight: Radius.circular(24),
-                      bottomLeft: isUser ? Radius.circular(24) : Radius.circular(4),
-                      bottomRight: isUser ? Radius.circular(4) : Radius.circular(24),
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                      bottomLeft: isUser
+                          ? Radius.circular(24)
+                          : Radius.circular(4),
+                      bottomRight: isUser
+                          ? Radius.circular(4)
+                          : Radius.circular(24),
                     ),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: Offset(0, 4))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: MarkdownBody(
-                    data: message.text, selectable: true,
+                    data: message.text,
+                    selectable: true,
                     styleSheet: MarkdownStyleSheet(
                       p: TextStyle(color: textColor, fontSize: 15, height: 1.5),
-                      strong: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                      strong: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                       listBullet: TextStyle(color: textColor),
-                      code: TextStyle(color: isUser ? Colors.white70 : theme.primaryColor, backgroundColor: isUser ? Colors.black26 : theme.scaffoldBackgroundColor, fontFamily: 'monospace', fontSize: 13),
-                      blockquote: TextStyle(color: isUser ? Colors.white70 : theme.hintColor),
-                      blockquoteDecoration: BoxDecoration(border: Border(left: BorderSide(color: isUser ? Colors.white30 : theme.dividerColor, width: 3))),
+                      code: TextStyle(
+                        color: isUser ? Colors.white70 : theme.primaryColor,
+                        backgroundColor: isUser
+                            ? Colors.black26
+                            : theme.scaffoldBackgroundColor,
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                      ),
+                      blockquote: TextStyle(
+                        color: isUser ? Colors.white70 : theme.hintColor,
+                      ),
+                      blockquoteDecoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: isUser ? Colors.white30 : theme.dividerColor,
+                            width: 3,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -782,11 +1104,23 @@ class _ChatBubble extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildActionIcon(context, Icons.volume_up_rounded, () => onSpeak(message.text)),
+                        _buildActionIcon(
+                          context,
+                          Icons.volume_up_rounded,
+                          () => onSpeak(message.text),
+                        ),
                         SizedBox(width: 16),
-                        _buildActionIcon(context, Icons.copy_rounded, () => onCopy(message.text)),
+                        _buildActionIcon(
+                          context,
+                          Icons.copy_rounded,
+                          () => onCopy(message.text),
+                        ),
                         SizedBox(width: 16),
-                        _buildActionIcon(context, Icons.share_rounded, () => onShare(message.text)),
+                        _buildActionIcon(
+                          context,
+                          Icons.share_rounded,
+                          () => onShare(message.text),
+                        ),
                       ],
                     ),
                   ),
@@ -799,10 +1133,22 @@ class _ChatBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildActionIcon(BuildContext context, IconData icon, VoidCallback onTap) {
+  Widget _buildActionIcon(
+    BuildContext context,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return InkWell(
-      onTap: onTap, borderRadius: BorderRadius.circular(20),
-      child: Padding(padding: const EdgeInsets.all(4.0), child: Icon(icon, size: 18, color: Theme.of(context).hintColor.withOpacity(0.6))),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).hintColor.withOpacity(0.6),
+        ),
+      ),
     );
   }
 }
@@ -815,17 +1161,33 @@ class _UserAvatar extends StatelessWidget {
     return FutureBuilder<Map<String, dynamic>?>(
       future: ApiService().getUser(user.uid),
       builder: (context, snapshot) {
-        String? profileUrl; int iconId = 0; String? colorHex;
+        String? profileUrl;
+        int iconId = 0;
+        String? colorHex;
         if (snapshot.hasData && snapshot.data != null) {
-           final data = snapshot.data!;
-           profileUrl = data['profile_image_url'] ?? data['profileImageUrl']; 
-           iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0; 
-           colorHex = data['avatar_hex'] ?? data['avatarHex'];
+          final data = snapshot.data!;
+          profileUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+          iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
+          colorHex = data['avatar_hex'] ?? data['avatarHex'];
         }
         return CircleAvatar(
-          radius: 18, backgroundColor: profileUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
-          backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl, cacheManager: AppCacheManager.instance) : null,
-          child: profileUrl == null ? Icon(AvatarHelper.getIcon(iconId), size: 18, color: Colors.white) : null,
+          radius: 18,
+          backgroundColor: profileUrl != null
+              ? Colors.transparent
+              : AvatarHelper.getColor(colorHex),
+          backgroundImage: profileUrl != null
+              ? CachedNetworkImageProvider(
+                  profileUrl,
+                  cacheManager: AppCacheManager.instance,
+                )
+              : null,
+          child: profileUrl == null
+              ? Icon(
+                  AvatarHelper.getIcon(iconId),
+                  size: 18,
+                  color: Colors.white,
+                )
+              : null,
         );
       },
     );

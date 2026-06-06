@@ -101,38 +101,42 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   void _refreshContent() {
     setState(() {
-       _trendingFuture = _fetchTrendingTopics();
-       _discoverFuture = _fetchDiscoverContent();
-       _communityRecFuture = _fetchCommunityRecs();
-       _peopleRecFuture = _getSuggestedUsers(FirebaseAuth.instance.currentUser?.uid);
+      _trendingFuture = _fetchTrendingTopics();
+      _discoverFuture = _fetchDiscoverContent();
+      _communityRecFuture = _fetchCommunityRecs();
+      _peopleRecFuture = _getSuggestedUsers(
+        FirebaseAuth.instance.currentUser?.uid,
+      );
     });
   }
 
   Future<List<Map<String, dynamic>>> _fetchTrendingTopics() async {
-     try {
-       return await ApiService().getTrendingTopics();
-     } catch (e) {
-       return [];
-     }
+    try {
+      return await ApiService().getTrendingTopics();
+    } catch (e) {
+      return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> _fetchDiscoverContent() async {
-     try {
-        return await ApiService().getDiscoverRecommendations();
-     } catch (e) {
-       return [];
-     }
+    try {
+      return await ApiService().getDiscoverRecommendations();
+    } catch (e) {
+      return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> _fetchCommunityRecs() async {
     try {
       return await ApiService().getRecommendedCommunities();
-    } catch(e) {
+    } catch (e) {
       return [];
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getSuggestedUsers(String? currentUserId) async {
+  Future<List<Map<String, dynamic>>> _getSuggestedUsers(
+    String? currentUserId,
+  ) async {
     if (currentUserId == null) return [];
     try {
       return await ApiService().getSuggestedUsers();
@@ -147,7 +151,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     if (widget.isSearching && !oldWidget.isSearching) {
       _tabController.index = 0;
       Future.delayed(const Duration(milliseconds: 100), () {
-        if(mounted && widget.isSearching) FocusScope.of(context).requestFocus(_searchFocusNode);
+        if (mounted && widget.isSearching)
+          FocusScope.of(context).requestFocus(_searchFocusNode);
       });
     }
 
@@ -184,7 +189,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       widget.onSearchPressed();
     }
 
-    if(mounted) {
+    if (mounted) {
       setState(() => _isListening = true);
       _micAnimController.forward();
     }
@@ -197,27 +202,33 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         String finalQuery = text;
         String lowerQuery = finalQuery.toLowerCase();
 
-        if (lowerQuery.startsWith("cari ")) finalQuery = finalQuery.substring(5);
-        else if (lowerQuery.startsWith("search for ")) finalQuery = finalQuery.substring(11);
-        else if (lowerQuery.startsWith("buka ")) finalQuery = finalQuery.substring(5);
+        if (lowerQuery.startsWith("cari "))
+          finalQuery = finalQuery.substring(5);
+        else if (lowerQuery.startsWith("search for "))
+          finalQuery = finalQuery.substring(11);
+        else if (lowerQuery.startsWith("buka "))
+          finalQuery = finalQuery.substring(5);
 
         if (lowerQuery.contains("profil") || lowerQuery.contains("user")) {
           _tabController.animateTo(1);
-        } else if (lowerQuery.contains("komunitas") || lowerQuery.contains("community")) {
+        } else if (lowerQuery.contains("komunitas") ||
+            lowerQuery.contains("community")) {
           _tabController.animateTo(2);
         } else {
           _tabController.animateTo(0);
         }
 
         _searchController.text = finalQuery;
-        _searchController.selection = TextSelection.fromPosition(TextPosition(offset: finalQuery.length));
+        _searchController.selection = TextSelection.fromPosition(
+          TextPosition(offset: finalQuery.length),
+        );
         _onSearchChanged(finalQuery);
       },
     );
   }
 
   void _stopListening() {
-    if(mounted) {
+    if (mounted) {
       _micAnimController.reverse();
       setState(() => _isListening = false);
     }
@@ -238,8 +249,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       if (value.trim().isEmpty) return;
 
       final suggestion = await _predictionService.getLocalPrediction(value);
-      if (mounted && suggestion != null && suggestion.toLowerCase() != _searchText) {
-        setState(() { _searchSuggestion = suggestion; });
+      if (mounted &&
+          suggestion != null &&
+          suggestion.toLowerCase() != _searchText) {
+        setState(() {
+          _searchSuggestion = suggestion;
+        });
       }
     });
   }
@@ -280,9 +295,13 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
     final double searchBarBaseHeight = 70.0;
     final double suggestionHeight = _searchSuggestion != null ? 30.0 : 0.0;
-    final double currentSearchBarHeight = widget.isSearching ? (searchBarBaseHeight + suggestionHeight) : 0.0;
+    final double currentSearchBarHeight = widget.isSearching
+        ? (searchBarBaseHeight + suggestionHeight)
+        : 0.0;
     final double topAnchor = 90.0;
-    final double contentTopPadding = widget.isSearching ? (topAnchor + currentSearchBarHeight) : topAnchor;
+    final double contentTopPadding = widget.isSearching
+        ? (topAnchor + currentSearchBarHeight)
+        : topAnchor;
 
     return WillPopScope(
       onWillPop: () async {
@@ -304,7 +323,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           ),
           Positioned(
             top: topAnchor,
-            left: 0, right: 0,
+            left: 0,
+            right: 0,
             child: Align(
               alignment: Alignment.topRight,
               child: AnimatedContainer(
@@ -312,105 +332,173 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 curve: Curves.easeInOutQuart,
                 width: widget.isSearching ? screenWidth : 0,
                 height: currentSearchBarHeight,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20)),
-                  child: Container(
-                    color: theme.scaffoldBackgroundColor,
-                    child: widget.isSearching
-                        ? SingleChildScrollView(
-                            physics: const NeverScrollableScrollPhysics(),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: screenWidth,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: Center(
-                                    child: TextField(
-                                      controller: _searchController,
-                                      focusNode: _searchFocusNode,
-                                      autofocus: false,
-                                      readOnly: _isListening,
-                                      decoration: InputDecoration(
-                                        hintText: _isListening
-                                            ? t.translate('search_listening')
-                                            : t.translate('search_hint'),
-                                        hintStyle: TextStyle(
-                                          color: _isListening ? SisapaTheme.blue : theme.hintColor,
-                                          fontStyle: _isListening ? FontStyle.italic : FontStyle.normal,
-                                          fontWeight: _isListening ? FontWeight.bold : FontWeight.normal,
-                                        ),
-                                        prefixIcon: const Icon(Icons.search),
-                                        suffixIcon: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (_searchController.text.isNotEmpty)
-                                              IconButton(icon: const Icon(Icons.clear), onPressed: _clearSearch),
+                child: FrostedSurface(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                  ),
+                  tint: theme.scaffoldBackgroundColor.withOpacity(0.82),
+                  blur: FrostedGlassTokens.controlBlurSigma,
+                  child: widget.isSearching
+                      ? SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: screenWidth,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                child: Center(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocusNode,
+                                    autofocus: false,
+                                    readOnly: _isListening,
+                                    decoration: InputDecoration(
+                                      hintText: _isListening
+                                          ? t.translate('search_listening')
+                                          : t.translate('search_hint'),
+                                      hintStyle: TextStyle(
+                                        color: _isListening
+                                            ? SisapaTheme.blue
+                                            : theme.hintColor,
+                                        fontStyle: _isListening
+                                            ? FontStyle.italic
+                                            : FontStyle.normal,
+                                        fontWeight: _isListening
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                      prefixIcon: const Icon(Icons.search),
+                                      suffixIcon: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (_searchController.text.isNotEmpty)
+                                            IconButton(
+                                              icon: const Icon(Icons.clear),
+                                              onPressed: _clearSearch,
+                                            ),
 
-                                            Listener(
-                                              onPointerDown: (details) => _startListening(),
-                                              onPointerUp: (details) => _stopListening(),
-                                              onPointerCancel: (details) => _stopListening(),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(right: 12.0, left: 4.0),
-                                                child: ScaleTransition(
-                                                  scale: _micAnimController,
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      color: _isListening ? Colors.red : Colors.transparent,
-                                                      boxShadow: _isListening ? [
-                                                        BoxShadow(color: Colors.red.withOpacity(0.4), blurRadius: 10, spreadRadius: 2)
-                                                      ] : null,
-                                                    ),
-                                                    child: Icon(
-                                                      _isListening ? Icons.mic : Icons.mic_none,
-                                                      color: _isListening ? Colors.white : theme.primaryColor,
-                                                      size: 24,
-                                                    ),
+                                          Listener(
+                                            onPointerDown: (details) =>
+                                                _startListening(),
+                                            onPointerUp: (details) =>
+                                                _stopListening(),
+                                            onPointerCancel: (details) =>
+                                                _stopListening(),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 12.0,
+                                                left: 4.0,
+                                              ),
+                                              child: ScaleTransition(
+                                                scale: _micAnimController,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: _isListening
+                                                        ? Colors.red
+                                                        : Colors.transparent,
+                                                    boxShadow: _isListening
+                                                        ? [
+                                                            BoxShadow(
+                                                              color: Colors.red
+                                                                  .withOpacity(
+                                                                    0.4,
+                                                                  ),
+                                                              blurRadius: 10,
+                                                              spreadRadius: 2,
+                                                            ),
+                                                          ]
+                                                        : null,
+                                                  ),
+                                                  child: Icon(
+                                                    _isListening
+                                                        ? Icons.mic
+                                                        : Icons.mic_none,
+                                                    color: _isListening
+                                                        ? Colors.white
+                                                        : theme.primaryColor,
+                                                    size: 24,
                                                   ),
                                                 ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-                                        filled: true,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                                      ),
-                                      onChanged: _onSearchChanged,
-                                    ),
-                                  ),
-                                ),
-                                if (_searchSuggestion != null && widget.isSearching)
-                                  InkWell(
-                                    onTap: _applySuggestion,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(bottom: 8.0, left: 24.0, right: 24.0),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.lightbulb_outline, size: 14, color: SisapaTheme.blue),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 13),
-                                                children: [
-                                                  TextSpan(text: t.translate('search_suggestion_prefix')),
-                                                  TextSpan(text: _searchSuggestion, style: const TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)),
-                                                ],
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      filled: true,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 0,
+                                          ),
+                                    ),
+                                    onChanged: _onSearchChanged,
+                                  ),
+                                ),
+                              ),
+                              if (_searchSuggestion != null &&
+                                  widget.isSearching)
+                                InkWell(
+                                  onTap: _applySuggestion,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: 8.0,
+                                      left: 24.0,
+                                      right: 24.0,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.lightbulb_outline,
+                                          size: 14,
+                                          color: SisapaTheme.blue,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: RichText(
+                                            text: TextSpan(
+                                              style: TextStyle(
+                                                color: theme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.color,
+                                                fontSize: 13,
+                                              ),
+                                              children: [
+                                                TextSpan(
+                                                  text: t.translate(
+                                                    'search_suggestion_prefix',
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: _searchSuggestion,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: SisapaTheme.blue,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
+                                ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ),
             ),
@@ -421,7 +509,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildExplorePage(ThemeData theme, AppLocalizations t) {
-    if (!_userDataLoaded) return const Center(child: CircularProgressIndicator());
+    if (!_userDataLoaded)
+      return const Center(child: CircularProgressIndicator());
 
     return RefreshIndicator(
       notificationPredicate: (notification) => !_isListening,
@@ -443,8 +532,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 children: [
                   const Icon(Icons.trending_up, color: SisapaTheme.blue),
                   const SizedBox(width: 8),
-                  Text(t.translate('search_trending_title'),
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                  Text(
+                    t.translate('search_trending_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -452,15 +545,26 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _trendingFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
-                if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16), child: Text(t.translate('search_trends_error')));
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                if (snapshot.hasError)
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(t.translate('search_trends_error')),
+                  );
 
                 final trends = snapshot.data ?? [];
 
                 if (trends.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(t.translate('search_trends_empty'), style: const TextStyle(color: Colors.grey)),
+                    child: Text(
+                      t.translate('search_trends_empty'),
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   );
                 }
 
@@ -475,7 +579,11 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                       physics: const NeverScrollableScrollPhysics(),
                       padding: EdgeInsets.zero,
                       itemCount: displayedTrends.length,
-                      separatorBuilder: (context, index) => Divider(height: 1, thickness: 0.5, color: theme.dividerColor.withOpacity(0.3)),
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: theme.dividerColor.withOpacity(0.3),
+                      ),
                       itemBuilder: (context, index) {
                         final tag = displayedTrends[index]['tag'];
                         final count = displayedTrends[index]['count'];
@@ -484,15 +592,46 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
                         return ListTile(
                           dense: false,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          leading: Text("${index + 1}", style: TextStyle(color: theme.hintColor, fontWeight: FontWeight.bold, fontSize: 16)),
-                          title: Text(tag, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isHashtag ? SisapaTheme.blue : theme.textTheme.bodyLarge?.color)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          leading: Text(
+                            "${index + 1}",
+                            style: TextStyle(
+                              color: theme.hintColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          title: Text(
+                            tag,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: isHashtag
+                                  ? SisapaTheme.blue
+                                  : theme.textTheme.bodyLarge?.color,
+                            ),
+                          ),
                           subtitle: Text("$count distinct posts"),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (isTopTrending) const Padding(padding: EdgeInsets.only(right: 8.0), child: Icon(Icons.local_fire_department, color: Colors.orange, size: 20)),
-                              Icon(Icons.arrow_forward_ios, size: 14, color: theme.hintColor),
+                              if (isTopTrending)
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 8.0),
+                                  child: Icon(
+                                    Icons.local_fire_department,
+                                    color: Colors.orange,
+                                    size: 20,
+                                  ),
+                                ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 14,
+                                color: theme.hintColor,
+                              ),
                             ],
                           ),
                           onTap: () => _onTrendingTagClicked(tag),
@@ -501,16 +640,32 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                     ),
                     if (canExpand)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
                         child: InkWell(
-                          onTap: () => setState(() => _showAllTrending = !_showAllTrending),
+                          onTap: () => setState(
+                            () => _showAllTrending = !_showAllTrending,
+                          ),
                           child: Row(
                             children: [
                               Text(
-                                _showAllTrending ? t.translate('general_show_less') : t.translate('general_show_more'),
-                                style: const TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)
+                                _showAllTrending
+                                    ? t.translate('general_show_less')
+                                    : t.translate('general_show_more'),
+                                style: const TextStyle(
+                                  color: SisapaTheme.blue,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              Icon(_showAllTrending ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: SisapaTheme.blue, size: 16)
+                              Icon(
+                                _showAllTrending
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                color: SisapaTheme.blue,
+                                size: 16,
+                              ),
                             ],
                           ),
                         ),
@@ -528,8 +683,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 children: [
                   const Icon(Icons.groups_outlined, color: Colors.orange),
                   const SizedBox(width: 8),
-                  Text(t.translate('search_communities_title'),
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                  Text(
+                    t.translate('search_communities_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -537,66 +696,132 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _communityRecFuture,
               builder: (context, snapshot) {
-                 if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
-                 if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16), child: Text(t.translate('search_communities_error')));
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                if (snapshot.hasError)
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(t.translate('search_communities_error')),
+                  );
 
-                 final recommended = snapshot.data ?? [];
+                final recommended = snapshot.data ?? [];
 
-                 if (recommended.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(t.translate('search_communities_empty'), style: const TextStyle(color: Colors.grey)),
-                    );
-                 }
+                if (recommended.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      t.translate('search_communities_empty'),
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  );
+                }
 
-                 return SizedBox(
-                      height: 160,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: recommended.length > 10 ? 10 : recommended.length,
-                        itemBuilder: (context, index) {
-                          final data = recommended[index];
-                          final name = data['name'] ?? 'Community';
-                          final imageUrl = data['image_url'] ?? data['imageUrl'];
-                          final membersCount = data['follower_count'] ?? 0;
+                return SizedBox(
+                  height: 160,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: recommended.length > 10
+                        ? 10
+                        : recommended.length,
+                    itemBuilder: (context, index) {
+                      final data = recommended[index];
+                      final name = data['name'] ?? 'Community';
+                      final imageUrl = data['image_url'] ?? data['imageUrl'];
+                      final membersCount = data['follower_count'] ?? 0;
 
-                          return Container(
-                            width: 140,
-                            margin: const EdgeInsets.all(4),
-                            child: Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: () {
-                                  Navigator.push(context, MaterialPageRoute(
-                                    builder: (_) => CommunityDetailScreen(communityId: data['id'], communityData: data)
-                                  ));
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 28,
-                                        backgroundColor: SisapaTheme.blue.withOpacity(0.1),
-                                        backgroundImage: imageUrl != null && imageUrl.toString().isNotEmpty ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
-                                        child: imageUrl == null || imageUrl.toString().isEmpty ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'C', style: const TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)) : null,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                      Text("$membersCount ${t.translate('general_members')}", style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                                    ],
+                      return Container(
+                        width: 140,
+                        margin: const EdgeInsets.all(4),
+                        child: FrostedSurface(
+                          margin: const EdgeInsets.all(4.0),
+                          borderRadius: BorderRadius.circular(12),
+                          tint: theme.cardColor.withOpacity(
+                            theme.brightness == Brightness.dark ? 0.78 : 0.74,
+                          ),
+                          blur: FrostedGlassTokens.blurSigma,
+                          border: Border.all(
+                            color: FrostedGlassTokens.subtleBorderSide(
+                              context,
+                            ).color,
+                          ),
+                          boxShadow: FrostedGlassTokens.materialDepth(context),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => CommunityDetailScreen(
+                                      communityId: data['id'],
+                                      communityData: data,
+                                    ),
                                   ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor: SisapaTheme.blue
+                                          .withOpacity(0.1),
+                                      backgroundImage:
+                                          imageUrl != null &&
+                                              imageUrl.toString().isNotEmpty
+                                          ? CachedNetworkImageProvider(
+                                              imageUrl,
+                                              cacheManager:
+                                                  AppCacheManager.instance,
+                                            )
+                                          : null,
+                                      child:
+                                          imageUrl == null ||
+                                              imageUrl.toString().isEmpty
+                                          ? Text(
+                                              name.isNotEmpty
+                                                  ? name[0].toUpperCase()
+                                                  : 'C',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: SisapaTheme.blue,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      "$membersCount ${t.translate('general_members')}",
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    );
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
               },
             ),
 
@@ -608,8 +833,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 children: [
                   const Icon(Icons.explore_outlined, color: Colors.purple),
                   const SizedBox(width: 8),
-                  Text(t.translate('search_discover_title'),
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                  Text(
+                    t.translate('search_discover_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -617,15 +846,31 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _discoverFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
-                if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16), child: CommonErrorWidget(message: t.translate('search_discover_error'), isConnectionError: true));
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                if (snapshot.hasError)
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: CommonErrorWidget(
+                      message: t.translate('search_discover_error'),
+                      isConnectionError: true,
+                    ),
+                  );
 
                 final allPosts = snapshot.data ?? [];
 
                 if (allPosts.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
-                    child: Center(child: Text(t.translate('search_discover_empty'))),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 32.0,
+                    ),
+                    child: Center(
+                      child: Text(t.translate('search_discover_empty')),
+                    ),
                   );
                 }
 
@@ -633,7 +878,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 final bool showAll = _showAllDiscover;
                 final int totalCount = allPosts.length;
 
-                final int visibleCount = showAll ? totalCount : (totalCount > initialCount ? initialCount : totalCount);
+                final int visibleCount = showAll
+                    ? totalCount
+                    : (totalCount > initialCount ? initialCount : totalCount);
                 final displayedPosts = allPosts.take(visibleCount).toList();
                 final bool canExpand = totalCount > initialCount;
 
@@ -645,7 +892,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                       return BlogPostCard(
                         postId: post['id'],
                         postData: post,
-                        isOwner: authorId == FirebaseAuth.instance.currentUser?.uid,
+                        isOwner:
+                            authorId == FirebaseAuth.instance.currentUser?.uid,
                         heroContextId: 'discover',
                         blockedUserIds: _blockedUserIds,
                       );
@@ -661,14 +909,22 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                 _showAllDiscover = !_showAllDiscover;
                               });
                             },
-                            icon: Icon(_showAllDiscover ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
-                            label: Text(_showAllDiscover ? t.translate('general_show_less') : t.translate('general_show_more')),
+                            icon: Icon(
+                              _showAllDiscover
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                            ),
+                            label: Text(
+                              _showAllDiscover
+                                  ? t.translate('general_show_less')
+                                  : t.translate('general_show_more'),
+                            ),
                           ),
                         ),
                       ),
                   ],
                 );
-              }
+              },
             ),
 
             Divider(thickness: 8, color: theme.dividerColor.withOpacity(0.1)),
@@ -677,10 +933,17 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.person_add_alt_1_outlined, color: Colors.blueAccent),
+                  const Icon(
+                    Icons.person_add_alt_1_outlined,
+                    color: Colors.blueAccent,
+                  ),
                   const SizedBox(width: 8),
-                  Text(t.translate('search_people_title'),
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                  Text(
+                    t.translate('search_people_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -688,18 +951,34 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _peopleRecFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
-                if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16), child: Text(t.translate('search_people_error')));
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                if (snapshot.hasError)
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(t.translate('search_people_error')),
+                  );
 
                 final allUsers = snapshot.data ?? [];
 
-                if (allUsers.isEmpty) return Padding(padding: const EdgeInsets.all(16.0), child: Text(t.translate('search_people_empty')));
+                if (allUsers.isEmpty)
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(t.translate('search_people_empty')),
+                  );
 
                 final int initialCount = 5;
                 final bool showAll = _showAllPeople;
                 final int totalCount = allUsers.length;
 
-                final int visibleCount = showAll ? totalCount : (totalCount > initialCount ? initialCount : totalCount);
+                final int visibleCount = showAll
+                    ? totalCount
+                    : (totalCount > initialCount ? initialCount : totalCount);
                 final displayedUsers = allUsers.take(visibleCount).toList();
                 final bool canExpand = totalCount > initialCount;
 
@@ -724,14 +1003,22 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                 _showAllPeople = !_showAllPeople;
                               });
                             },
-                            icon: Icon(_showAllPeople ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
-                            label: Text(_showAllPeople ? t.translate('general_show_less') : t.translate('general_show_more')),
+                            icon: Icon(
+                              _showAllPeople
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                            ),
+                            label: Text(
+                              _showAllPeople
+                                  ? t.translate('general_show_less')
+                                  : t.translate('general_show_more'),
+                            ),
                           ),
                         ),
                       ),
                   ],
                 );
-              }
+              },
             ),
           ],
         ),
@@ -743,7 +1030,9 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     return Column(
       children: [
         Container(
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.dividerColor))),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
+          ),
           child: TabBar(
             controller: _tabController,
             labelColor: theme.primaryColor,
@@ -759,7 +1048,11 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: [_buildPostResults(t), _buildUserResults(t), _buildCommunityResults(t)],
+            children: [
+              _buildPostResults(t),
+              _buildUserResults(t),
+              _buildCommunityResults(t),
+            ],
           ),
         ),
       ],
@@ -769,10 +1062,17 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget _buildPostResults(AppLocalizations t) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _searchText.isNotEmpty ? ApiService().getPosts(query: _searchText, limit: 50) : Future.value(<Map<String, dynamic>>[]),
+      future: _searchText.isNotEmpty
+          ? ApiService().getPosts(query: _searchText, limit: 50)
+          : Future.value(<Map<String, dynamic>>[]),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_failed'), isConnectionError: true);
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError)
+          return CommonErrorWidget(
+            message: t.translate('search_failed'),
+            isConnectionError: true,
+          );
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
 
         if (_searchText.isEmpty) return const SizedBox();
 
@@ -782,7 +1082,10 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           return !_blockedUserIds.contains(authorId);
         }).toList();
 
-        if (filteredPosts.isEmpty) return Center(child: Text('${t.translate('search_no_results')} "$_searchText"'));
+        if (filteredPosts.isEmpty)
+          return Center(
+            child: Text('${t.translate('search_no_results')} "$_searchText"'),
+          );
 
         return ListView.builder(
           padding: const EdgeInsets.only(bottom: 100),
@@ -792,11 +1095,11 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             final post = filteredPosts[index];
             final authorId = post['user_uid'] ?? post['userId'];
             return BlogPostCard(
-                postId: post['id'],
-                postData: post,
-                isOwner: authorId == currentUserId,
-                heroContextId: 'search_results',
-                blockedUserIds: _blockedUserIds
+              postId: post['id'],
+              postData: post,
+              isOwner: authorId == currentUserId,
+              heroContextId: 'search_results',
+              blockedUserIds: _blockedUserIds,
             );
           },
         );
@@ -807,15 +1110,27 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget _buildUserResults(AppLocalizations t) {
     final myUid = FirebaseAuth.instance.currentUser?.uid;
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _searchText.isNotEmpty ? ApiService().searchUsers(_searchText) : Future.value(<Map<String, dynamic>>[]),
+      future: _searchText.isNotEmpty
+          ? ApiService().searchUsers(_searchText)
+          : Future.value(<Map<String, dynamic>>[]),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_user_failed'), isConnectionError: true);
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError)
+          return CommonErrorWidget(
+            message: t.translate('search_user_failed'),
+            isConnectionError: true,
+          );
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
 
         final users = snapshot.data ?? [];
-        final filteredUsers = users.where((u) => (u['uid'] ?? u['id']) != myUid).toList();
+        final filteredUsers = users
+            .where((u) => (u['uid'] ?? u['id']) != myUid)
+            .toList();
 
-        if (filteredUsers.isEmpty) return Center(child: Text('${t.translate('search_no_results')} "$_searchText"'));
+        if (filteredUsers.isEmpty)
+          return Center(
+            child: Text('${t.translate('search_no_results')} "$_searchText"'),
+          );
 
         return ListView.builder(
           padding: const EdgeInsets.only(bottom: 100),
@@ -824,7 +1139,11 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           itemBuilder: (context, index) {
             final user = filteredUsers[index];
             final String userId = user['uid'] ?? user['id'] ?? '';
-            return _UserSearchTile(userId: userId, userData: user, currentUserId: myUid);
+            return _UserSearchTile(
+              userId: userId,
+              userData: user,
+              currentUserId: myUid,
+            );
           },
         );
       },
@@ -833,14 +1152,24 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Widget _buildCommunityResults(AppLocalizations t) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _searchText.isNotEmpty ? ApiService().getCommunities(query: _searchText) : Future.value(<Map<String, dynamic>>[]),
+      future: _searchText.isNotEmpty
+          ? ApiService().getCommunities(query: _searchText)
+          : Future.value(<Map<String, dynamic>>[]),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return CommonErrorWidget(message: t.translate('search_failed'), isConnectionError: true);
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError)
+          return CommonErrorWidget(
+            message: t.translate('search_failed'),
+            isConnectionError: true,
+          );
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
 
         final communities = snapshot.data ?? [];
 
-        if (communities.isEmpty) return Center(child: Text('${t.translate('search_no_results')} "$_searchText"'));
+        if (communities.isEmpty)
+          return Center(
+            child: Text('${t.translate('search_no_results')} "$_searchText"'),
+          );
 
         return ListView.builder(
           padding: const EdgeInsets.only(bottom: 100),
@@ -849,22 +1178,39 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           itemBuilder: (context, index) {
             final community = communities[index];
             final String name = community['name'] ?? 'Community';
-            final String? imageUrl = community['image_url'] ?? community['imageUrl'];
+            final String? imageUrl =
+                community['image_url'] ?? community['imageUrl'];
             final int memberCount = community['follower_count'] ?? 0;
 
             return ListTile(
               leading: CircleAvatar(
-                backgroundImage: imageUrl != null && imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
+                backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                    ? CachedNetworkImageProvider(
+                        imageUrl,
+                        cacheManager: AppCacheManager.instance,
+                      )
+                    : null,
                 backgroundColor: SisapaTheme.blue.withOpacity(0.1),
-                child: imageUrl == null || imageUrl.isEmpty ? const Icon(Icons.groups, color: SisapaTheme.blue) : null,
+                child: imageUrl == null || imageUrl.isEmpty
+                    ? const Icon(Icons.groups, color: SisapaTheme.blue)
+                    : null,
               ),
-              title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text("$memberCount ${t.translate('general_members')}"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 14),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => CommunityDetailScreen(communityId: community['id'], communityData: community)
-                ));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CommunityDetailScreen(
+                      communityId: community['id'],
+                      communityData: community,
+                    ),
+                  ),
+                );
               },
             );
           },
@@ -931,14 +1277,25 @@ class _UserSearchTileState extends State<_UserSearchTile> {
         if (resp['success'] == true) {
           setState(() => _isFollowing = true);
           if (resp['type'] == 'request_sent') {
-            OverlayService().showTopNotification(context, "Follow request sent", Icons.hourglass_empty, (){});
+            OverlayService().showTopNotification(
+              context,
+              "Follow request sent",
+              Icons.hourglass_empty,
+              () {},
+            );
             setState(() => _isFollowing = false);
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, "Action failed: $e", Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          "Action failed: $e",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
     }
   }
@@ -951,40 +1308,101 @@ class _UserSearchTileState extends State<_UserSearchTile> {
     final name = widget.userData['name'] ?? 'User';
     final email = widget.userData['email'] ?? '';
     final handle = email.isNotEmpty ? "@${email.split('@')[0]}" : "";
-    final int iconId = widget.userData['avatar_icon_id'] ?? widget.userData['avatarIconId'] ?? 0;
-    final String? colorHex = widget.userData['avatar_hex'] ?? widget.userData['avatarHex'];
-    final String? profileImageUrl = widget.userData['profile_image_url'] ?? widget.userData['profileImageUrl'];
+    final int iconId =
+        widget.userData['avatar_icon_id'] ??
+        widget.userData['avatarIconId'] ??
+        0;
+    final String? colorHex =
+        widget.userData['avatar_hex'] ?? widget.userData['avatarHex'];
+    final String? profileImageUrl =
+        widget.userData['profile_image_url'] ??
+        widget.userData['profileImageUrl'];
 
     return InkWell(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfilePage(userId: widget.userId, includeScaffold: true))),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              ProfilePage(userId: widget.userId, includeScaffold: true),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-                radius: 24,
-                backgroundColor: profileImageUrl != null && profileImageUrl.isNotEmpty ? Colors.transparent : AvatarHelper.getColor(colorHex),
-                backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
-                child: profileImageUrl == null || profileImageUrl.isEmpty ? Icon(AvatarHelper.getIcon(iconId), size: 24, color: Colors.white) : null
+              radius: 24,
+              backgroundColor:
+                  profileImageUrl != null && profileImageUrl.isNotEmpty
+                  ? Colors.transparent
+                  : AvatarHelper.getColor(colorHex),
+              backgroundImage:
+                  profileImageUrl != null && profileImageUrl.isNotEmpty
+                  ? CachedNetworkImageProvider(
+                      profileImageUrl,
+                      cacheManager: AppCacheManager.instance,
+                    )
+                  : null,
+              child: profileImageUrl == null || profileImageUrl.isEmpty
+                  ? Icon(
+                      AvatarHelper.getIcon(iconId),
+                      size: 24,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
             const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-              Text(handle, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor)),
-            ])),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    handle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(width: 8),
             _isFollowing
-              ? OutlinedButton(
-                  onPressed: _toggleFollow,
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16), side: BorderSide(color: theme.dividerColor), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-                  child: Text(t.translate('community_following'), style: TextStyle(color: theme.textTheme.bodyMedium?.color))
-                )
-              : ElevatedButton(
-                  onPressed: _toggleFollow,
-                  style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-                  child: Text(t.translate('community_follow'))
-                )
+                ? OutlinedButton(
+                    onPressed: _toggleFollow,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      side: BorderSide(color: theme.dividerColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      t.translate('community_following'),
+                      style: TextStyle(
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
+                    ),
+                  )
+                : ElevatedButton(
+                    onPressed: _toggleFollow,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SisapaTheme.blue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(t.translate('community_follow')),
+                  ),
           ],
         ),
       ),

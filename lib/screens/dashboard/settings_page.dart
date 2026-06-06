@@ -22,13 +22,13 @@ class SettingsPage extends StatelessWidget {
         const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
         var offsetAnimation = animation.drive(tween);
 
-        return SlideTransition(
-          position: offsetAnimation,
-          child: child,
-        );
+        return SlideTransition(position: offsetAnimation, child: child);
       },
     );
   }
@@ -58,32 +58,48 @@ class SettingsPage extends StatelessWidget {
   void _showLanguageDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              SizedBox(height: 16),
-              ListTile(
-                leading: Text("🇺🇸", style: TextStyle(fontSize: 24)),
-                title: Text("English"),
-                trailing: languageNotifier.value.languageCode == 'en' ? Icon(Icons.check, color: SisapaTheme.blue) : null,
-                onTap: () => _changeLanguage(context, 'en'),
-              ),
-              ListTile(
-                leading: Text("🇮🇩", style: TextStyle(fontSize: 24)),
-                title: Text("Bahasa Indonesia"),
-                trailing: languageNotifier.value.languageCode == 'id' ? Icon(Icons.check, color: SisapaTheme.blue) : null,
-                onTap: () => _changeLanguage(context, 'id'),
-              ),
-              SizedBox(height: 12),
-            ],
+        return FrostedBottomSheet(
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ListTile(
+                  leading: Text("🇺🇸", style: TextStyle(fontSize: 24)),
+                  title: Text("English"),
+                  trailing: languageNotifier.value.languageCode == 'en'
+                      ? Icon(Icons.check, color: SisapaTheme.blue)
+                      : null,
+                  onTap: () => _changeLanguage(context, 'en'),
+                ),
+                ListTile(
+                  leading: Text("🇮🇩", style: TextStyle(fontSize: 24)),
+                  title: Text("Bahasa Indonesia"),
+                  trailing: languageNotifier.value.languageCode == 'id'
+                      ? Icon(Icons.check, color: SisapaTheme.blue)
+                      : null,
+                  onTap: () => _changeLanguage(context, 'id'),
+                ),
+                SizedBox(height: 12),
+              ],
+            ),
           ),
         );
-      }
+      },
     );
   }
 
@@ -91,17 +107,28 @@ class SettingsPage extends StatelessWidget {
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
-    final didConfirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t.translate('settings_logout')), // "Log Out"
-        content: Text(t.translate('settings_logout_confirm')),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(t.translate('general_cancel'))),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(t.translate('settings_logout'), style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    ) ?? false;
+    final didConfirm =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => FrostedAlertDialog(
+            title: Text(t.translate('settings_logout')), // "Log Out"
+            content: Text(t.translate('settings_logout_confirm')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(t.translate('general_cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(
+                  t.translate('settings_logout'),
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
 
     if (didConfirm) {
       await FirebaseAuth.instance.signOut();
@@ -117,7 +144,7 @@ class SettingsPage extends StatelessWidget {
     var t = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(t.translate('settings_title')), // "Settings" / "Pengaturan"
       ),
       body: ListView(
@@ -151,7 +178,9 @@ class SettingsPage extends StatelessWidget {
             context: context,
             icon: Icons.translate, // CHANGED TO TRANSLATE ICON
             title: t.translate('settings_language'), // "Change Language"
-            subtitle: languageNotifier.value.languageCode == 'en' ? 'English' : 'Bahasa Indonesia',
+            subtitle: languageNotifier.value.languageCode == 'en'
+                ? 'English'
+                : 'Bahasa Indonesia',
             onTap: () => _showLanguageDialog(context),
           ),
 
@@ -159,8 +188,13 @@ class SettingsPage extends StatelessWidget {
             valueListenable: hapticNotifier,
             builder: (context, isHapticOn, child) {
               return SwitchListTile(
-                secondary: Icon(Icons.vibration, color: Theme.of(context).primaryColor),
-                title: Text(t.translate('settings_haptic')), // "Haptic Feedback"
+                secondary: Icon(
+                  Icons.vibration,
+                  color: Theme.of(context).primaryColor,
+                ),
+                title: Text(
+                  t.translate('settings_haptic'),
+                ), // "Haptic Feedback"
                 value: isHapticOn,
                 onChanged: (value) {
                   hapticNotifier.value = value;
@@ -175,7 +209,8 @@ class SettingsPage extends StatelessWidget {
             child: Text(
               t.translate('settings_header_notif'), // "Notifications"
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: SisapaTheme.blue, fontWeight: FontWeight.bold
+                color: SisapaTheme.blue,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -184,8 +219,13 @@ class SettingsPage extends StatelessWidget {
             valueListenable: notificationPrefs.allNotificationsEnabled,
             builder: (context, isEnabled, child) {
               return SwitchListTile(
-                secondary: Icon(Icons.notifications_active_outlined, color: Theme.of(context).primaryColor),
-                title: Text(t.translate('settings_notif_allow')), // "Allow Notifications"
+                secondary: Icon(
+                  Icons.notifications_active_outlined,
+                  color: Theme.of(context).primaryColor,
+                ),
+                title: Text(
+                  t.translate('settings_notif_allow'),
+                ), // "Allow Notifications"
                 subtitle: Text(t.translate('settings_notif_allow_desc')),
                 value: isEnabled,
                 onChanged: (value) {
@@ -202,11 +242,20 @@ class SettingsPage extends StatelessWidget {
                 valueListenable: notificationPrefs.headsUpEnabled,
                 builder: (context, headsUpEnabled, child) {
                   return SwitchListTile(
-                    onChanged: allEnabled ? (value) {
-                       notificationPrefs.setHeadsUp(value);
-                    } : null,
-                    secondary: Icon(Icons.view_day_outlined, color: allEnabled ? Theme.of(context).primaryColor : Theme.of(context).disabledColor),
-                    title: Text(t.translate('settings_notif_heads')), // "Heads-up Popups"
+                    onChanged: allEnabled
+                        ? (value) {
+                            notificationPrefs.setHeadsUp(value);
+                          }
+                        : null,
+                    secondary: Icon(
+                      Icons.view_day_outlined,
+                      color: allEnabled
+                          ? Theme.of(context).primaryColor
+                          : Theme.of(context).disabledColor,
+                    ),
+                    title: Text(
+                      t.translate('settings_notif_heads'),
+                    ), // "Heads-up Popups"
                     subtitle: Text(t.translate('settings_notif_heads_desc')),
                     value: allEnabled && headsUpEnabled,
                   );
@@ -217,24 +266,43 @@ class SettingsPage extends StatelessWidget {
 
           ListTile(
             leading: Icon(Icons.cleaning_services_outlined, color: Colors.red),
-            title: Text(t.translate('settings_notif_clear'), style: TextStyle(color: Colors.red)), // "Clear Notification History"
+            title: Text(
+              t.translate('settings_notif_clear'),
+              style: TextStyle(color: Colors.red),
+            ), // "Clear Notification History"
             onTap: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: Text(t.translate('settings_notif_clear_confirm')),
-                  content: Text(t.translate('settings_notif_clear_desc')),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.translate('general_cancel'))),
-                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t.translate('general_delete'), style: TextStyle(color: Colors.red))),
-                  ],
-                ),
-              ) ?? false;
+              final confirm =
+                  await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => FrostedAlertDialog(
+                      title: Text(t.translate('settings_notif_clear_confirm')),
+                      content: Text(t.translate('settings_notif_clear_desc')),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(t.translate('general_cancel')),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(
+                            t.translate('general_delete'),
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ) ??
+                  false;
 
               if (confirm) {
                 final success = await ApiService().clearNotifications();
                 if (success && context.mounted) {
-                   OverlayService().showTopNotification(context, t.translate('settings_notif_cleared'), Icons.check_circle, (){});
+                  OverlayService().showTopNotification(
+                    context,
+                    t.translate('settings_notif_cleared'),
+                    Icons.check_circle,
+                    () {},
+                  );
                 }
               }
             },
@@ -307,14 +375,11 @@ class _OptimizedThemeTileState extends State<_OptimizedThemeTile> {
     return ListTile(
       leading: Icon(
         _isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-        color: Theme.of(context).primaryColor
+        color: Theme.of(context).primaryColor,
       ),
       title: Text(t.translate('settings_theme')), // "Theme"
       subtitle: Text(subtitleText),
-      trailing: Switch(
-        value: _isDark,
-        onChanged: _handleChange,
-      ),
+      trailing: Switch(value: _isDark, onChanged: _handleChange),
     );
   }
 }

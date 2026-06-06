@@ -57,7 +57,8 @@ class BlogPostCard extends StatefulWidget {
   State<BlogPostCard> createState() => _BlogPostCardState();
 }
 
-class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _BlogPostCardState extends State<BlogPostCard>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   final TextEditingController _editController = TextEditingController();
   late AnimationController _likeController;
   late Animation<double> _likeAnimation;
@@ -92,14 +93,29 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     _localIsPinned = widget.isPinned;
 
     // Setup Controllers
-    _likeController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
-    _likeAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _likeController, curve: Curves.easeInOut));
+    _likeController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _likeAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _likeController, curve: Curves.easeInOut),
+    );
 
-    _shareController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
-    _shareAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _shareController, curve: Curves.easeInOut));
+    _shareController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _shareAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _shareController, curve: Curves.easeInOut),
+    );
 
-    _repostController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
-    _repostAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _repostController, curve: Curves.easeInOut));
+    _repostController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _repostAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _repostController, curve: Curves.easeInOut),
+    );
 
     // Panggil setup logic utama
     _initializePostData();
@@ -117,8 +133,14 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     _isVideoLoading = false;
 
     // Cek apakah ini Repost Wrapper
-    final origId = widget.postData['originalPostId'] ?? widget.postData['original_post_id'];
-    final isRepostType = widget.postData['type'] == 'repost' || widget.postData['is_repost'] == true || widget.postData['is_repost'] == 1 || origId != null;
+    final origId =
+        widget.postData['originalPostId'] ??
+        widget.postData['original_post_id'];
+    final isRepostType =
+        widget.postData['type'] == 'repost' ||
+        widget.postData['is_repost'] == true ||
+        widget.postData['is_repost'] == 1 ||
+        origId != null;
 
     if (isRepostType && origId != null) {
       _isRepostWrapper = true;
@@ -151,8 +173,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     } else {
       // Jika ID sama tapi data berubah (misal like count update dari parent), sync saja
       if (!_isRepostWrapper && widget.postData != oldWidget.postData) {
-         _resolvedPostData = widget.postData;
-         _syncState();
+        _resolvedPostData = widget.postData;
+        _syncState();
       }
     }
 
@@ -163,13 +185,21 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     }
   }
 
-  String get effectivePostId => _isRepostWrapper ? (widget.postData['originalPostId'] ?? widget.postData['original_post_id'] ?? widget.postId).toString() : widget.postId;
+  String get effectivePostId => _isRepostWrapper
+      ? (widget.postData['originalPostId'] ??
+                widget.postData['original_post_id'] ??
+                widget.postId)
+            .toString()
+      : widget.postId;
   Map<String, dynamic> get effectivePostData => _resolvedPostData ?? {};
 
   bool get effectiveIsOwner {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return false;
-    return (effectivePostData['user_uid'] ?? effectivePostData['userId'] ?? effectivePostData['user_id']) == currentUser.uid;
+    return (effectivePostData['user_uid'] ??
+            effectivePostData['userId'] ??
+            effectivePostData['user_id']) ==
+        currentUser.uid;
   }
 
   Future<void> _fetchOriginalPost(String originalId) async {
@@ -203,7 +233,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   }
 
   Future<void> _initializeVideo() async {
-    if (_isVideoInitialized || _videoController != null || _isVideoLoading) return;
+    if (_isVideoInitialized || _videoController != null || _isVideoLoading)
+      return;
 
     final data = effectivePostData;
     final String? singleUrl = data['mediaUrl'] ?? data['media_url'];
@@ -214,7 +245,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       setState(() => _isVideoLoading = true);
 
       try {
-        final controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+        final controller = VideoPlayerController.networkUrl(
+          Uri.parse(videoUrl),
+        );
         await controller.initialize();
         controller.setLooping(true);
 
@@ -246,31 +279,41 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     final bool apiBookmarked = _resolvedPostData!['is_bookmarked'] == true;
     // Fallback for Firestore-style data during transition
     final likesRaw = _resolvedPostData!['likes'];
-    final List<dynamic> likesList = (likesRaw is Map) 
-        ? likesRaw.keys.toList() 
+    final List<dynamic> likesList = (likesRaw is Map)
+        ? likesRaw.keys.toList()
         : (likesRaw as List<dynamic>? ?? []);
     final reposts = _resolvedPostData!['repostedBy'] as List? ?? [];
 
     if (mounted) {
       setState(() {
-        _isLiked = apiLiked || (currentUser != null && likesList.contains(currentUser.uid));
+        _isLiked =
+            apiLiked ||
+            (currentUser != null && likesList.contains(currentUser.uid));
         _likeCount = apiLikeCount > 0 ? apiLikeCount : likesList.length;
-        
+
         // Base isReposted on the resolved original post or local cache
         if (ApiService.repostsLoaded && currentUser != null) {
-          _isReposted = ApiService.myRepostedPostIds.contains(effectivePostId.toString());
+          _isReposted = ApiService.myRepostedPostIds.contains(
+            effectivePostId.toString(),
+          );
         } else {
-          _isReposted = _resolvedPostData!['is_reposted'] == true || _resolvedPostData!['is_reposted'] == 1 || (currentUser != null && reposts.contains(currentUser.uid));
+          _isReposted =
+              _resolvedPostData!['is_reposted'] == true ||
+              _resolvedPostData!['is_reposted'] == 1 ||
+              (currentUser != null && reposts.contains(currentUser.uid));
         }
-        
+
         // If it's a repost wrapper created by the current user, it must be their repost!
         if (_isRepostWrapper) {
-          final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'] ?? widget.postData['user_id'];
+          final wrapperUserId =
+              widget.postData['user_uid'] ??
+              widget.postData['userId'] ??
+              widget.postData['user_id'];
           if (currentUser != null && wrapperUserId == currentUser.uid) {
             _isReposted = true;
           }
         }
-        
+
         _repostCount = _resolvedPostData!['repost_count'] ?? reposts.length;
         if (_isReposted && _repostCount == 0) {
           _repostCount = 1;
@@ -301,7 +344,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     setState(() {
       _isLiked = !_isLiked;
-      if (_isLiked) { _likeCount++; } else { _likeCount--; }
+      if (_isLiked) {
+        _likeCount++;
+      } else {
+        _likeCount--;
+      }
     });
 
     try {
@@ -321,17 +368,20 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
     final targetId = effectivePostId;
-    final wrapperUserId = widget.postData['user_uid'] ?? widget.postData['userId'] ?? widget.postData['user_id'];
+    final wrapperUserId =
+        widget.postData['user_uid'] ??
+        widget.postData['userId'] ??
+        widget.postData['user_id'];
     final isMyOwnWrapper = _isRepostWrapper && currentUser.uid == wrapperUserId;
 
     setState(() {
       _isReposted = !_isReposted;
-      if (_isReposted) { 
+      if (_isReposted) {
         ApiService.myRepostedPostIds.add(targetId.toString());
-        _repostCount++; 
-      } else { 
+        _repostCount++;
+      } else {
         ApiService.myRepostedPostIds.remove(targetId.toString());
-        _repostCount = (_repostCount > 0) ? _repostCount - 1 : 0; 
+        _repostCount = (_repostCount > 0) ? _repostCount - 1 : 0;
         if (isMyOwnWrapper) {
           _isDeleted = true; // Instantly hide from Reposts tab
         }
@@ -369,10 +419,16 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       }
       _syncState();
       if (mounted) {
-         setState(() {
-           _isDeleted = false; // Revert hide if api fails
-         });
-         OverlayService().showTopNotification(context, "Failed to update repost", Icons.error, () {}, color: Colors.red);
+        setState(() {
+          _isDeleted = false; // Revert hide if api fails
+        });
+        OverlayService().showTopNotification(
+          context,
+          "Failed to update repost",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
     }
   }
@@ -388,9 +444,19 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     });
 
     if (!isCurrentlyBookmarked) {
-      OverlayService().showTopNotification(context, t.translate('post_bookmark_saved'), Icons.bookmark, () {});
+      OverlayService().showTopNotification(
+        context,
+        t.translate('post_bookmark_saved'),
+        Icons.bookmark,
+        () {},
+      );
     } else {
-      OverlayService().showTopNotification(context, t.translate('post_bookmark_removed'), Icons.bookmark_remove, () {});
+      OverlayService().showTopNotification(
+        context,
+        t.translate('post_bookmark_removed'),
+        Icons.bookmark_remove,
+        () {},
+      );
     }
 
     try {
@@ -399,7 +465,13 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       setState(() {
         _isBookmarked = isCurrentlyBookmarked;
       });
-      OverlayService().showTopNotification(context, t.translate('post_bookmark_error'), Icons.error, () {}, color: Colors.red);
+      OverlayService().showTopNotification(
+        context,
+        t.translate('post_bookmark_error'),
+        Icons.error,
+        () {},
+        color: Colors.red,
+      );
     }
   }
 
@@ -413,7 +485,11 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
 
     if (currentVis == 'private') {
       final userData = await ApiService().getUser(user.uid);
-      final bool isPrivateAccount = userData?['is_private'] == true || userData?['is_private'] == 1 || userData?['isPrivate'] == true || userData?['isPrivate'] == 1;
+      final bool isPrivateAccount =
+          userData?['is_private'] == true ||
+          userData?['is_private'] == 1 ||
+          userData?['isPrivate'] == true ||
+          userData?['isPrivate'] == 1;
       newVis = isPrivateAccount ? 'followers' : 'public';
     } else {
       newVis = 'private';
@@ -435,13 +511,26 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       icon = Icons.public;
     }
 
-    if (mounted) OverlayService().showTopNotification(context, msg, icon, () {}, color: color);
+    if (mounted)
+      OverlayService().showTopNotification(
+        context,
+        msg,
+        icon,
+        () {},
+        color: color,
+      );
 
     try {
       await ApiService().updatePost(effectivePostId, {'visibility': newVis});
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, t.translate('vis_toast_fail'), Icons.error, () {}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          t.translate('vis_toast_fail'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
     }
   }
@@ -455,23 +544,34 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     final name = effectivePostData['userName'] ?? 'User';
 
     Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) setState(() {
-        _isSharing = false;
-      });
+      if (mounted)
+        setState(() {
+          _isSharing = false;
+        });
       Share.share('Check out this post by $name: "$text"');
     });
   }
 
   Future<void> _deletePost() async {
     var t = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
+    final confirm =
+        await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
+          builder: (ctx) => FrostedAlertDialog(
             title: Text(t.translate('delete_post_title')),
             content: Text(t.translate('delete_post_confirm')),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.translate('general_cancel'))),
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t.translate('general_delete'), style: TextStyle(color: Colors.red))),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(t.translate('general_cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(
+                  t.translate('general_delete'),
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
             ],
           ),
         ) ??
@@ -488,7 +588,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         } else if (effectivePostData['media_url'] != null) {
           mediaUrls = [effectivePostData['media_url']];
         }
-        
+
         for (String url in mediaUrls) {
           try {
             final match = RegExp(r'sapapnj-media-assets/(.*)').firstMatch(url);
@@ -496,15 +596,28 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
               final objectName = match.group(1)!;
               await GcsService().deleteResource(objectName);
             }
-          } catch(e) {
+          } catch (e) {
             debugPrint("Failed to parse or delete media URL: $url - $e");
           }
         }
-        
+
         await ApiService().deletePost(widget.postId);
-        if (mounted) OverlayService().showTopNotification(context, t.translate('post_deleted'), Icons.delete_outline, () {});
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('post_deleted'),
+            Icons.delete_outline,
+            () {},
+          );
       } catch (e) {
-        if (mounted) OverlayService().showTopNotification(context, t.translate('post_delete_fail'), Icons.error, () {}, color: Colors.red);
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('post_delete_fail'),
+            Icons.error,
+            () {},
+            color: Colors.red,
+          );
       }
     }
   }
@@ -514,22 +627,48 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (user == null) return;
     var t = AppLocalizations.of(context)!;
     final bool newPinState = !_localIsPinned;
-    setState(() { _localIsPinned = newPinState; });
+    setState(() {
+      _localIsPinned = newPinState;
+    });
     if (widget.onPinToggle != null) {
       widget.onPinToggle!(effectivePostId, newPinState);
     }
     try {
       if (!newPinState) {
         await ApiService().updateUser(user.uid, {'pinned_post_id': null});
-        if (mounted) OverlayService().showTopNotification(context, t.translate('profile_unpin_success'), Icons.push_pin_outlined, () {});
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('profile_unpin_success'),
+            Icons.push_pin_outlined,
+            () {},
+          );
       } else {
-        await ApiService().updateUser(user.uid, {'pinned_post_id': effectivePostId});
-        if (mounted) OverlayService().showTopNotification(context, t.translate('profile_pin_success'), Icons.push_pin, () {});
+        await ApiService().updateUser(user.uid, {
+          'pinned_post_id': effectivePostId,
+        });
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('profile_pin_success'),
+            Icons.push_pin,
+            () {},
+          );
       }
     } catch (e) {
-      setState(() { _localIsPinned = !newPinState; });
-      if (widget.onPinToggle != null) widget.onPinToggle!(effectivePostId, !newPinState);
-      if (mounted) OverlayService().showTopNotification(context, t.translate('pin_fail'), Icons.error, () {}, color: Colors.red);
+      setState(() {
+        _localIsPinned = !newPinState;
+      });
+      if (widget.onPinToggle != null)
+        widget.onPinToggle!(effectivePostId, !newPinState);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('pin_fail'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     }
   }
 
@@ -540,7 +679,10 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         const begin = Offset(1.0, 0.0);
         const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
         return SlideTransition(position: animation.drive(tween), child: child);
       },
     );
@@ -575,7 +717,10 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       return;
     }
 
-    final postUserId = effectivePostData['user_uid'] ?? effectivePostData['userId'] ?? effectivePostData['user_id'];
+    final postUserId =
+        effectivePostData['user_uid'] ??
+        effectivePostData['userId'] ??
+        effectivePostData['user_id'];
     if (postUserId == null) return;
 
     if (effectiveIsOwner) {
@@ -586,7 +731,9 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
         return;
       }
     }
-    if (widget.currentProfileUserId != null && postUserId == widget.currentProfileUserId) return;
+    if (widget.currentProfileUserId != null &&
+        postUserId == widget.currentProfileUserId)
+      return;
 
     Navigator.of(context).push(
       _createSlideLeftRoute(
@@ -601,16 +748,24 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return FrostedAlertDialog(
           title: Text(t.translate('edit_post_title')),
           content: TextField(
             controller: _editController,
             maxLines: 5,
-            decoration: InputDecoration(hintText: t.translate('edit_post_hint')),
+            decoration: InputDecoration(
+              hintText: t.translate('edit_post_hint'),
+            ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(t.translate('general_cancel'))),
-            ElevatedButton(onPressed: _submitEdit, child: Text(t.translate('general_save'))),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(t.translate('general_cancel')),
+            ),
+            ElevatedButton(
+              onPressed: _submitEdit,
+              child: Text(t.translate('general_save')),
+            ),
           ],
         );
       },
@@ -620,11 +775,19 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   Future<void> _submitEdit() async {
     var t = AppLocalizations.of(context)!;
     try {
-      await ApiService().updatePost(effectivePostId, {'text': _editController.text});
+      await ApiService().updatePost(effectivePostId, {
+        'text': _editController.text,
+      });
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, t.translate('edit_post_fail'), Icons.error, () {}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          t.translate('edit_post_fail'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
         Navigator.of(context).pop();
       }
     }
@@ -633,29 +796,54 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   void _reportPost() {
     var t = AppLocalizations.of(context)!;
     showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: Text(t.translate('report_post_title')),
-            children: [
-              SimpleDialogOption(onPressed: () => _submitReport('Spam'), child: Text(t.translate('report_reason_spam'))),
-              SimpleDialogOption(onPressed: () => _submitReport('Harassment'), child: Text(t.translate('report_reason_harass'))),
-              SimpleDialogOption(onPressed: () => _submitReport('Inappropriate Content'), child: Text(t.translate('report_reason_inappropriate'))),
-              SimpleDialogOption(onPressed: () => _submitReport('Misinformation'), child: Text(t.translate('report_reason_misinfo'))),
-              Padding(padding: EdgeInsets.all(8), child: TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('general_cancel')))),
-            ],
-          );
-        });
+      context: context,
+      builder: (context) {
+        return FrostedSimpleDialog(
+          title: Text(t.translate('report_post_title')),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => _submitReport('Spam'),
+              child: Text(t.translate('report_reason_spam')),
+            ),
+            SimpleDialogOption(
+              onPressed: () => _submitReport('Harassment'),
+              child: Text(t.translate('report_reason_harass')),
+            ),
+            SimpleDialogOption(
+              onPressed: () => _submitReport('Inappropriate Content'),
+              child: Text(t.translate('report_reason_inappropriate')),
+            ),
+            SimpleDialogOption(
+              onPressed: () => _submitReport('Misinformation'),
+              child: Text(t.translate('report_reason_misinfo')),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8),
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(t.translate('general_cancel')),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _submitReport(String reason) {
     var t = AppLocalizations.of(context)!;
     Navigator.pop(context);
     moderationService.reportContent(
-        targetId: effectivePostId,
-        targetType: 'post',
-        reason: reason);
-    OverlayService().showTopNotification(context, t.translate('report_submitted'), Icons.flag, () {});
+      targetId: effectivePostId,
+      targetType: 'post',
+      reason: reason,
+    );
+    OverlayService().showTopNotification(
+      context,
+      t.translate('report_submitted'),
+      Icons.flag,
+      () {},
+    );
   }
 
   void _reportCommunity() {
@@ -664,48 +852,97 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (communityId == null) return;
 
     showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: Text(t.translate('report_comm_title')),
-            children: [
-              SimpleDialogOption(onPressed: () => _submitCommunityReport(communityId, 'Spam'), child: Text(t.translate('report_reason_spam'))),
-              SimpleDialogOption(onPressed: () => _submitCommunityReport(communityId, 'Harassment'), child: Text(t.translate('report_reason_harass'))),
-              SimpleDialogOption(onPressed: () => _submitCommunityReport(communityId, 'Inappropriate Content'), child: Text(t.translate('report_reason_inappropriate'))),
-              SimpleDialogOption(onPressed: () => _submitCommunityReport(communityId, 'Misinformation'), child: Text(t.translate('report_reason_misinfo'))),
-              Padding(padding: EdgeInsets.all(8), child: TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('general_cancel')))),
-            ],
-          );
-        });
+      context: context,
+      builder: (context) {
+        return FrostedSimpleDialog(
+          title: Text(t.translate('report_comm_title')),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => _submitCommunityReport(communityId, 'Spam'),
+              child: Text(t.translate('report_reason_spam')),
+            ),
+            SimpleDialogOption(
+              onPressed: () =>
+                  _submitCommunityReport(communityId, 'Harassment'),
+              child: Text(t.translate('report_reason_harass')),
+            ),
+            SimpleDialogOption(
+              onPressed: () =>
+                  _submitCommunityReport(communityId, 'Inappropriate Content'),
+              child: Text(t.translate('report_reason_inappropriate')),
+            ),
+            SimpleDialogOption(
+              onPressed: () =>
+                  _submitCommunityReport(communityId, 'Misinformation'),
+              child: Text(t.translate('report_reason_misinfo')),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8),
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(t.translate('general_cancel')),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _submitCommunityReport(String communityId, String reason) {
     var t = AppLocalizations.of(context)!;
     Navigator.pop(context);
     moderationService.reportContent(
-        targetId: communityId,
-        targetType: 'community',
-        reason: reason);
-    OverlayService().showTopNotification(context, t.translate('report_comm_submitted'), Icons.flag, () {});
+      targetId: communityId,
+      targetType: 'community',
+      reason: reason,
+    );
+    OverlayService().showTopNotification(
+      context,
+      t.translate('report_comm_submitted'),
+      Icons.flag,
+      () {},
+    );
   }
 
   void _blockUser() async {
     var t = AppLocalizations.of(context)!;
-    final didConfirm = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-                  title: Text(t.translate('block_user_title')),
-                  content: Text(t.translate('block_user_confirm')),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t.translate('general_cancel'))),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text(t.translate('general_delete'), style: TextStyle(color: Colors.red))),
-                  ],
-                )) ??
+    final didConfirm =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => FrostedAlertDialog(
+            title: Text(t.translate('block_user_title')),
+            content: Text(t.translate('block_user_confirm')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(t.translate('general_cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  t.translate('general_delete'),
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        ) ??
         false;
 
     if (didConfirm) {
-      await moderationService.blockUser(effectivePostData['userId'] ?? effectivePostData['user_uid'] ?? effectivePostData['user_id']);
-      if (mounted) OverlayService().showTopNotification(context, t.translate('user_blocked'), Icons.block, () {});
+      await moderationService.blockUser(
+        effectivePostData['userId'] ??
+            effectivePostData['user_uid'] ??
+            effectivePostData['user_id'],
+      );
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('user_blocked'),
+          Icons.block,
+          () {},
+        );
     }
   }
 
@@ -715,9 +952,19 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Uploading media...", style: TextStyle(color: SisapaTheme.blue, fontWeight: FontWeight.bold)),
+          Text(
+            "Uploading media...",
+            style: TextStyle(
+              color: SisapaTheme.blue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          LinearProgressIndicator(value: null, backgroundColor: Theme.of(context).dividerColor, valueColor: AlwaysStoppedAnimation<Color>(SisapaTheme.blue)),
+          LinearProgressIndicator(
+            value: null,
+            backgroundColor: Theme.of(context).dividerColor,
+            valueColor: AlwaysStoppedAnimation<Color>(SisapaTheme.blue),
+          ),
           const SizedBox(height: 4),
           Text('Processing...', style: Theme.of(context).textTheme.bodySmall),
         ],
@@ -747,8 +994,12 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
     if (!_isRepostWrapper) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final reposterId = widget.postData['userId'] ?? widget.postData['user_uid'] ?? widget.postData['user_id'];
-    final createdAt = widget.postData['created_at'] ?? widget.postData['timestamp'];
+    final reposterId =
+        widget.postData['userId'] ??
+        widget.postData['user_uid'] ??
+        widget.postData['user_id'];
+    final createdAt =
+        widget.postData['created_at'] ?? widget.postData['timestamp'];
     String timeStr;
     if (createdAt != null) {
       try {
@@ -761,7 +1012,8 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       timeStr = 'just now';
     }
 
-    final displayName = widget.postData['user_name'] ?? widget.postData['userName'] ?? 'User';
+    final displayName =
+        widget.postData['user_name'] ?? widget.postData['userName'] ?? 'User';
 
     return Container(
       padding: const EdgeInsets.only(left: 36.0, bottom: 6.0),
@@ -773,15 +1025,26 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
             child: GestureDetector(
               onTap: () {
                 if (reposterId != null) {
-                   Navigator.of(context).push(_createSlideLeftRoute(ProfilePage(userId: reposterId, includeScaffold: true)));
+                  Navigator.of(context).push(
+                    _createSlideLeftRoute(
+                      ProfilePage(userId: reposterId, includeScaffold: true),
+                    ),
+                  );
                 }
               },
               child: RichText(
                 text: TextSpan(
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 13, fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                   children: [
                     TextSpan(text: "$displayName "),
-                    TextSpan(text: "reposted · $timeStr", style: const TextStyle(fontWeight: FontWeight.normal)),
+                    TextSpan(
+                      text: "reposted · $timeStr",
+                      style: const TextStyle(fontWeight: FontWeight.normal),
+                    ),
                   ],
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -799,24 +1062,30 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    
+
     if (_isDeleted) {
       return const SizedBox.shrink();
     }
-    
+
     final theme = Theme.of(context);
 
     if (_isRepostWrapper) {
       if (_isLoadingOriginal) {
         return Container(
           padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5))),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: theme.dividerColor, width: 0.5),
+            ),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-               _buildRepostHeader(context),
-               const SizedBox(height: 12),
-               const Center(child: CircularProgressIndicator.adaptive(strokeWidth: 2)),
+              _buildRepostHeader(context),
+              const SizedBox(height: 12),
+              const Center(
+                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+              ),
             ],
           ),
         );
@@ -829,17 +1098,28 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       }
     }
 
-    if (widget.blockedUserIds.contains(effectivePostData['userId'] ?? effectivePostData['user_uid'] ?? effectivePostData['user_id'])) {
+    if (widget.blockedUserIds.contains(
+      effectivePostData['userId'] ??
+          effectivePostData['user_uid'] ??
+          effectivePostData['user_id'],
+    )) {
       return const SizedBox.shrink();
     }
-    if (_isRepostWrapper && widget.blockedUserIds.contains(widget.postData['userId'] ?? widget.postData['user_uid'] ?? widget.postData['user_id'])) {
+    if (_isRepostWrapper &&
+        widget.blockedUserIds.contains(
+          widget.postData['userId'] ??
+              widget.postData['user_uid'] ??
+              widget.postData['user_id'],
+        )) {
       return const SizedBox.shrink();
     }
 
     final text = effectivePostData['text'] ?? '';
-    final mediaType = effectivePostData['mediaType'] ?? effectivePostData['media_type'];
+    final mediaType =
+        effectivePostData['mediaType'] ?? effectivePostData['media_type'];
     final isUploading = effectivePostData['isUploading'] == true;
-    final uploadProgress = effectivePostData['uploadProgress'] as double? ?? 0.0;
+    final uploadProgress =
+        effectivePostData['uploadProgress'] as double? ?? 0.0;
     final uploadFailed = effectivePostData['uploadFailed'] == true;
     final int commentCount = effectivePostData['commentCount'] ?? 0;
 
@@ -858,17 +1138,25 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
       return Container(
         padding: const EdgeInsets.all(12.0),
         color: Colors.red.withOpacity(0.1),
-        child: Text("Post upload failed: $text", style: const TextStyle(color: Colors.red)),
+        child: Text(
+          "Post upload failed: $text",
+          style: const TextStyle(color: Colors.red),
+        ),
       );
     }
 
     return GestureDetector(
-      onTap: (widget.isClickable && !widget.isDetailView) ? _navigateToDetail : null,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5)),
-          color: theme.cardColor,
+      onTap: (widget.isClickable && !widget.isDetailView)
+          ? _navigateToDetail
+          : null,
+      child: FrostedSurface(
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor, width: 0.5),
         ),
+        tint: theme.cardColor.withOpacity(
+          theme.brightness == Brightness.dark ? 0.78 : 0.74,
+        ),
+        blur: FrostedGlassTokens.blurSigma,
         child: Stack(
           children: [
             if (widget.isDetailView && commentCount > 0)
@@ -876,10 +1164,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                 left: 32,
                 top: 36,
                 bottom: 0,
-                child: Container(
-                  width: 2,
-                  color: theme.dividerColor,
-                ),
+                child: Container(width: 2, color: theme.dividerColor),
               ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -907,44 +1192,56 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
                               text,
-                              style: theme.textTheme.bodyLarge?.copyWith(fontSize: widget.isDetailView ? 18 : 15),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontSize: widget.isDetailView ? 18 : 15,
+                              ),
                               maxLines: widget.isDetailView ? null : 10,
-                              overflow: widget.isDetailView ? null : TextOverflow.ellipsis,
+                              overflow: widget.isDetailView
+                                  ? null
+                                  : TextOverflow.ellipsis,
                             ),
                           ),
                         if (isUploading)
                           _buildUploadStatus(uploadProgress)
-                        else if (mediaUrls.isNotEmpty || (text.contains('http') && !widget.isDetailView))
+                        else if (mediaUrls.isNotEmpty ||
+                            (text.contains('http') && !widget.isDetailView))
                           Padding(
                             padding: const EdgeInsets.only(top: 12.0),
                             child: Builder(
                               builder: (context) {
-                                if (mediaType == 'video' && !_isVideoInitialized) {
-                                    return GestureDetector(
-                                      onTap: _initializeVideo,
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          PostMediaPreview(
-                                            mediaUrls: mediaUrls,
-                                            mediaType: mediaType,
-                                            text: text,
-                                            postData: effectivePostData,
-                                            postId: effectivePostId,
-                                            heroContextId: widget.heroContextId,
-                                            videoController: null,
+                                if (mediaType == 'video' &&
+                                    !_isVideoInitialized) {
+                                  return GestureDetector(
+                                    onTap: _initializeVideo,
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        PostMediaPreview(
+                                          mediaUrls: mediaUrls,
+                                          mediaType: mediaType,
+                                          text: text,
+                                          postData: effectivePostData,
+                                          postId: effectivePostId,
+                                          heroContextId: widget.heroContextId,
+                                          videoController: null,
+                                        ),
+                                        Container(
+                                          color: Colors.black26,
+                                          child: Center(
+                                            child: _isVideoLoading
+                                                ? const CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                  )
+                                                : const Icon(
+                                                    Icons.play_circle_fill,
+                                                    size: 64,
+                                                    color: Colors.white70,
+                                                  ),
                                           ),
-                                          Container(
-                                            color: Colors.black26,
-                                            child: Center(
-                                              child: _isVideoLoading
-                                                ? const CircularProgressIndicator(color: Colors.white)
-                                                : const Icon(Icons.play_circle_fill, size: 64, color: Colors.white70),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                        ),
+                                      ],
+                                    ),
+                                  );
                                 }
 
                                 return PostMediaPreview(
@@ -956,7 +1253,7 @@ class _BlogPostCardState extends State<BlogPostCard> with TickerProviderStateMix
                                   heroContextId: widget.heroContextId,
                                   videoController: _videoController,
                                 );
-                              }
+                              },
                             ),
                           ),
 

@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/avatar_helper.dart';
+import '../theme/app_theme.dart';
 import 'dashboard/profile_page.dart';
 import '../widgets/common_error_widget.dart';
 import '../services/overlay_service.dart';
@@ -24,7 +25,8 @@ class FollowListScreen extends StatefulWidget {
   State<FollowListScreen> createState() => _FollowListScreenState();
 }
 
-class _FollowListScreenState extends State<FollowListScreen> with SingleTickerProviderStateMixin {
+class _FollowListScreenState extends State<FollowListScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<String> _followingIds = [];
   List<String> _followersIds = [];
@@ -45,7 +47,10 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   }
 
   Future<void> _fetchLists() async {
-    setState(() { _isLoading = true; _hasError = false; });
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
     try {
       final data = await ApiService().getUser(widget.userId);
       if (data != null) {
@@ -57,11 +62,18 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
           });
         }
       } else {
-        if (mounted) setState(() { _isLoading = false; });
+        if (mounted)
+          setState(() {
+            _isLoading = false;
+          });
       }
     } catch (e) {
       debugPrint("Error fetching lists: $e");
-      if (mounted) setState(() { _isLoading = false; _hasError = true; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
     }
   }
 
@@ -69,23 +81,28 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
   Future<void> _removeFollower(String followerId) async {
     var t = AppLocalizations.of(context)!;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.translate('follow_remove_title')),
-        content: Text(t.translate('follow_remove_content')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.translate('general_cancel'))
+    final confirm =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => FrostedAlertDialog(
+            title: Text(t.translate('follow_remove_title')),
+            content: Text(t.translate('follow_remove_content')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(t.translate('general_cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(
+                  t.translate('follow_remove_btn'),
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(t.translate('follow_remove_btn'), style: TextStyle(color: Colors.red))
-          ),
-        ],
-      )
-    ) ?? false;
+        ) ??
+        false;
 
     if (!confirm) return;
 
@@ -96,12 +113,24 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
 
       await ApiService().removeFollower(followerId);
 
-      if(mounted) OverlayService().showTopNotification(context, t.translate('follow_removed_msg'), Icons.person_remove, (){});
-
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('follow_removed_msg'),
+          Icons.person_remove,
+          () {},
+        );
     } catch (e) {
       // Revert if failed
       _fetchLists();
-      if(mounted) OverlayService().showTopNotification(context, t.translate('follow_remove_fail'), Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('follow_remove_fail'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     }
   }
 
@@ -128,7 +157,7 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
     var t = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(
           _isMe ? t.translate('follow_title_me') : t.translate('follow_title'),
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -148,12 +177,12 @@ class _FollowListScreenState extends State<FollowListScreen> with SingleTickerPr
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _hasError
-            ? CommonErrorWidget(
-                message: t.translate('follow_error'),
-                isConnectionError: true,
-                onRetry: _fetchLists
-              )
-            : TabBarView(
+          ? CommonErrorWidget(
+              message: t.translate('follow_error'),
+              isConnectionError: true,
+              onRetry: _fetchLists,
+            )
+          : TabBarView(
               controller: _tabController,
               children: [
                 _UserList(
@@ -203,7 +232,11 @@ class _UserList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 64, color: Colors.grey.withOpacity(0.5)),
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: Colors.grey.withOpacity(0.5),
+            ),
             SizedBox(height: 16),
             Text(emptyMessage, style: TextStyle(color: Colors.grey)),
           ],
@@ -217,7 +250,9 @@ class _UserList extends StatelessWidget {
         return _UserTile(
           userId: userIds[index],
           onDeadUser: () => onDeadUserFound(userIds[index]),
-          onRemove: onRemoveAction != null ? () => onRemoveAction!(userIds[index]) : null,
+          onRemove: onRemoveAction != null
+              ? () => onRemoveAction!(userIds[index])
+              : null,
         );
       },
     );
@@ -244,7 +279,16 @@ class _UserTile extends StatelessWidget {
       future: ApiService().getUser(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return SizedBox(height: 60, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
+          return SizedBox(
+            height: 60,
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
         }
 
         if (!snapshot.hasData || snapshot.data == null) {
@@ -259,7 +303,8 @@ class _UserTile extends StatelessWidget {
         final name = data['name'] ?? 'User';
         final email = data['email'] ?? '';
         final handle = email.isNotEmpty ? "@${email.split('@')[0]}" : "";
-        final profileImageUrl = data['profile_image_url'] ?? data['profileImageUrl'];
+        final profileImageUrl =
+            data['profile_image_url'] ?? data['profileImageUrl'];
         final int iconId = data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0;
         final String? colorHex = data['avatar_hex'] ?? data['avatarHex'];
 
@@ -268,27 +313,54 @@ class _UserTile extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => ProfilePage(userId: userId, includeScaffold: true)
-              )
+                builder: (_) =>
+                    ProfilePage(userId: userId, includeScaffold: true),
+              ),
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: profileImageUrl != null ? Colors.transparent : AvatarHelper.getColor(colorHex),
-                  backgroundImage: profileImageUrl != null ? CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance) : null,
-                  child: profileImageUrl == null ? Icon(AvatarHelper.getIcon(iconId), size: 24, color: Colors.white) : null,
+                  backgroundColor: profileImageUrl != null
+                      ? Colors.transparent
+                      : AvatarHelper.getColor(colorHex),
+                  backgroundImage: profileImageUrl != null
+                      ? CachedNetworkImageProvider(
+                          profileImageUrl,
+                          cacheManager: AppCacheManager.instance,
+                        )
+                      : null,
+                  child: profileImageUrl == null
+                      ? Icon(
+                          AvatarHelper.getIcon(iconId),
+                          size: 24,
+                          color: Colors.white,
+                        )
+                      : null,
                 ),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                      Text(handle, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor)),
+                      Text(
+                        name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        handle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -297,11 +369,22 @@ class _UserTile extends StatelessWidget {
                   OutlinedButton(
                     onPressed: onRemove,
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 0,
+                      ),
                       side: BorderSide(color: theme.dividerColor),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
-                    child: Text(t.translate('follow_remove_btn'), style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 12)),
+                    child: Text(
+                      t.translate('follow_remove_btn'),
+                      style: TextStyle(
+                        color: theme.textTheme.bodyMedium?.color,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
               ],
             ),

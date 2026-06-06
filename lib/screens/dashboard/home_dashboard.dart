@@ -1,6 +1,5 @@
 import '../../services/app_cache_manager.dart';
 
-import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -371,22 +370,19 @@ class _HomeDashboardState extends State<HomeDashboard>
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (ctx) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.all(20),
-            child: _DraftMenuContent(
-              initialDrafts: drafts,
-              onNewPost: () {
-                Navigator.pop(ctx);
-                _navigateToCreatePost();
-              },
-              onOpenDraft: (draft) {
-                Navigator.pop(ctx);
-                _navigateToCreatePost(draftData: draft);
-              },
-            ),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.all(20),
+          child: _DraftMenuContent(
+            initialDrafts: drafts,
+            onNewPost: () {
+              Navigator.pop(ctx);
+              _navigateToCreatePost();
+            },
+            onOpenDraft: (draft) {
+              Navigator.pop(ctx);
+              _navigateToCreatePost(draftData: draft);
+            },
           ),
         );
       },
@@ -399,76 +395,83 @@ class _HomeDashboardState extends State<HomeDashboard>
 
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Container(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: Text(
-                  "Post to Community",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        return FrostedBottomSheet(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    "Post to Community",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: ApiService().getMyCommunities(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting)
-                      return Center(child: CircularProgressIndicator());
+                Expanded(
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: ApiService().getMyCommunities(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting)
+                        return Center(child: CircularProgressIndicator());
 
-                    final list = snapshot.data ?? [];
-                    if (list.isEmpty) {
-                      return Center(
-                        child: Text("You haven't joined any communities yet."),
-                      );
-                    }
-
-                    return ListView.builder(
-                      itemCount: list.length,
-                      itemBuilder: (context, index) {
-                        final data = list[index];
-                        final String id = data['id'];
-                        final String name = data['name'] ?? 'Community';
-                        final String? icon = data['image_url'];
-
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: SisapaTheme.blue.withOpacity(0.1),
-                            backgroundImage: icon != null
-                                ? CachedNetworkImageProvider(
-                                    icon,
-                                    cacheManager: AppCacheManager.instance,
-                                  )
-                                : null,
-                            child: icon == null
-                                ? Icon(Icons.groups, color: SisapaTheme.blue)
-                                : null,
+                      final list = snapshot.data ?? [];
+                      if (list.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "You haven't joined any communities yet.",
                           ),
-                          title: Text(name),
-                          trailing: Icon(Icons.arrow_forward_ios, size: 14),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _navigateToCreatePost(
-                              initialData: {
-                                'communityId': id,
-                                'communityName': name,
-                                'communityIcon': icon,
-                              },
-                            );
-                          },
                         );
-                      },
-                    );
-                  },
+                      }
+
+                      return ListView.builder(
+                        itemCount: list.length,
+                        itemBuilder: (context, index) {
+                          final data = list[index];
+                          final String id = data['id'];
+                          final String name = data['name'] ?? 'Community';
+                          final String? icon = data['image_url'];
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: SisapaTheme.blue.withOpacity(
+                                0.1,
+                              ),
+                              backgroundImage: icon != null
+                                  ? CachedNetworkImageProvider(
+                                      icon,
+                                      cacheManager: AppCacheManager.instance,
+                                    )
+                                  : null,
+                              child: icon == null
+                                  ? Icon(Icons.groups, color: SisapaTheme.blue)
+                                  : null,
+                            ),
+                            title: Text(name),
+                            trailing: Icon(Icons.arrow_forward_ios, size: 14),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _navigateToCreatePost(
+                                initialData: {
+                                  'communityId': id,
+                                  'communityName': name,
+                                  'communityIcon': icon,
+                                },
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -517,9 +520,7 @@ class _HomeDashboardState extends State<HomeDashboard>
   PreferredSizeWidget? _buildAppBar(bool isDarkMode) {
     if (_currentTabIndex == 4) return null; // No AppBar on Profile
 
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+    return FrostedAppBar(
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDarkMode
@@ -543,20 +544,6 @@ class _HomeDashboardState extends State<HomeDashboard>
       ),
       centerTitle: true,
       actions: _buildAppBarActions(),
-      flexibleSpace: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: _isScrolled ? 20.0 : 0.001,
-            sigmaY: _isScrolled ? 20.0 : 0.001,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            color: _isScrolled
-                ? Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85)
-                : Colors.transparent,
-          ),
-        ),
-      ),
     );
   }
 
@@ -569,11 +556,18 @@ class _HomeDashboardState extends State<HomeDashboard>
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
-      child: FloatingActionButton(
-        onPressed: _handleFabTap,
-        backgroundColor: SisapaTheme.blue,
-        elevation: 4,
-        child: const Icon(Icons.edit_outlined, color: Colors.white),
+      child: FrostedSurface(
+        shape: BoxShape.circle,
+        tone: FrostedSurfaceTone.brand,
+        blur: FrostedGlassTokens.blurSigma,
+        boxShadow: FrostedGlassTokens.materialDepth(context),
+        child: FloatingActionButton(
+          onPressed: _handleFabTap,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          highlightElevation: 0,
+          child: const Icon(Icons.edit_outlined, color: Colors.white),
+        ),
       ),
     );
   }
@@ -638,54 +632,48 @@ class _HomeDashboardState extends State<HomeDashboard>
         : const Color.fromARGB(170, 0, 0, 0);
     final activeIconColor = SisapaTheme.blue;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: navBarBgColor,
-            border: Border(
-              top: BorderSide(color: Colors.grey.withOpacity(0.1), width: 0.5),
-            ),
+    return FrostedSurface(
+      tint: navBarBgColor,
+      blur: FrostedGlassTokens.strongBlurSigma,
+      border: Border(
+        top: FrostedGlassTokens.subtleBorderSide(context, opacity: 0.2),
+      ),
+      child: CustomAnimatedBottomBar(
+        selectedIndex: _currentTabIndex,
+        onItemSelected: _onTabSelected,
+        backgroundColor: const Color.fromARGB(0, 9, 9, 9),
+        items: <BottomNavyBarItem>[
+          BottomNavyBarItem(
+            icon: Icon(Icons.home),
+            title: Text('Home'),
+            activeColor: activeIconColor,
+            inactiveColor: inactiveIconColor,
           ),
-          child: CustomAnimatedBottomBar(
-            selectedIndex: _currentTabIndex,
-            onItemSelected: _onTabSelected,
-            backgroundColor: const Color.fromARGB(0, 9, 9, 9),
-            items: <BottomNavyBarItem>[
-              BottomNavyBarItem(
-                icon: Icon(Icons.home),
-                title: Text('Home'),
-                activeColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
-              BottomNavyBarItem(
-                icon: Icon(Icons.groups),
-                title: Text('Community'),
-                activeColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
-              BottomNavyBarItem(
-                icon: Icon(Icons.assistant),
-                title: Text('AI Assistant'),
-                activeColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
-              BottomNavyBarItem(
-                icon: Icon(Icons.search),
-                title: Text('Search'),
-                activeColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
-              BottomNavyBarItem(
-                icon: Icon(Icons.person),
-                title: Text('Profile'),
-                activeColor: activeIconColor,
-                inactiveColor: inactiveIconColor,
-              ),
-            ],
+          BottomNavyBarItem(
+            icon: Icon(Icons.groups),
+            title: Text('Community'),
+            activeColor: activeIconColor,
+            inactiveColor: inactiveIconColor,
           ),
-        ),
+          BottomNavyBarItem(
+            icon: Icon(Icons.assistant),
+            title: Text('AI Assistant'),
+            activeColor: activeIconColor,
+            inactiveColor: inactiveIconColor,
+          ),
+          BottomNavyBarItem(
+            icon: Icon(Icons.search),
+            title: Text('Search'),
+            activeColor: activeIconColor,
+            inactiveColor: inactiveIconColor,
+          ),
+          BottomNavyBarItem(
+            icon: Icon(Icons.person),
+            title: Text('Profile'),
+            activeColor: activeIconColor,
+            inactiveColor: inactiveIconColor,
+          ),
+        ],
       ),
     );
   }
@@ -762,17 +750,14 @@ class _DraftMenuContentState extends State<_DraftMenuContent> {
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark ? Color(0xFF15202B) : Colors.white;
 
-    return Container(
+    return FrostedSurface(
       width: double.infinity,
       padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: bgColor.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5),
-        ],
-      ),
+      borderRadius: BorderRadius.circular(24),
+      tint: bgColor.withOpacity(isDark ? 0.86 : 0.82),
+      blur: FrostedGlassTokens.strongBlurSigma,
+      border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+      boxShadow: FrostedGlassTokens.materialDepth(context),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

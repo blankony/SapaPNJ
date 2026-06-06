@@ -6,11 +6,7 @@ class WebViewScreen extends StatefulWidget {
   final String url;
   final String title;
 
-  const WebViewScreen({
-    super.key,
-    required this.url,
-    required this.title,
-  });
+  const WebViewScreen({super.key, required this.url, required this.title});
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();
@@ -64,7 +60,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -95,7 +91,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 child: LinearProgressIndicator(
                   value: _progress / 100,
                   backgroundColor: theme.dividerColor,
-                  valueColor: const AlwaysStoppedAnimation<Color>(SisapaTheme.blue),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    SisapaTheme.blue,
+                  ),
                 ),
               )
             : null,

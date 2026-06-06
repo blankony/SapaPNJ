@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+export 'frosted_glass.dart';
+
 class SisapaTheme {
   static const Color blue = Color(0xFF1DA1F2);
   static const Color black = Color(0xFF14171A);
@@ -34,7 +36,11 @@ class SisapaTheme {
       color: Color(0xFF15202B),
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
-      titleTextStyle: TextStyle(color: white, fontSize: 20, fontWeight: FontWeight.bold),
+      titleTextStyle: TextStyle(
+        color: white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
     ),
 
     inputDecorationTheme: InputDecorationTheme(
@@ -66,9 +72,7 @@ class SisapaTheme {
       foregroundColor: white,
     ),
 
-    iconTheme: IconThemeData(
-      color: lightGrey,
-    ),
+    iconTheme: IconThemeData(color: lightGrey),
 
     textTheme: TextTheme(
       bodyLarge: TextStyle(color: white),
@@ -105,7 +109,11 @@ class SisapaTheme {
       color: SisapaTheme.white,
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
-      titleTextStyle: TextStyle(color: black, fontSize: 20, fontWeight: FontWeight.bold),
+      titleTextStyle: TextStyle(
+        color: black,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
     ),
 
     inputDecorationTheme: InputDecorationTheme(
@@ -137,9 +145,7 @@ class SisapaTheme {
       foregroundColor: white,
     ),
 
-    iconTheme: IconThemeData(
-      color: darkGrey,
-    ),
+    iconTheme: IconThemeData(color: darkGrey),
 
     textTheme: TextTheme(
       bodyLarge: TextStyle(color: black),

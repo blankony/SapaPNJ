@@ -21,7 +21,12 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 80);
+    final XFile? pickedFile = await picker.pickImage(
+      maxWidth: 1920,
+      maxHeight: 1920,
+      source: source,
+      imageQuality: 80,
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -32,7 +37,13 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
 
   Future<void> _submitVerification() async {
     if (_ktmImage == null) {
-      OverlayService().showTopNotification(context, "Please attach photo of your KTM", Icons.warning, (){}, color: Colors.orange);
+      OverlayService().showTopNotification(
+        context,
+        "Please attach photo of your KTM",
+        Icons.warning,
+        () {},
+        color: Colors.orange,
+      );
       return;
     }
 
@@ -50,14 +61,27 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
         });
 
         if (mounted) {
-          OverlayService().showTopNotification(context, "Submitted for review!", Icons.check_circle, (){}, color: Colors.green);
+          OverlayService().showTopNotification(
+            context,
+            "Submitted for review!",
+            Icons.check_circle,
+            () {},
+            color: Colors.green,
+          );
           Navigator.pop(context);
         }
       } else {
         throw Exception("Upload failed");
       }
     } catch (e) {
-      if (mounted) OverlayService().showTopNotification(context, "Submission failed", Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          "Submission failed",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -66,7 +90,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Get Verified Badge")),
+      appBar: FrostedAppBar(title: const Text("Get Verified Badge")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -96,19 +120,29 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Theme.of(context).dividerColor),
                   image: _ktmImage != null
-                    ? DecorationImage(image: FileImage(_ktmImage!), fit: BoxFit.cover)
-                    : null
+                      ? DecorationImage(
+                          image: FileImage(_ktmImage!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
                 child: _ktmImage == null
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text("Tap to upload KTM", style: TextStyle(color: Colors.grey)),
-                      ],
-                    )
-                  : null,
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Tap to upload KTM",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      )
+                    : null,
               ),
             ),
 
@@ -134,11 +168,20 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                   backgroundColor: SisapaTheme.blue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
                 child: _isUploading
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("Submit Verification"),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text("Submit Verification"),
               ),
             ),
           ],
