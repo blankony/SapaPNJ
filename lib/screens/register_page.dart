@@ -400,9 +400,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: FrostedAppBar(
+      appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: theme.primaryColor),
       ),
       body: Stack(
