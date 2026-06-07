@@ -68,8 +68,10 @@
 - [x] Spirit AI, when loading a history it only show the messages from the AI and no messages from the user is shown at all.
 - [x] Optimize spirit AI Token usage by summarizing the whole chat after every each 10 message. this way Spirit AI can still remember and the prompt we sent will be shorter with the context.
 - [ ] Profile page bug, when at we are top of the profile page the topbar/appbar is showing when it should be hidden, and then when we scroll the top bar became hidden instead, it is essentially flipped.
+- [ ] Community posts doesnt show up in the home feed or any other feed than the communities tab, even reposted community posts doesnt get shown at all aswell.
 - [x] Verification method for KTM, Official Comunities, etc
 - [ ] Opening keyboard on a blog post to reply causes lag
 - [ ] Hide text input outline on the blog post reply section
 - [ ] Add a smooth and bouncy pull down to refresh animation just like in the communities tab pull down refresh, for other page.
 - [ ] Major Refactor of the lib directories for better maintainability, for example creating a common single dart file for functions so we dont need to define the same functions over and over again in other darts, and splitting the massive file to seperate files and dir for better organization.
+- [ ] Trend Posts generator for trending testing?
