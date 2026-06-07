@@ -3,7 +3,6 @@ import 'dart:io';
 import '../../services/app_cache_manager.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/api_service.dart';
 import 'package:intl/intl.dart';
@@ -12,20 +11,21 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 
-import '../../widgets/blog_post_card.dart';
-import '../../widgets/comment_tile.dart';
-import '../../widgets/common_error_widget.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 import '../edit_profile_screen.dart';
 import '../image_viewer_screen.dart';
 import 'settings_page.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
 import '../../services/moderation_service.dart';
-import '../follow_list_screen.dart';
 import '../ktm_verification_screen.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
+import 'profile/department_badge.dart';
+import 'profile/profile_avatar_image.dart';
+import 'profile/profile_content_tabs.dart';
+import 'profile/profile_empty_states.dart';
+import 'profile/profile_stat_link.dart';
+import 'profile/profile_tab_header_delegate.dart';
 
 final GcsService _cloudinaryService = GcsService();
 final ApiService _apiService = ApiService();
@@ -147,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage>
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
-        pageBuilder: (_, __, ___) => ImageViewerScreen(
+        pageBuilder: (_, _, _) => ImageViewerScreen(
           imageUrl: url,
           heroTag: heroTag,
           mediaType: 'image',
@@ -196,7 +196,7 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
                 SizedBox(height: 10),
                 LinearProgressIndicator(
-                  backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+                  backgroundColor: SisapaTheme.blue.withValues(alpha: 0.1),
                   valueColor: AlwaysStoppedAnimation(SisapaTheme.blue),
                 ),
               ],
@@ -337,16 +337,16 @@ class _ProfilePageState extends State<ProfilePage>
       loadingOverlay.remove();
       if (downloadUrl != null) {
         final Map<String, dynamic> updateData = {};
-        if (isBanner)
+        if (isBanner) {
           updateData['banner_image_url'] = downloadUrl;
-        else {
+        } else {
           updateData['profile_image_url'] = downloadUrl;
           updateData['avatar_icon_id'] = -1;
         }
 
         await _apiService.updateUser(_userId, updateData);
         await _loadUserData(); // refresh
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('profile_update_success'),
@@ -354,12 +354,13 @@ class _ProfilePageState extends State<ProfilePage>
             () {},
             color: Colors.green,
           );
+        }
       }
     } catch (e) {
       try {
         loadingOverlay.remove();
       } catch (_) {}
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('profile_upload_fail'),
@@ -367,6 +368,7 @@ class _ProfilePageState extends State<ProfilePage>
           () {},
           color: Colors.red,
         );
+      }
     }
   }
 
@@ -584,20 +586,23 @@ class _ProfilePageState extends State<ProfilePage>
   void _shareProfile(String name) {
     var t = AppLocalizations.of(context)!;
     // Simple localization, assuming name doesn't need translation
-    Share.share(t.translate('profile_share_text'));
+    SharePlus.instance.share(
+      ShareParams(text: t.translate('profile_share_text')),
+    );
   }
 
   Future<void> _toggleBlock() async {
     var t = AppLocalizations.of(context)!;
     if (_isBlocked) {
       await moderationService.unblockUser(_userId);
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('profile_unblocked'),
           Icons.check_circle,
           () {},
         );
+      }
     } else {
       final confirm =
           await showDialog<bool>(
@@ -623,13 +628,14 @@ class _ProfilePageState extends State<ProfilePage>
           false;
       if (confirm) {
         await moderationService.blockUser(_userId);
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('profile_blocked'),
             Icons.block,
             () {},
           );
+        }
       }
     }
   }
@@ -710,8 +716,9 @@ class _ProfilePageState extends State<ProfilePage>
         false;
     if (didConfirm) {
       await FirebaseAuth.instance.signOut();
-      if (context.mounted)
+      if (context.mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     }
   }
 
@@ -747,8 +754,6 @@ class _ProfilePageState extends State<ProfilePage>
     super.build(context);
     var t = AppLocalizations.of(context)!;
 
-    if (_userId == null)
-      return Center(child: Text(t.translate('profile_not_logged_in')));
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
@@ -851,7 +856,7 @@ class _ProfilePageState extends State<ProfilePage>
             if (!_isBlocked && canViewProfile)
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _SliverAppBarDelegate(
+                delegate: ProfileTabHeaderDelegate(
                   TabBar(
                     controller: _tabController,
                     tabs: [
@@ -872,21 +877,20 @@ class _ProfilePageState extends State<ProfilePage>
         },
 
         body: _isBlocked
-            ? _buildBlockedBody()
+            ? BlockedProfileBody(onUnblock: _toggleBlock)
             : (!canViewProfile)
-            ? _buildPrivateAccountBody()
+            ? const PrivateAccountBody()
             : TabBarView(
                 controller: _tabController,
                 children: [
-                  Builder(
-                    builder: (context) => _buildMyPosts(context, _userId),
+                  ProfilePostsTab(
+                    userId: _userId,
+                    userData: _userData,
+                    optimisticPinnedPostId: _optimisticPinnedPostId,
+                    onPinToggle: _handlePinToggle,
                   ),
-                  Builder(
-                    builder: (context) => _buildMyReposts(context, _userId),
-                  ),
-                  Builder(
-                    builder: (context) => _buildMyReplies(context, _userId),
-                  ),
+                  ProfileRepostsTab(userId: _userId),
+                  ProfileRepliesTab(userId: _userId),
                 ],
               ),
       ),
@@ -910,11 +914,12 @@ class _ProfilePageState extends State<ProfilePage>
       icon: Icon(Icons.more_vert),
       onSelected: (value) {
         if (value == 'share') _shareProfile(name);
-        if (value == 'settings')
+        if (value == 'settings') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => SettingsPage()),
           );
+        }
         if (value == 'logout') _signOut(context);
         if (value == 'block') _toggleBlock();
         if (value == 'report') _reportUser();
@@ -986,10 +991,11 @@ class _ProfilePageState extends State<ProfilePage>
           height: 150,
           child: GestureDetector(
             onTap: () {
-              if (isMyProfile)
+              if (isMyProfile) {
                 _showBannerOptions(context, bannerImageUrl, 'banner');
-              else if (bannerImageUrl != null && !_isBlocked)
+              } else if (bannerImageUrl != null && !_isBlocked) {
                 _openFullImage(context, bannerImageUrl, 'banner');
+              }
             },
             child: Hero(
               tag: 'banner',
@@ -1023,8 +1029,8 @@ class _ProfilePageState extends State<ProfilePage>
           right: 0,
           height: MediaQuery.of(context).padding.top + kToolbarHeight,
           child: FrostedLayer(
-            tint: theme.scaffoldBackgroundColor.withOpacity(
-              theme.brightness == Brightness.dark ? 0.78 : 0.74,
+            tint: theme.scaffoldBackgroundColor.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.78 : 0.74,
             ),
           ),
         ),
@@ -1034,10 +1040,11 @@ class _ProfilePageState extends State<ProfilePage>
           left: 16,
           child: GestureDetector(
             onTap: () {
-              if (isMyProfile)
+              if (isMyProfile) {
                 _showProfileOptions(context, profileImageUrl, 'avatar');
-              else if (profileImageUrl != null && !_isBlocked)
+              } else if (profileImageUrl != null && !_isBlocked) {
                 _openFullImage(context, profileImageUrl, 'avatar');
+              }
             },
             child: Hero(
               tag: 'avatar',
@@ -1046,7 +1053,7 @@ class _ProfilePageState extends State<ProfilePage>
                   CircleAvatar(
                     radius: 49,
                     backgroundColor: theme.scaffoldBackgroundColor,
-                    child: _buildAvatarImage(data),
+                    child: ProfileAvatarImage(data: data),
                   ),
                 ],
               ),
@@ -1062,7 +1069,11 @@ class _ProfilePageState extends State<ProfilePage>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (deptCode != null) ...[
-                _buildDepartmentBadge(deptCode, dept, prodi),
+                DepartmentBadge(
+                  code: deptCode,
+                  fullDeptName: dept,
+                  fullProdiName: prodi,
+                ),
                 SizedBox(width: 8),
               ],
               isMyProfile
@@ -1074,20 +1085,21 @@ class _ProfilePageState extends State<ProfilePage>
                                 builder: (_) => EditProfileScreen(),
                               ),
                             ) ==
-                            true)
+                            true) {
                           setState(() {});
+                        }
                       },
-                      child: Text(t.translate('profile_edit')),
                       style: OutlinedButton.styleFrom(shape: StadiumBorder()),
+                      child: Text(t.translate('profile_edit')),
                     )
                   : _isBlocked
                   ? ElevatedButton(
                       onPressed: _toggleBlock,
-                      child: Text(t.translate('profile_unblocked')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                       ),
+                      child: Text(t.translate('profile_unblocked')),
                     )
                   : _buildFollowButton(isPrivate, amIFollowing),
             ],
@@ -1168,7 +1180,7 @@ class _ProfilePageState extends State<ProfilePage>
     bool showKtmVerifyBtn = false;
 
     if (isMyProfile) {
-      if (_user != null && !_user!.emailVerified) {
+      if (_user != null && !_user.emailVerified) {
         showEmailVerifyBtn = true;
       } else if (!isVerified && !isPending) {
         showKtmVerifyBtn = true;
@@ -1218,28 +1230,28 @@ class _ProfilePageState extends State<ProfilePage>
                 onTap: () async {
                   try {
                     await _user!.sendEmailVerification();
-                    if (mounted)
-                      OverlayService().showTopNotification(
-                        context,
-                        t.translate('profile_verify_sent'),
-                        Icons.mark_email_read,
-                        () {},
-                      );
+                    if (!context.mounted) return;
+                    OverlayService().showTopNotification(
+                      context,
+                      t.translate('profile_verify_sent'),
+                      Icons.mark_email_read,
+                      () {},
+                    );
                   } catch (e) {
-                    if (mounted)
-                      OverlayService().showTopNotification(
-                        context,
-                        t.translate('profile_verify_wait'),
-                        Icons.timer,
-                        () {},
-                        color: Colors.orange,
-                      );
+                    if (!context.mounted) return;
+                    OverlayService().showTopNotification(
+                      context,
+                      t.translate('profile_verify_wait'),
+                      Icons.timer,
+                      () {},
+                      color: Colors.orange,
+                    );
                   }
                 },
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.red),
                   ),
@@ -1267,7 +1279,7 @@ class _ProfilePageState extends State<ProfilePage>
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.orange),
                 ),
@@ -1299,7 +1311,7 @@ class _ProfilePageState extends State<ProfilePage>
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: SisapaTheme.blue.withOpacity(0.1),
+                    color: SisapaTheme.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: SisapaTheme.blue),
                   ),
@@ -1359,18 +1371,18 @@ class _ProfilePageState extends State<ProfilePage>
             SizedBox(height: 8),
             Row(
               children: [
-                _buildStatText(
-                  context,
-                  (data['following'] ?? []).length,
-                  t.translate('profile_following'),
-                  1,
+                ProfileStatLink(
+                  userId: _userId,
+                  count: (data['following'] ?? []).length,
+                  label: t.translate('profile_following'),
+                  tabIndex: 1,
                 ),
                 SizedBox(width: 16),
-                _buildStatText(
-                  context,
-                  (data['followers'] ?? []).length,
-                  t.translate('profile_followers'),
-                  2,
+                ProfileStatLink(
+                  userId: _userId,
+                  count: (data['followers'] ?? []).length,
+                  label: t.translate('profile_followers'),
+                  tabIndex: 2,
                 ),
               ],
             ),
@@ -1380,475 +1392,4 @@ class _ProfilePageState extends State<ProfilePage>
       ),
     );
   }
-
-  Widget _buildBlockedBody() {
-    var t = AppLocalizations.of(context)!;
-    return Container(
-      alignment: Alignment.center,
-      padding: EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.block, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            t.translate('profile_blocked_title'),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          SizedBox(height: 8),
-          Text(
-            t.translate('profile_blocked_desc'),
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
-          ),
-          SizedBox(height: 16),
-          OutlinedButton(
-            onPressed: _toggleBlock,
-            child: Text(t.translate('profile_unblocked')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrivateAccountBody() {
-    final theme = Theme.of(context);
-    var t = AppLocalizations.of(context)!;
-    return Container(
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: 40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: theme.dividerColor, width: 2),
-            ),
-            child: Icon(
-              Icons.lock_outline,
-              size: 48,
-              color: theme.primaryColor,
-            ),
-          ),
-          SizedBox(height: 24),
-          Text(
-            t.translate('profile_private_title'),
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            t.translate('profile_private_desc'),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBadgeInfo(BuildContext context, String dept, String prodi) {
-    var t = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => FrostedAlertDialog(
-        title: Text(t.translate('profile_academic_title')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              t.translate('profile_dept'),
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
-            ),
-            Text(dept, style: TextStyle(fontSize: 16)),
-            SizedBox(height: 16),
-            Text(
-              t.translate('profile_prodi'),
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
-            ),
-            Text(prodi, style: TextStyle(fontSize: 16)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              t.translate('general_cancel'),
-              style: TextStyle(color: SisapaTheme.blue),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDepartmentBadge(
-    String code,
-    String? fullDeptName,
-    String? fullProdiName,
-  ) {
-    final parts = code.split('-');
-    if (parts.length < 2) return SizedBox.shrink();
-    final dept = parts[0];
-    final prodi = parts[1];
-    Color deptColor = (dept.toUpperCase() == 'TE')
-        ? Color(0xFF00008B)
-        : (dept.toUpperCase() == 'TS'
-              ? Color(0xFF5D4037)
-              : Colors.primaries[dept.hashCode.abs() %
-                    Colors.primaries.length]);
-    Color prodiColor = (prodi.toUpperCase() == 'BM')
-        ? Colors.orange
-        : Colors.primaries[prodi.hashCode.abs() % Colors.primaries.length];
-    return GestureDetector(
-      onTap: () {
-        if (fullDeptName != null && fullProdiName != null)
-          _showBadgeInfo(context, fullDeptName, fullProdiName);
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: deptColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              dept,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          SizedBox(width: 4),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: prodiColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              prodi,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatarImage(Map<String, dynamic> data) {
-    final url = data['profile_image_url'] ?? data['profileImageUrl'];
-    if (url != null)
-      return CircleAvatar(
-        radius: 45,
-        backgroundImage: CachedNetworkImageProvider(
-          url,
-          cacheManager: AppCacheManager.instance,
-        ),
-      );
-    return CircleAvatar(
-      radius: 45,
-      backgroundColor: AvatarHelper.getColor(
-        data['avatar_hex'] ?? data['avatarHex'],
-      ),
-      child: Icon(
-        AvatarHelper.getIcon(
-          data['avatar_icon_id'] ?? data['avatarIconId'] ?? 0,
-        ),
-        size: 50,
-        color: Colors.white,
-      ),
-    );
-  }
-
-  Widget _buildStatText(
-    BuildContext context,
-    int count,
-    String label,
-    int tabIndex,
-  ) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                FollowListScreen(userId: _userId, initialIndex: tabIndex),
-          ),
-        );
-      },
-      child: Row(
-        children: [
-          Text("$count", style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(width: 4),
-          Text(label, style: TextStyle(color: Theme.of(context).hintColor)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMyPosts(BuildContext context, String userId) {
-    var t = AppLocalizations.of(context)!;
-
-    final String? firestorePinned =
-        _userData['pinned_post_id'] ?? _userData['pinnedPostId'];
-    final activePinnedId = _optimisticPinnedPostId == ''
-        ? null
-        : (_optimisticPinnedPostId ?? firestorePinned);
-
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _apiService.getPosts(userUid: userId, limit: 50),
-      builder: (context, snapshot) {
-        if (snapshot.hasError)
-          return CommonErrorWidget(
-            message: t.translate('profile_load_posts_fail'),
-            isConnectionError: true,
-          );
-
-        List<Widget> slivers = [];
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            !snapshot.hasData) {
-          slivers.add(
-            SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        } else {
-          final allPosts = snapshot.data ?? [];
-
-          final visiblePosts = allPosts.where((data) {
-            final bool isCommunityIdentityPost =
-                data['is_community_post'] ?? data['isCommunityPost'] ?? false;
-            if (isCommunityIdentityPost) return false;
-            final visibility = data['visibility'] ?? 'public';
-            final ownerId = data['user_uid'] ?? data['userId'];
-            if (visibility == 'public') return true;
-            if (visibility == 'followers') return true;
-            if (visibility == 'private' &&
-                ownerId == FirebaseAuth.instance.currentUser?.uid)
-              return true;
-            return false;
-          }).toList();
-
-          if (visiblePosts.isEmpty) {
-            slivers.add(
-              SliverFillRemaining(
-                child: Center(child: Text(t.translate('profile_no_posts'))),
-              ),
-            );
-          } else {
-            if (activePinnedId != null) {
-              final index = visiblePosts.indexWhere(
-                (d) => d['id'] == activePinnedId,
-              );
-              if (index != -1) {
-                final pinned = visiblePosts.removeAt(index);
-                visiblePosts.insert(0, pinned);
-              }
-            }
-            slivers.add(
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final pData = visiblePosts[index];
-                  final pId = pData['id'] ?? '';
-                  return BlogPostCard(
-                    key: ValueKey(pId),
-                    postId: pId,
-                    postData: pData,
-                    isOwner:
-                        (pData['user_uid'] ?? pData['userId']) ==
-                        FirebaseAuth.instance.currentUser?.uid,
-                    heroContextId: 'profile_posts',
-                    isPinned: pId == activePinnedId,
-                    onPinToggle: (id, isPinned) =>
-                        _handlePinToggle(id, isPinned),
-                    currentProfileUserId: _userId,
-                  );
-                }, childCount: visiblePosts.length),
-              ),
-            );
-            slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
-          }
-        }
-
-        return CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: slivers,
-        );
-      },
-    );
-  }
-
-  Widget _buildMyReplies(BuildContext context, String userId) {
-    var t = AppLocalizations.of(context)!;
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _apiService.getUserComments(userId),
-      builder: (context, snapshot) {
-        if (snapshot.hasError)
-          return CommonErrorWidget(
-            message: t.translate('profile_load_replies_fail'),
-            isConnectionError: true,
-          );
-
-        List<Widget> slivers = [];
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            !snapshot.hasData) {
-          slivers.add(
-            SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        } else {
-          final docs = snapshot.data ?? [];
-          if (docs.isEmpty) {
-            slivers.add(
-              SliverFillRemaining(
-                child: Center(child: Text(t.translate('profile_no_replies'))),
-              ),
-            );
-          } else {
-            slivers.add(
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final data = docs[index];
-                  final parentPostId =
-                      data['post_id'] ?? data['originalPostId'] ?? '';
-
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      listTileTheme: ListTileThemeData(
-                        minVerticalPadding: 0,
-                        visualDensity: VisualDensity.compact,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 0,
-                        ),
-                      ),
-                    ),
-                    child: CommentTile(
-                      key: ValueKey(data['id'] ?? index),
-                      commentId: data['id'] ?? '',
-                      commentData: data,
-                      postId: parentPostId,
-                      isOwner: true,
-                      showPostContext: true,
-                      heroContextId: 'profile_replies',
-                      currentProfileUserId: _userId,
-                    ),
-                  );
-                }, childCount: docs.length),
-              ),
-            );
-            slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
-          }
-        }
-        return CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: slivers,
-        );
-      },
-    );
-  }
-
-  Widget _buildMyReposts(BuildContext context, String userId) {
-    var t = AppLocalizations.of(context)!;
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _apiService.getReposts(userId),
-      builder: (context, snapshot) {
-        if (snapshot.hasError)
-          return CommonErrorWidget(
-            message: t.translate('profile_load_reposts_fail'),
-            isConnectionError: true,
-          );
-        List<Widget> slivers = [];
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            !snapshot.hasData) {
-          slivers.add(
-            SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        } else {
-          final allPosts = snapshot.data ?? [];
-
-          if (allPosts.isEmpty) {
-            slivers.add(
-              SliverFillRemaining(
-                child: Center(child: Text(t.translate('profile_no_reposts'))),
-              ),
-            );
-          } else {
-            slivers.add(
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final pData = Map<String, dynamic>.from(allPosts[index]);
-                  final pId = pData['id'] ?? '';
-
-                  // Prevent duplicate repost spam: If viewing own profile, force is_reposted = true
-                  if (userId == FirebaseAuth.instance.currentUser?.uid) {
-                    pData['is_reposted'] = true;
-                  }
-
-                  return BlogPostCard(
-                    key: ValueKey('repost_$pId'),
-                    postId: pId,
-                    postData: pData,
-                    isOwner:
-                        (pData['user_uid'] ?? pData['userId']) ==
-                        FirebaseAuth.instance.currentUser?.uid,
-                    heroContextId: 'profile_reposts',
-                    currentProfileUserId: _userId,
-                  );
-                }, childCount: allPosts.length),
-              ),
-            );
-            slivers.add(SliverToBoxAdapter(child: SizedBox(height: 80)));
-          }
-        }
-
-        return CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: slivers,
-        );
-      },
-    );
-  }
-}
-
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-  final Color backgroundColor;
-
-  _SliverAppBarDelegate(this._tabBar, this.backgroundColor);
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) => FrostedLayer(
-    tint: backgroundColor.withOpacity(
-      Theme.of(context).brightness == Brightness.dark ? 0.78 : 0.74,
-    ),
-    blur: FrostedGlassTokens.controlBlurSigma,
-    child: _tabBar,
-  );
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) => true;
 }
