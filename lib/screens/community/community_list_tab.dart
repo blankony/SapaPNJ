@@ -378,13 +378,21 @@ class _CommunityListTabState extends State<CommunityListTab>
     );
   }
 
+  String? _communityImageUrl(Map<String, dynamic> data) {
+    final rawUrl = data['image_url'] ?? data['imageUrl'];
+    if (rawUrl is! String) return null;
+
+    final url = rawUrl.trim();
+    return url.isEmpty ? null : url;
+  }
+
   Widget _buildMyChannelItem(
     BuildContext context,
     String id,
     Map<String, dynamic> data,
   ) {
     final String name = data['name'] ?? 'Channel';
-    final String? imageUrl = data['imageUrl'];
+    final String? imageUrl = _communityImageUrl(data);
     final theme = Theme.of(context);
 
     return Padding(
@@ -429,7 +437,7 @@ class _CommunityListTabState extends State<CommunityListTab>
                     : null,
                 child: imageUrl == null
                     ? Text(
-                        name[0].toUpperCase(),
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
