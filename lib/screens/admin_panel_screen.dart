@@ -123,9 +123,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               child: CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.contain,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     const Center(child: CircularProgressIndicator()),
-                errorWidget: (_, __, ___) =>
+                errorWidget: (_, _, _) =>
                     const Icon(Icons.broken_image, color: Colors.white54, size: 64),
               ),
             ),
@@ -230,7 +230,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor: SisapaTheme.blue.withOpacity(0.15),
+                      backgroundColor: SisapaTheme.blue.withValues(alpha: 0.15),
                       child: Text(
                         name.isNotEmpty ? name[0].toUpperCase() : '?',
                         style: TextStyle(
@@ -284,12 +284,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
+                        placeholder: (_, _) => Container(
                           height: 180,
                           color: theme.colorScheme.surfaceContainerHighest,
                           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                         ),
-                        errorWidget: (_, __, ___) => Container(
+                        errorWidget: (_, _, _) => Container(
                           height: 180,
                           color: theme.colorScheme.surfaceContainerHighest,
                           child: const Center(
