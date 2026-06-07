@@ -194,6 +194,17 @@ class _AiAssistantPageState extends State<AiAssistantPage>
     });
   }
 
+  bool _isUserChatMessage(Map<String, dynamic> msg) {
+    final rawValue = msg['is_user'] ?? msg['isUser'];
+    if (rawValue is bool) return rawValue;
+    if (rawValue is num) return rawValue != 0;
+    if (rawValue is String) {
+      final normalized = rawValue.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
+  }
+
   Future<void> _loadChatSession(String sessionId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -214,8 +225,8 @@ class _AiAssistantPageState extends State<AiAssistantPage>
       List<Part> bufferParts = [];
 
       for (var msg in messages) {
-        final text = msg['text'] ?? '';
-        final isUser = msg['is_user'] == true || msg['isUser'] == true;
+        final text = (msg['text'] ?? '').toString();
+        final isUser = _isUserChatMessage(msg);
         final String currentRole = isUser ? 'user' : 'model';
 
         loadedUiMessages.add(
@@ -323,7 +334,6 @@ class _AiAssistantPageState extends State<AiAssistantPage>
         if (!isUser) title = "New Chat";
         final newSessionId = await ApiService().createChatSession(title: title);
         _currentSessionId = newSessionId;
-        aiPageEventBus.fire(AiPageEvent(type: AiEventType.newChat));
       }
       await ApiService().saveChatMessage(
         _currentSessionId!,
