@@ -91,7 +91,7 @@ router.patch('/:uid', async (req, res) => {
   const allowedFields = [
     'name', 'bio', 'department', 'study_program', 'department_code',
     'avatar_icon_id', 'avatar_hex', 'profile_image_url', 'banner_image_url',
-    'is_private', 'pinned_post_id', 'verification_status'
+    'is_private', 'pinned_post_id', 'verification_status', 'ktm_image_url'
   ];
 
   const updates = [];
@@ -506,7 +506,7 @@ router.get('/', async (req, res) => {
     // Return suggested users (not followed by current user, not current user)
     const [rows] = await pool.execute(
       `SELECT uid, name, email, avatar_icon_id, avatar_hex, profile_image_url,
-              verification_status, department_code
+              verification_status, department_code, role
        FROM users
        WHERE uid != ? AND uid NOT IN (
          SELECT following_uid FROM follows WHERE follower_uid = ?
@@ -519,7 +519,7 @@ router.get('/', async (req, res) => {
 
   const [rows] = await pool.execute(
     `SELECT uid, name, email, avatar_icon_id, avatar_hex, profile_image_url,
-            verification_status, department_code
+            verification_status, department_code, role
      FROM users
      WHERE name LIKE ? OR email LIKE ?
      LIMIT 20`,

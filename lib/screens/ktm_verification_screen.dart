@@ -58,6 +58,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
         // 2. Update via ApiService
         await ApiService().updateUser(user.uid, {
           'verification_status': 'pending', // pending, verified, rejected
+          'ktm_image_url': url,
         });
 
         if (mounted) {

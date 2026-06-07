@@ -893,6 +893,31 @@ class ApiService {
   }
 
   // ─────────────────────────────────────────────
+  // ADMIN
+  // ─────────────────────────────────────────────
+
+  /// Get pending KTM verifications (admin only).
+  Future<List<Map<String, dynamic>>> getPendingVerifications() async {
+    final resp = await http.get(
+      Uri.parse('$_baseUrl/api/admin/verifications'),
+      headers: await _headers(),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+  }
+
+  /// Approve or reject a KTM verification (admin only).
+  Future<bool> reviewVerification(String uid, bool approve) async {
+    final resp = await http.patch(
+      Uri.parse('$_baseUrl/api/admin/verifications/$uid'),
+      headers: await _headers(),
+      body: jsonEncode({'action': approve ? 'approve' : 'reject'}),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+    return true;
+  }
+
+  // ─────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────
 

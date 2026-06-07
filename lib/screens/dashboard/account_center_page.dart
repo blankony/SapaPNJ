@@ -9,6 +9,7 @@ import '../change_password_screen.dart';
 import '../../auth_gate.dart';
 import '../../services/overlay_service.dart';
 import '../ktm_verification_screen.dart';
+import '../admin_panel_screen.dart';
 import '../../services/app_localizations.dart';
 
 class AccountCenterPage extends StatefulWidget {
@@ -515,6 +516,28 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                           },
                   );
                 })(),
+
+                // --- ADMIN PANEL (Only visible to admins) ---
+                if (_userDbData['role'] == 'admin')
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.admin_panel_settings, color: Colors.deepPurple, size: 20),
+                    ),
+                    title: const Text('Admin Panel'),
+                    subtitle: const Text('Review KTM verifications'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AdminPanelScreen()),
+                      );
+                    },
+                  ),
 
               Divider(height: 32),
 
