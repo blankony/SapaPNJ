@@ -330,6 +330,26 @@ router.delete('/:uid/notifications', async (req, res) => {
 });
 
 
+// GET /api/users/:uid/comments — Get all comments by a user
+router.get('/:uid/comments', async (req, res) => {
+  const pool = await getPool();
+  try {
+    const [rows] = await pool.execute(
+      `SELECT c.*, u.name as user_name, u.email as user_email,
+              u.avatar_icon_id, u.avatar_hex, u.profile_image_url
+       FROM comments c
+       JOIN users u ON c.user_uid = u.uid
+       WHERE c.user_uid = ?
+       ORDER BY c.created_at DESC`,
+      [req.params.uid]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get user comments error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/users/:uid/bookmarks — Get bookmarked posts
 router.get('/:uid/bookmarks', async (req, res) => {
   if (req.uid !== req.params.uid) return res.status(403).json({ error: 'Forbidden' });
