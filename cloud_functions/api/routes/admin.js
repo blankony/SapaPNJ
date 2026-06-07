@@ -1,4 +1,5 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const { getPool } = require('../db');
 
@@ -27,18 +28,53 @@ router.patch('/verifications/:uid', async (req, res) => {
     return res.status(400).json({ error: 'Invalid action. Must be "approve" or "reject"' });
   }
 
-  const newStatus = action === 'approve' ? 'verified' : 'rejected';
   const pool = await getPool();
+  const targetUid = req.params.uid;
+
+  let connection;
   try {
-    const [result] = await pool.execute(
-      'UPDATE users SET verification_status = ? WHERE uid = ?',
-      [newStatus, req.params.uid]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    if (action === 'approve') {
+      const [result] = await connection.query(
+        'UPDATE users SET verification_status = "verified" WHERE uid = ?',
+        [targetUid]
+      );
+      if (result.affectedRows === 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(404).json({ error: 'User not found' });
+      }
+      await connection.query(
+        'INSERT INTO notifications (id, user_uid, type, is_read) VALUES (?, ?, "ktm_approved", FALSE)',
+        [uuidv4(), targetUid]
+      );
+    } else if (action === 'reject') {
+      const [result] = await connection.query(
+        'UPDATE users SET verification_status = "rejected", ktm_rejection_count = ktm_rejection_count + 1, ktm_last_rejected_at = NOW() WHERE uid = ?',
+        [targetUid]
+      );
+      if (result.affectedRows === 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(404).json({ error: 'User not found' });
+      }
+      await connection.query(
+        'INSERT INTO notifications (id, user_uid, type, is_read) VALUES (?, ?, "ktm_rejected", FALSE)',
+        [uuidv4(), targetUid]
+      );
     }
-    res.json({ success: true, verification_status: newStatus });
+
+    await connection.commit();
+    connection.release();
+
+    res.json({ success: true, verification_status: action === 'approve' ? 'verified' : 'rejected' });
   } catch (err) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
     console.error('Update verification error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }

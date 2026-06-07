@@ -27,35 +27,35 @@
 ## Phase 4: Admin KTM Verification Pipeline
 
 ### 4.1 Database Schema Changes
-- [ ] Add `role ENUM('user','admin') DEFAULT 'user'` column to `users` table
-- [ ] Add `ktm_image_url TEXT` column to `users` table
-- [ ] Modify `verification_status` ENUM to include `'rejected'`: `ENUM('none','pending','verified','rejected')`
-- [ ] Update schema.sql to reflect all changes
+- [x] Add `role ENUM('user','admin') DEFAULT 'user'` column to `users` table
+- [x] Add `ktm_image_url TEXT` column to `users` table
+- [x] Modify `verification_status` ENUM to include `'rejected'`: `ENUM('none','pending','verified','rejected')`
+- [x] Update schema.sql to reflect all changes
 
 ### 4.2 Backend API — Admin Routes
-- [ ] Create admin middleware (`middleware/admin.js`) — checks `role = 'admin'` from DB
-- [ ] Create `/api/admin/verifications` route file (`routes/admin.js`)
-- [ ] `GET /api/admin/verifications` — list all users with `verification_status = 'pending'` (admin only)
-- [ ] `PATCH /api/admin/verifications/:uid` — approve or reject a user (sets `verification_status` to `'verified'` or `'rejected'`) (admin only)
-- [ ] Register admin routes in `index.js`
-- [ ] Add `ktm_image_url` to allowed PATCH fields in `routes/users.js`
+- [x] Create admin middleware (`middleware/admin.js`) — checks `role = 'admin'` from DB
+- [x] Create `/api/admin/verifications` route file (`routes/admin.js`)
+- [x] `GET /api/admin/verifications` — list all users with `verification_status = 'pending'` (admin only)
+- [x] `PATCH /api/admin/verifications/:uid` — approve or reject a user (sets `verification_status` to `'verified'` or `'rejected'`) (admin only)
+- [x] Register admin routes in `index.js`
+- [x] Add `ktm_image_url` to allowed PATCH fields in `routes/users.js`
 
 ### 4.3 Flutter Client — Fix KTM Submission
-- [ ] Fix `ktm_verification_screen.dart` to store `ktm_image_url` alongside `verification_status: 'pending'`
+- [x] Fix `ktm_verification_screen.dart` to store `ktm_image_url` alongside `verification_status: 'pending'`
 
 ### 4.4 Flutter Client — Admin API Methods
-- [ ] Add `getPendingVerifications()` method to `ApiService`
-- [ ] Add `reviewVerification(uid, approve)` method to `ApiService`
-- [ ] Add `getMyRole()` or use existing `getUser()` to detect admin role
+- [x] Add `getPendingVerifications()` method to `ApiService`
+- [x] Add `reviewVerification(uid, approve)` method to `ApiService`
+- [x] Add `getMyRole()` or use existing `getUser()` to detect admin role
 
 ### 4.5 Flutter Client — Admin Panel Screen
-- [ ] Create `admin_panel_screen.dart` — list pending KTM verifications with image preview
-- [ ] Each card shows: user name, NIM, email, KTM image, approve/reject buttons
-- [ ] Add "Admin Panel" menu item in `account_center_page.dart` (only visible when `role == 'admin'`)
+- [x] Create `admin_panel_screen.dart` — list pending KTM verifications with image preview
+- [x] Each card shows: user name, NIM, email, KTM image, approve/reject buttons
+- [x] Add "Admin Panel" menu item in `account_center_page.dart` (only visible when `role == 'admin'`)
 
 ### 4.6 Set Initial Admin & Documentation
-- [ ] Set user `arnold.holyridho.runtuwene.te23@stu.pnj.ac.id` as admin in migration SQL
-- [ ] Create `documents/ADMIN_GUIDE.md` documenting how to add/remove admin users
+- [x] Set user `arnold.holyridho.runtuwene.te23@stu.pnj.ac.id` as admin in migration SQL
+- [x] Create `documents/ADMIN_GUIDE.md` documenting how to add/remove admin users
 
 ## Bugs
 - [x] Replies on the blogpost page constantly refresh during typing instead of just refreshing after sending a message or manual refresh

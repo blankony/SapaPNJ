@@ -21,6 +21,8 @@ CREATE TABLE users (
   role                ENUM('user','admin') DEFAULT 'user',
   verification_status ENUM('none','pending','verified','rejected') DEFAULT 'none',
   ktm_image_url       TEXT,
+  ktm_rejection_count INT DEFAULT 0,
+  ktm_last_rejected_at DATETIME,
   agreed_to_terms     BOOLEAN DEFAULT FALSE,
   agreed_at           DATETIME,
   created_at          DATETIME DEFAULT CURRENT_TIMESTAMP

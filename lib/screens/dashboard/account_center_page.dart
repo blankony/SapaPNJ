@@ -507,7 +507,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                             final res = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => KtmVerificationScreen(),
+                                builder: (_) => KtmVerificationScreen(userDbData: _userDbData),
                               ),
                             );
                             if (res == true) {

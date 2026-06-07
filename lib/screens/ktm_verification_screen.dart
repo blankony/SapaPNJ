@@ -8,7 +8,9 @@ import '../services/overlay_service.dart';
 import '../theme/app_theme.dart';
 
 class KtmVerificationScreen extends StatefulWidget {
-  const KtmVerificationScreen({super.key});
+  final Map<String, dynamic> userDbData;
+
+  const KtmVerificationScreen({super.key, required this.userDbData});
 
   @override
   State<KtmVerificationScreen> createState() => _KtmVerificationScreenState();
