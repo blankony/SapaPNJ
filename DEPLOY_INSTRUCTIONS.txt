@@ -1,5 +1,5 @@
-HOW TO DEPLOY THE SAPAPNJ BACKEND API
-======================================
+HOW TO DEPLOY THE SAPAPNJ BACKEND API (via GCP Cloud Shell)
+============================================================
 
 What changed:
 - cloud_functions/api/routes/users.js — Added GET /api/users/:uid/comments endpoint
@@ -12,36 +12,40 @@ Flutter-only changes do NOT require this deployment.
 DEPLOYMENT STEPS
 ================
 
-1. Open a terminal (PowerShell, CMD, or Git Bash)
+1. Push your latest code to GitHub first:
+   git push
 
-2. Navigate to the API folder:
+2. Open GCP Cloud Shell:
+   https://shell.cloud.google.com
+
+3. Clone or pull the repo in Cloud Shell:
+
+   First time:
+     git clone https://github.com/YOUR_USERNAME/SapaPNJ.git
+     cd SapaPNJ
+
+   Already cloned before:
+     cd SapaPNJ
+     git pull
+
+4. Navigate to the API folder:
    cd cloud_functions/api
-
-3. Make sure you are authenticated with Google Cloud:
-   gcloud auth login
-
-4. Make sure your project is set correctly:
-   gcloud config set project YOUR_GCP_PROJECT_ID
 
 5. Deploy to Cloud Run:
    gcloud run deploy sapapnjapi --region=asia-southeast2 --source=. --allow-unauthenticated
 
-6. Wait for the build and deployment to finish (usually 2-5 minutes).
+6. If prompted to select a project, choose your GCP project.
+   If prompted to enable APIs, type Y.
 
-7. Done! The new endpoint will be live at your Cloud Run URL.
+7. Wait for the build and deployment to finish (usually 2-5 minutes).
 
-
-ALTERNATIVE: Using the deploy script (Git Bash / Linux / macOS only)
-====================================================================
-
-From the project root:
-   bash cloud_functions/api/deploy.sh
+8. Done! The new endpoint will be live at your Cloud Run URL.
 
 
 VERIFYING THE DEPLOYMENT
 =========================
 
-After deploying, test the new endpoint:
-   curl -H "Authorization: Bearer YOUR_FIREBASE_TOKEN" https://YOUR_CLOUD_RUN_URL/api/users/SOME_USER_UID/comments
+In Cloud Shell, test:
+   curl https://YOUR_CLOUD_RUN_URL/api/health
 
-You should get a JSON array of comments (or an empty array [] if the user has no comments).
+You should get: {"status":"ok","timestamp":"..."}
