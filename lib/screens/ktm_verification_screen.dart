@@ -77,7 +77,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
         throw Exception("Upload failed");
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           "Submission failed",
@@ -85,6 +85,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
           () {},
           color: Colors.red,
         );
+      }
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -92,6 +93,32 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isOnCooldown = false;
+    String? bannerMessage;
+    Color bannerColor = Colors.orange;
+
+    final String verificationStatus = widget.userDbData['verification_status'] ?? 'unverified';
+    final int rejectionCount = widget.userDbData['ktm_rejection_count'] ?? 0;
+    final String? lastRejectedAtStr = widget.userDbData['ktm_last_rejected_at'];
+
+    if (verificationStatus == 'rejected') {
+      if (rejectionCount >= 3 && lastRejectedAtStr != null) {
+        final DateTime lastRejectedAt = DateTime.parse(lastRejectedAtStr).toLocal();
+        final DateTime cooldownExpiry = lastRejectedAt.add(const Duration(days: 7));
+        if (DateTime.now().isBefore(cooldownExpiry)) {
+          isOnCooldown = true;
+          final Duration diff = cooldownExpiry.difference(DateTime.now());
+          bannerMessage = "You have reached the maximum of 3 attempts. Please wait ${diff.inDays} days and ${diff.inHours % 24} hours before trying again.";
+          bannerColor = Colors.red;
+        } else {
+          bannerMessage = "You can try again. Please upload a clearer photo.";
+        }
+      } else {
+        final int remainingAttempts = 3 - rejectionCount;
+        bannerMessage = "Your previous request was rejected. You have $remainingAttempts attempts remaining. Please upload a clearer photo.";
+      }
+    }
+
     return Scaffold(
       appBar: FrostedAppBar(title: const Text("Get Verified Badge")),
       body: SingleChildScrollView(
@@ -112,81 +139,107 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Image Picker Area
-            GestureDetector(
-              onTap: () => _pickImage(ImageSource.gallery),
-              child: Container(
-                height: 200,
+            if (bannerMessage != null)
+              Container(
                 width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).dividerColor),
-                  image: _ktmImage != null
-                      ? DecorationImage(
-                          image: FileImage(_ktmImage!),
-                          fit: BoxFit.cover,
+                  color: bannerColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: bannerColor.withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: bannerColor),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        bannerMessage,
+                        style: TextStyle(color: bannerColor, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (!isOnCooldown) ...[
+              // Image Picker Area
+              GestureDetector(
+                onTap: () => _pickImage(ImageSource.gallery),
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                    image: _ktmImage != null
+                        ? DecorationImage(
+                            image: FileImage(_ktmImage!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _ktmImage == null
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(
+                              Icons.add_a_photo_outlined,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              "Tap to upload KTM",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
                         )
                       : null,
                 ),
-                child: _ktmImage == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(
-                            Icons.add_a_photo_outlined,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "Tap to upload KTM",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      )
-                    : null,
               ),
-            ),
 
-            if (_ktmImage != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Center(
-                  child: TextButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("Retake Photo"),
+              if (_ktmImage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Center(
+                    child: TextButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text("Retake Photo"),
+                    ),
                   ),
                 ),
-              ),
 
-            const SizedBox(height: 40),
+              const SizedBox(height: 40),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isUploading ? null : _submitVerification,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SisapaTheme.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isUploading ? null : _submitVerification,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SisapaTheme.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
+                  child: _isUploading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text("Submit Verification"),
                 ),
-                child: _isUploading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text("Submit Verification"),
               ),
-            ),
+            ],
           ],
         ),
       ),

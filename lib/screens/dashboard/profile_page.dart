@@ -1306,7 +1306,7 @@ class _ProfilePageState extends State<ProfilePage>
               child: InkWell(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => KtmVerificationScreen()),
+                  MaterialPageRoute(builder: (_) => KtmVerificationScreen(userDbData: _userData)),
                 ),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),

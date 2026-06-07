@@ -397,6 +397,7 @@ class _NotificationTile extends StatelessWidget {
     final String text =
         notificationData['post_text_snippet'] ??
         notificationData['postTextSnippet'] ??
+        notificationData['message'] ??
         '';
     final dynamic timestamp =
         notificationData['created_at'] ?? notificationData['timestamp'];
@@ -409,6 +410,14 @@ class _NotificationTile extends StatelessWidget {
       icon = Icons.cloud_done;
       color = Colors.green;
       title = t.translate('notif_upload_title');
+    } else if (type == 'ktm_approved') {
+      icon = Icons.verified;
+      color = Colors.blue;
+      title = "Verification Approved";
+    } else if (type == 'ktm_rejected') {
+      icon = Icons.error_outline;
+      color = Colors.red;
+      title = "Verification Rejected";
     }
 
     return Container(
