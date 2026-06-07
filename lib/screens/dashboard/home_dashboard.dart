@@ -42,6 +42,7 @@ class _HomeDashboardState extends State<HomeDashboard>
   // Navigation State
   int _currentTabIndex = 0;
   bool _isSearchActive = false;
+  int _homeFeedTabIndex = 0;
 
   // Controllers
   late final PageController _pageController;
@@ -90,6 +91,10 @@ class _HomeDashboardState extends State<HomeDashboard>
             setState(() => _isScrolled = scrolled);
           }
         },
+        onFeedTabChange: (index) {
+          _homeFeedTabIndex = index;
+          _syncHomeAppBarState();
+        },
       ),
     );
 
@@ -101,6 +106,9 @@ class _HomeDashboardState extends State<HomeDashboard>
           _homeScrollController.offset,
           identifier: 'scroll_pos_0',
         );
+        if (_currentTabIndex == 0 && _homeFeedTabIndex == 0) {
+          _syncHomeAppBarState();
+        }
       }
     });
     _recommendedScrollController.addListener(() {
@@ -110,6 +118,9 @@ class _HomeDashboardState extends State<HomeDashboard>
           _recommendedScrollController.offset,
           identifier: 'scroll_pos_1',
         );
+        if (_currentTabIndex == 0 && _homeFeedTabIndex == 1) {
+          _syncHomeAppBarState();
+        }
       }
     });
   }
@@ -131,6 +142,37 @@ class _HomeDashboardState extends State<HomeDashboard>
             curve: Curves.easeOutQuart,
           ),
         );
+  }
+
+  bool _isControllerScrolled(
+    ScrollController controller,
+    String storageIdentifier,
+  ) {
+    if (controller.hasClients) {
+      return controller.offset > 0;
+    }
+
+    final savedOffset =
+        PageStorage.of(
+              context,
+            ).readState(context, identifier: storageIdentifier)
+            as double?;
+    return (savedOffset ?? 0) > 0;
+  }
+
+  bool get _isActiveHomeFeedScrolled {
+    return _homeFeedTabIndex == 0
+        ? _isControllerScrolled(_homeScrollController, 'scroll_pos_0')
+        : _isControllerScrolled(_recommendedScrollController, 'scroll_pos_1');
+  }
+
+  void _syncHomeAppBarState() {
+    if (!mounted || _currentTabIndex != 0) return;
+
+    final scrolled = _isActiveHomeFeedScrolled;
+    if (_isScrolled != scrolled) {
+      setState(() => _isScrolled = scrolled);
+    }
   }
 
   void _restoreState() {
@@ -165,6 +207,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       if (savedScroll1 != null && _recommendedScrollController.hasClients) {
         _recommendedScrollController.jumpTo(savedScroll1);
       }
+      _syncHomeAppBarState();
     });
 
     if (savedScroll0 != null || savedScroll1 != null) restoredAnyState = true;
@@ -306,7 +349,7 @@ class _HomeDashboardState extends State<HomeDashboard>
 
     setState(() {
       _currentTabIndex = index;
-      if (index != 0) _isScrolled = false;
+      _isScrolled = index == 0 ? _isActiveHomeFeedScrolled : false;
       PageStorage.of(
         context,
       ).writeState(context, _currentTabIndex, identifier: 'home_tab_index');
@@ -358,7 +401,7 @@ class _HomeDashboardState extends State<HomeDashboard>
     // 1. Ambil drafts terlebih dahulu
     final List<DraftPost> drafts = await draftService.getDrafts();
 
-    if (!mounted) return;
+    if (!mounted || !context.mounted) return;
 
     // 2. Cek apakah drafts kosong
     if (drafts.isEmpty) {
@@ -371,7 +414,7 @@ class _HomeDashboardState extends State<HomeDashboard>
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (ctx) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -420,8 +463,9 @@ class _HomeDashboardState extends State<HomeDashboard>
                   child: FutureBuilder<List<Map<String, dynamic>>>(
                     future: ApiService().getMyCommunities(),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting)
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(child: CircularProgressIndicator());
+                      }
 
                       final list = snapshot.data ?? [];
                       if (list.isEmpty) {
@@ -442,8 +486,8 @@ class _HomeDashboardState extends State<HomeDashboard>
 
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: SisapaTheme.blue.withOpacity(
-                                0.1,
+                              backgroundColor: SisapaTheme.blue.withValues(
+                                alpha: 0.1,
                               ),
                               backgroundImage: icon != null
                                   ? CachedNetworkImageProvider(
@@ -616,6 +660,7 @@ class _HomeDashboardState extends State<HomeDashboard>
             onPageChanged: (index) {
               setState(() {
                 _currentTabIndex = index;
+                _isScrolled = index == 0 ? _isActiveHomeFeedScrolled : false;
                 PageStorage.of(context).writeState(
                   context,
                   _currentTabIndex,
@@ -632,8 +677,8 @@ class _HomeDashboardState extends State<HomeDashboard>
 
   Widget _buildBottomNavigationBar(bool isDarkMode) {
     final navBarBgColor = isDarkMode
-        ? Color(0xFF15202B).withOpacity(0.85)
-        : Colors.white.withOpacity(0.85);
+        ? Color(0xFF15202B).withValues(alpha: 0.85)
+        : Colors.white.withValues(alpha: 0.85);
     final inactiveIconColor = isDarkMode
         ? Colors.white
         : const Color.fromARGB(170, 0, 0, 0);

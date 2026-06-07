@@ -11,12 +11,14 @@ class HomePage extends StatefulWidget {
   final ScrollController scrollController;
   final ScrollController recommendedScrollController;
   final ValueChanged<bool>? onScrollChange;
+  final ValueChanged<int>? onFeedTabChange;
 
   const HomePage({
     super.key,
     required this.scrollController,
     required this.recommendedScrollController,
     this.onScrollChange,
+    this.onFeedTabChange,
   });
 
   @override
@@ -25,6 +27,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+  static const double _tabBarHeight = 48.0;
+
   late TabController _tabController;
   final ScrollController _localScrollController = ScrollController();
   bool _isScrolled = false;
@@ -33,27 +37,66 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
+    _localScrollController.addListener(_handleScrollChange);
+    widget.scrollController.addListener(_handleScrollChange);
+    widget.recommendedScrollController.addListener(_handleScrollChange);
 
-    _localScrollController.addListener(() {
-      if (_localScrollController.hasClients) {
-        bool scrolled = _localScrollController.offset > 0;
-        if (scrolled != _isScrolled) {
-          setState(() {
-            _isScrolled = scrolled;
-          });
-          if (widget.onScrollChange != null) {
-            widget.onScrollChange!(scrolled);
-          }
-        }
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handleScrollChange());
   }
 
   @override
   bool get wantKeepAlive => true;
 
+  bool _isControllerScrolled(ScrollController controller) {
+    return controller.hasClients && controller.offset > 0;
+  }
+
+  bool get _isActiveFeedScrolled {
+    final activeFeedController = _tabController.index == 0
+        ? widget.scrollController
+        : widget.recommendedScrollController;
+
+    return _isControllerScrolled(_localScrollController) ||
+        _isControllerScrolled(activeFeedController);
+  }
+
+  void _handleScrollChange() {
+    if (!mounted) return;
+
+    final scrolled = _isActiveFeedScrolled;
+    if (scrolled != _isScrolled) {
+      setState(() => _isScrolled = scrolled);
+    }
+    widget.onScrollChange?.call(scrolled);
+  }
+
+  void _handleTabChange() {
+    widget.onFeedTabChange?.call(_tabController.index);
+    _handleScrollChange();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController.removeListener(_handleScrollChange);
+      widget.scrollController.addListener(_handleScrollChange);
+    }
+    if (oldWidget.recommendedScrollController !=
+        widget.recommendedScrollController) {
+      oldWidget.recommendedScrollController.removeListener(_handleScrollChange);
+      widget.recommendedScrollController.addListener(_handleScrollChange);
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _localScrollController.removeListener(_handleScrollChange);
+    widget.scrollController.removeListener(_handleScrollChange);
+    widget.recommendedScrollController.removeListener(_handleScrollChange);
     _tabController.dispose();
     _localScrollController.dispose();
     super.dispose();
@@ -84,11 +127,11 @@ class _HomePageState extends State<HomePage>
             expandedHeight: 0,
 
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
+              preferredSize: const Size.fromHeight(_tabBarHeight),
               child: FrostedLayer(
                 blur: _isScrolled ? FrostedGlassTokens.controlBlurSigma : 0.001,
                 tint: _isScrolled
-                    ? theme.scaffoldBackgroundColor.withOpacity(0.82)
+                    ? theme.scaffoldBackgroundColor.withValues(alpha: 0.82)
                     : Colors.transparent,
                 child: TabBar(
                   controller: _tabController,
@@ -146,7 +189,6 @@ class _PostFeedListState extends State<_PostFeedList>
     with AutomaticKeepAliveClientMixin {
   final ApiService _api = ApiService();
   List<Map<String, dynamic>> _posts = [];
-  Map<String, dynamic> _userData = {};
   bool _isLoading = true;
   bool _hasError = false;
   String _refreshKey = '';
@@ -170,26 +212,23 @@ class _PostFeedListState extends State<_PostFeedList>
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final results = await Future.wait([
-          widget.feedType == 'recommended'
-              ? _api.getPersonalizedRecommendations()
-              : _api.getPosts(limit: 50),
-          _api.getUser(user.uid),
-        ]);
+        final posts = widget.feedType == 'recommended'
+            ? await _api.getPersonalizedRecommendations()
+            : await _api.getPosts(limit: 50);
         if (mounted) {
           setState(() {
-            _posts = results[0] as List<Map<String, dynamic>>;
-            _userData = (results[1] as Map<String, dynamic>?) ?? {};
+            _posts = posts;
             _isLoading = false;
           });
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
         });
+      }
     }
   }
 
@@ -202,14 +241,14 @@ class _PostFeedListState extends State<_PostFeedList>
   Widget build(BuildContext context) {
     super.build(context);
     final user = FirebaseAuth.instance.currentUser;
-    final bool isRec = widget.feedType == 'recommended';
 
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
     if (_isLoading) return Center(child: CircularProgressIndicator());
-    if (_hasError)
+    if (_hasError) {
       return CommonErrorWidget(message: t.translate('home_error_loading'));
+    }
 
     List<Map<String, dynamic>> docs = List.from(_posts);
 
@@ -224,7 +263,7 @@ class _PostFeedListState extends State<_PostFeedList>
             Icon(
               Icons.feed_outlined,
               size: 64,
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.withValues(alpha: 0.5),
             ),
             SizedBox(height: 16),
             Text(
