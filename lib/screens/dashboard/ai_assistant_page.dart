@@ -29,6 +29,13 @@ class AiAssistantPage extends StatefulWidget {
 
 class _AiAssistantPageState extends State<AiAssistantPage>
     with TickerProviderStateMixin {
+  static const int _chatHistorySummaryInterval = 10;
+  static const int _recentMessagesKeptForContext = 6;
+  static const int _summaryTranscriptCharacterLimit = 7000;
+  static const int _summaryCharacterLimit = 1600;
+  static const int _chatMaxOutputTokens = 700;
+  static const int _summaryMaxOutputTokens = 220;
+
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
@@ -46,7 +53,12 @@ class _AiAssistantPageState extends State<AiAssistantPage>
 
   final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
   late GenerativeModel _model;
+  late GenerativeModel _summaryModel;
   late ChatSession _chatSession;
+  int _historyContextRevision = 0;
+  int _lastCompactedMessageCount = 0;
+  int _summarizedMessageCount = 0;
+  String? _conversationSummary;
 
   late AnimationController _typingController;
   late TTSManager _ttsManager;
@@ -67,9 +79,35 @@ class _AiAssistantPageState extends State<AiAssistantPage>
   late List<Map<String, dynamic>> _activeSuggestions;
 
   final Content _systemInstruction = Content.system("""
-      You are "Spirit AI", a friendly, intelligent, and spirited virtual assistant for the Politeknik Negeri Jakarta (PNJ) community app "Sapa PNJ".
-      Your Persona: Name: Spirit AI, Tone: Energetic, helpful, polite. Language: English (default), adapt to user.
-      Your Capabilities: Answer questions about campus life, academics, facilities. Assist drafting emails/bios. Provide support.
+      You are "Spirit AI", the friendly virtual assistant inside Sapa PNJ.
+
+      Core identity:
+      - App: Sapa PNJ, a Flutter social and communication platform for the Politeknik Negeri Jakarta (PNJ) community.
+      - Development team: Arnold Holyridho R. (2303421041) and Arya Setiawan (2303421026). Mention this only when asked about the creator, developer, or development team.
+      - Persona: energetic, helpful, polite, and concise. Use the user's language when clear; otherwise default to English.
+
+      App navigation knowledge:
+      - Home tab: main feed, recommended feed, top-right notifications, and the floating edit button for creating posts.
+      - Community tab: user's channels, community broadcasts, browse/create communities, channel pages, and official community posting.
+      - AI Assistant tab: this chat. Use the top-right history icon/end drawer for chat history and starting a new chat.
+      - Search tab: posts, users, and communities. Tap the Search tab, then the app-bar search icon/input.
+      - Profile tab: the user's profile, posts/reposts/replies, edit profile, follow stats, and profile verification shortcuts.
+      - Side drawer: tap the app-bar avatar/menu to open Account Center, Communities, PNJ Services, Saved Posts, Settings, language/theme, and logout.
+      - PNJ Services in the side drawer: SPIRIT Academia, E-Learning PNJ, Akademik PNJ, and the official PNJ website.
+      - Account Center: email and Google account status, KTM verification, Admin Panel for admins, and profile/account settings.
+      - Settings: Account Center, notification preferences, blocked users, About Us, language, theme, and logout.
+
+      Behavior:
+      - When the user asks where something is located in this app, answer with direct UI steps and tab names.
+      - If a feature location is uncertain, give the closest likely path and say what to tap next.
+      - Keep answers brief by default. Do not repeat the full chat history. If a conversation summary is present, use it silently as context.
+    """);
+
+  final Content _summaryInstruction = Content.system("""
+      You summarize Spirit AI conversations for compact future context.
+      Preserve user goals, preferences, app-navigation needs, decisions, unresolved requests, and important PNJ/Sapa PNJ context.
+      Do not add facts that are not in the transcript.
+      Keep the summary short and useful for the next assistant response.
     """);
 
   @override
@@ -173,7 +211,19 @@ class _AiAssistantPageState extends State<AiAssistantPage>
       _model = GenerativeModel(
         model: 'gemini-2.5-flash',
         apiKey: _apiKey,
+        generationConfig: GenerationConfig(
+          maxOutputTokens: _chatMaxOutputTokens,
+        ),
         systemInstruction: _systemInstruction,
+      );
+      _summaryModel = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: _apiKey,
+        generationConfig: GenerationConfig(
+          maxOutputTokens: _summaryMaxOutputTokens,
+          temperature: 0.2,
+        ),
+        systemInstruction: _summaryInstruction,
       );
       _chatSession = _model.startChat();
     } catch (e) {
@@ -182,12 +232,16 @@ class _AiAssistantPageState extends State<AiAssistantPage>
   }
 
   void _startNewChat() {
+    _historyContextRevision++;
     setState(() {
       _messages.clear();
       _currentSessionId = null;
       _isTyping = false;
       _hasConnectionError = false;
       _chatSession = _model.startChat();
+      _lastCompactedMessageCount = 0;
+      _summarizedMessageCount = 0;
+      _conversationSummary = null;
       _allSuggestions.shuffle();
       _activeSuggestions = _allSuggestions.take(3).toList();
       _ttsManager.stop();
@@ -205,29 +259,217 @@ class _AiAssistantPageState extends State<AiAssistantPage>
     return false;
   }
 
+  List<Content> _buildGeminiHistory(List<ChatMessage> messages) {
+    final List<Content> geminiHistory = [];
+    String? lastRole;
+    List<Part> bufferParts = [];
+
+    for (final message in messages) {
+      final text = message.text.trim();
+      if (text.isEmpty) continue;
+
+      final currentRole = message.isUser ? 'user' : 'model';
+      if (lastRole == null) {
+        lastRole = currentRole;
+        bufferParts.add(TextPart(text));
+      } else if (lastRole == currentRole) {
+        bufferParts.add(TextPart("\n\n$text"));
+      } else {
+        geminiHistory.add(Content(lastRole, [...bufferParts]));
+        lastRole = currentRole;
+        bufferParts = [TextPart(text)];
+      }
+    }
+
+    if (lastRole != null && bufferParts.isNotEmpty) {
+      geminiHistory.add(Content(lastRole, bufferParts));
+    }
+
+    return geminiHistory;
+  }
+
+  int _summaryEndIndex(List<ChatMessage> messages) {
+    int summaryEnd = messages.length - _recentMessagesKeptForContext;
+    if (summaryEnd <= 0) return 0;
+
+    if (messages.first.isUser && summaryEnd.isOdd) {
+      summaryEnd -= 1;
+    }
+
+    return summaryEnd;
+  }
+
+  String _truncateFromEnd(String text, int maxCharacters) {
+    if (text.length <= maxCharacters) return text;
+    return text.substring(text.length - maxCharacters);
+  }
+
+  String _formatTranscript(List<ChatMessage> messages) {
+    final buffer = StringBuffer();
+    for (final message in messages) {
+      final text = message.text.trim();
+      if (text.isEmpty) continue;
+
+      final speaker = message.isUser ? 'User' : 'Spirit AI';
+      buffer.writeln('$speaker: $text');
+      buffer.writeln();
+    }
+
+    return _truncateFromEnd(
+      buffer.toString().trim(),
+      _summaryTranscriptCharacterLimit,
+    );
+  }
+
+  Future<String?> _summarizeMessages(
+    List<ChatMessage> messages, {
+    String? previousSummary,
+  }) async {
+    if (messages.isEmpty && previousSummary == null) return null;
+
+    final transcript = _formatTranscript(messages);
+    final prompt =
+        """
+Summarize this Spirit AI conversation for future replies.
+
+Existing summary, if any:
+${previousSummary?.trim().isNotEmpty == true ? previousSummary!.trim() : 'None'}
+
+New transcript to merge:
+${transcript.isNotEmpty ? transcript : 'No new transcript.'}
+
+Return a concise summary only.
+""";
+
+    try {
+      final response = await _summaryModel.generateContent([
+        Content.text(prompt),
+      ]);
+      final summary = response.text?.trim();
+      if (summary == null || summary.isEmpty) return null;
+      return _truncateFromEnd(summary, _summaryCharacterLimit);
+    } catch (e) {
+      debugPrint("Error summarizing chat history: $e");
+      return null;
+    }
+  }
+
+  Future<_GeminiHistoryContext> _buildGeminiHistoryContext(
+    List<ChatMessage> messages, {
+    bool forceCompact = false,
+    required int lastCompactedMessageCount,
+    required int summarizedMessageCount,
+    required String? previousSummary,
+  }) async {
+    final shouldCompact =
+        messages.length >= _chatHistorySummaryInterval &&
+        (forceCompact ||
+            messages.length - lastCompactedMessageCount >=
+                _chatHistorySummaryInterval);
+
+    if (!shouldCompact) {
+      return _GeminiHistoryContext(
+        history: _buildGeminiHistory(messages),
+        lastCompactedMessageCount: lastCompactedMessageCount,
+        summarizedMessageCount: summarizedMessageCount,
+        summary: previousSummary,
+      );
+    }
+
+    final summaryEnd = _summaryEndIndex(messages);
+    if (summaryEnd <= summarizedMessageCount) {
+      return _GeminiHistoryContext(
+        history: _buildGeminiHistory(messages),
+        lastCompactedMessageCount: lastCompactedMessageCount,
+        summarizedMessageCount: summarizedMessageCount,
+        summary: previousSummary,
+      );
+    }
+
+    final messagesToSummarize = messages.sublist(
+      summarizedMessageCount,
+      summaryEnd,
+    );
+    final summary = await _summarizeMessages(
+      messagesToSummarize,
+      previousSummary: previousSummary,
+    );
+
+    if (summary == null) {
+      return _GeminiHistoryContext(
+        history: _buildGeminiHistory(messages),
+        lastCompactedMessageCount: lastCompactedMessageCount,
+        summarizedMessageCount: summarizedMessageCount,
+        summary: previousSummary,
+      );
+    }
+
+    final recentMessages = messages.sublist(summaryEnd);
+    return _GeminiHistoryContext(
+      history: [
+        Content('user', [TextPart('Conversation summary so far:\n$summary')]),
+        Content.model([
+          TextPart(
+            'Understood. I will use this summary as context and continue from the recent messages.',
+          ),
+        ]),
+        ..._buildGeminiHistory(recentMessages),
+      ],
+      lastCompactedMessageCount: messages.length,
+      summarizedMessageCount: summaryEnd,
+      summary: summary,
+    );
+  }
+
+  Future<void> _compactChatHistoryIfNeeded() async {
+    final revision = _historyContextRevision;
+    final messagesSnapshot = List<ChatMessage>.from(_messages);
+    final shouldCompact =
+        messagesSnapshot.length >= _chatHistorySummaryInterval &&
+        messagesSnapshot.length - _lastCompactedMessageCount >=
+            _chatHistorySummaryInterval;
+
+    if (!shouldCompact) return;
+
+    final historyContext = await _buildGeminiHistoryContext(
+      messagesSnapshot,
+      lastCompactedMessageCount: _lastCompactedMessageCount,
+      summarizedMessageCount: _summarizedMessageCount,
+      previousSummary: _conversationSummary,
+    );
+
+    if (!mounted || revision != _historyContextRevision) return;
+
+    _chatSession = _model.startChat(history: historyContext.history);
+    _lastCompactedMessageCount = historyContext.lastCompactedMessageCount;
+    _summarizedMessageCount = historyContext.summarizedMessageCount;
+    _conversationSummary = historyContext.summary;
+  }
+
   Future<void> _loadChatSession(String sessionId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    final loadRevision = ++_historyContextRevision;
     setState(() {
       _isLoadingHistory = true;
       _messages.clear();
       _hasConnectionError = false;
       _currentSessionId = sessionId;
+      _chatSession = _model.startChat();
+      _lastCompactedMessageCount = 0;
+      _summarizedMessageCount = 0;
+      _conversationSummary = null;
     });
 
     try {
       final messages = await ApiService().getChatMessages(sessionId);
 
       final List<ChatMessage> loadedUiMessages = [];
-      final List<Content> geminiHistory = [];
-      String? lastRole;
-      List<Part> bufferParts = [];
 
       for (var msg in messages) {
         final text = (msg['text'] ?? '').toString();
         final isUser = _isUserChatMessage(msg);
-        final String currentRole = isUser ? 'user' : 'model';
 
         loadedUiMessages.add(
           ChatMessage(
@@ -238,28 +480,29 @@ class _AiAssistantPageState extends State<AiAssistantPage>
                 : DateTime.now(),
           ),
         );
-
-        if (lastRole == null) {
-          lastRole = currentRole;
-          bufferParts.add(TextPart(text));
-        } else if (lastRole == currentRole) {
-          bufferParts.add(TextPart("\n\n$text"));
-        } else {
-          geminiHistory.add(Content(lastRole, [...bufferParts]));
-          lastRole = currentRole;
-          bufferParts = [TextPart(text)];
-        }
       }
-      if (lastRole != null && bufferParts.isNotEmpty)
-        geminiHistory.add(Content(lastRole, bufferParts));
+
+      final historyContext = await _buildGeminiHistoryContext(
+        loadedUiMessages,
+        forceCompact: true,
+        lastCompactedMessageCount: 0,
+        summarizedMessageCount: 0,
+        previousSummary: null,
+      );
+
+      if (!mounted || loadRevision != _historyContextRevision) return;
 
       setState(() {
         _messages.addAll(loadedUiMessages);
         _isLoadingHistory = false;
-        _chatSession = _model.startChat(history: geminiHistory);
+        _chatSession = _model.startChat(history: historyContext.history);
+        _lastCompactedMessageCount = historyContext.lastCompactedMessageCount;
+        _summarizedMessageCount = historyContext.summarizedMessageCount;
+        _conversationSummary = historyContext.summary;
       });
       _scrollToBottom();
     } catch (e) {
+      if (!mounted || loadRevision != _historyContextRevision) return;
       setState(() {
         _isLoadingHistory = false;
         _hasConnectionError = true;
@@ -281,6 +524,7 @@ class _AiAssistantPageState extends State<AiAssistantPage>
       _messages.add(
         ChatMessage(text: text, isUser: true, timestamp: DateTime.now()),
       );
+      _historyContextRevision++;
       _isTyping = true;
       _hasConnectionError = false;
     });
@@ -300,10 +544,12 @@ class _AiAssistantPageState extends State<AiAssistantPage>
           _messages.add(
             ChatMessage(text: aiText, isUser: false, timestamp: DateTime.now()),
           );
+          _historyContextRevision++;
         });
         _scrollToBottom();
         if (user != null)
           await _saveMessageToFirestore(user.uid, aiText, false);
+        unawaited(_compactChatHistoryIfNeeded());
       }
     } catch (e) {
       if (mounted) {
@@ -316,6 +562,7 @@ class _AiAssistantPageState extends State<AiAssistantPage>
               timestamp: DateTime.now(),
             ),
           ); // "Connection error..."
+          _historyContextRevision++;
         });
         _scrollToBottom();
       }
@@ -687,4 +934,18 @@ class _AiAssistantPageState extends State<AiAssistantPage>
       ),
     );
   }
+}
+
+class _GeminiHistoryContext {
+  final List<Content> history;
+  final int lastCompactedMessageCount;
+  final int summarizedMessageCount;
+  final String? summary;
+
+  const _GeminiHistoryContext({
+    required this.history,
+    required this.lastCompactedMessageCount,
+    required this.summarizedMessageCount,
+    required this.summary,
+  });
 }
