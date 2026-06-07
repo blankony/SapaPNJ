@@ -164,16 +164,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     try {
       if (isFollowing) {
         await _api.unfollowCommunity(widget.communityId);
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('profile_unfollow'),
             Icons.remove_circle_outline,
             () {},
           );
+        }
       } else {
         await _api.followCommunity(widget.communityId);
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('community_following'),
@@ -181,12 +182,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             () {},
             color: Colors.green,
           );
+        }
       }
       // Refresh community data
       final updated = await _api.getCommunity(widget.communityId);
       if (mounted && updated != null) setState(() => _communityData = updated);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('profile_action_fail'),
@@ -194,6 +196,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           () {},
           color: Colors.red,
         );
+      }
     }
   }
 
@@ -201,11 +204,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (_, __, ___) => ImageViewerScreen(
-          imageUrl: url,
-          heroTag: heroTag,
-          mediaType: 'image',
-        ),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ImageViewerScreen(
+              imageUrl: url,
+              heroTag: heroTag,
+              mediaType: 'image',
+            ),
       ),
     );
   }
@@ -217,6 +221,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     bool hasControl,
   ) {
     if (url == null && !hasControl) return;
+    if (url == null && hasControl) {
+      _pickAndUploadImage(isBanner: isBanner);
+      return;
+    }
 
     // LOCALIZATION inside modal
     var t = AppLocalizations.of(context)!;
@@ -277,6 +285,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   }
 
   Future<void> _pickAndUploadImage({required bool isBanner}) async {
+    if (_isUploadingImage) return;
+
     var t = AppLocalizations.of(context)!;
 
     final picker = ImagePicker();
@@ -307,9 +317,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         await _api.updateCommunity(widget.communityId, update);
         // Refresh
         final updated = await _api.getCommunity(widget.communityId);
-        if (mounted && updated != null)
+        if (mounted && updated != null) {
           setState(() => _communityData = updated);
-        if (mounted)
+        }
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('profile_update_success'),
@@ -317,9 +328,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             () {},
             color: Colors.green,
           );
+        }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('edit_error_upload'),
@@ -327,6 +339,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           () {},
           color: Colors.red,
         );
+      }
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }
@@ -398,12 +411,15 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   fit: StackFit.expand,
                   children: [
                     GestureDetector(
-                      onTap: () => _showImageOptions(
-                        context,
-                        bannerUrl,
-                        true,
-                        hasFullControl,
-                      ),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _isUploadingImage
+                          ? null
+                          : () => _showImageOptions(
+                              context,
+                              bannerUrl,
+                              true,
+                              hasFullControl,
+                            ),
                       child: Hero(
                         tag: 'community_banner',
                         child: bannerUrl != null
@@ -441,15 +457,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               ),
                       ),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.8),
-                          ],
+                    IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.8),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -459,9 +477,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       right: 0,
                       height:
                           MediaQuery.of(context).padding.top + kToolbarHeight,
-                      child: FrostedLayer(
-                        tint: theme.scaffoldBackgroundColor.withOpacity(
-                          isDarkMode ? 0.78 : 0.74,
+                      child: IgnorePointer(
+                        child: FrostedLayer(
+                          tint: theme.scaffoldBackgroundColor.withValues(
+                            alpha: isDarkMode ? 0.78 : 0.74,
+                          ),
                         ),
                       ),
                     ),
@@ -473,12 +493,14 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           GestureDetector(
-                            onTap: () => _showImageOptions(
-                              context,
-                              avatarUrl,
-                              false,
-                              hasFullControl,
-                            ),
+                            onTap: _isUploadingImage
+                                ? null
+                                : () => _showImageOptions(
+                                    context,
+                                    avatarUrl,
+                                    false,
+                                    hasFullControl,
+                                  ),
                             child: Hero(
                               tag: 'community_icon',
                               child: Container(

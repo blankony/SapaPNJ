@@ -62,7 +62,7 @@
 - [x] On the profile page the replies is not showing anything at all.
 - [x] Home screen bug, where the first post showing doest acknowledge the appbar and instead it is show under instead of below stacking the top appbar, this happes when a post was deleted and the page was refreshed then the user refresh the page it after refreshing it just load the home page while loading the post under the top appbar making the UI looks janky
 - [x] The Communities page cannot be refreshed(pull down gesture)
-- [ ] The Communities Comunity account page and clicking on the banner even if it says "Add Banner" does not prompt the user to choose an image as banner.
+- [x] The Communities Comunity account page and clicking on the banner even if it says "Add Banner" does not prompt the user to choose an image as banner.
 - [ ] Change the gear icon on the community page to a pen for more clearer icon and suggesting we can edit the comunity profile and roles from here
 - [ ] In the comunities page the "Your Channels" Section even after setting a profile image for it, still doesnt have a image at all and instead still showing the comunity name first letter placeholder icon
 - [ ] Spirit AI, when loading a history it only show the messages from the AI and no messages from the user is shown at all.
