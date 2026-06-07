@@ -16,19 +16,6 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// --- TEMPORARY MIGRATION ROUTE ---
-app.get('/api/migrate-db-temp', async (req, res) => {
-  try {
-    const { getPool } = require('./db');
-    const pool = await getPool();
-    await pool.execute("ALTER TABLE users ADD COLUMN ktm_rejection_count INT DEFAULT 0 AFTER ktm_image_url").catch(e => console.log(e.message));
-    await pool.execute("ALTER TABLE users ADD COLUMN ktm_last_rejected_at DATETIME AFTER ktm_rejection_count").catch(e => console.log(e.message));
-    res.send('Migration 5 executed successfully from Cloud Run!');
-  } catch (error) {
-    res.status(500).send('Migration failed: ' + error.message);
-  }
-});
-
 // Health check (no auth)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
