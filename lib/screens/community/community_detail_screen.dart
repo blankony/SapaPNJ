@@ -392,7 +392,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               actions: [
                 if (hasFullControl)
                   IconButton(
-                    icon: Icon(Icons.settings_outlined),
+                    tooltip: t.translate('general_edit'),
+                    icon: Icon(Icons.edit_outlined),
                     onPressed: () => Navigator.push(
                       context,
                       _createSlideUpRoute(
