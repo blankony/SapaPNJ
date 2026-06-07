@@ -46,6 +46,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   File? _selectedMediaFile;
   String? _mediaType;
 
+  late Future<Map<String, dynamic>?> _postFuture;
+  late Future<List<Map<String, dynamic>>> _commentsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _postFuture = _apiService.getPost(widget.postId);
+    _commentsFuture = _apiService.getComments(widget.postId);
+  }
+
+  void _refreshComments() {
+    setState(() {
+      _commentsFuture = _apiService.getComments(widget.postId);
+    });
+  }
+
   void _onCommentChanged(String text) {
     setState(() {
       _predictedText = null;
@@ -157,10 +173,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (mounted) {
         _commentController.clear();
         _clearMedia();
-        setState(() {
-          _predictedText = null;
-          _isSending = false;
-        });
+        _predictedText = null;
+        _isSending = false;
+        _refreshComments();
         FocusScope.of(context).unfocus();
       }
     } catch (e) {
@@ -197,7 +212,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               child: Column(
                 children: [
                   FutureBuilder<Map<String, dynamic>?>(
-                    future: _apiService.getPost(widget.postId),
+                    future: _postFuture,
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Padding(
@@ -259,7 +274,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Widget _buildCommentList() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _apiService.getComments(widget.postId),
+      future: _commentsFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError)
           return Padding(
