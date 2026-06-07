@@ -1,12 +1,10 @@
-import '../../services/app_cache_manager.dart';
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/api_service.dart';
+import '../../services/app_cache_manager.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 import '../../widgets/side_panel.dart';
 import '../../widgets/ai_history_drawer.dart';
@@ -18,7 +16,6 @@ import '../create_post_screen.dart';
 import '../community/community_list_tab.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/avatar_helper.dart';
 import '../../widgets/notification_sheet.dart';
 import '../../services/overlay_service.dart';
 import '../../services/notification_prefs_service.dart';
@@ -26,6 +23,12 @@ import '../../services/ai_event_bus.dart';
 
 import '../../services/draft_service.dart';
 import '../post_detail_screen.dart';
+import 'home_dashboard/app_bar_avatar.dart';
+import 'home_dashboard/custom_animated_bottom_bar.dart';
+import 'home_dashboard/dashboard_slide_route.dart';
+import 'home_dashboard/draft_menu_content.dart';
+import 'home_dashboard/keep_alive_page.dart';
+import 'home_dashboard/notification_button.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -256,7 +259,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       if (postId != null) {
         Navigator.push(
           context,
-          _AnimatedRoute(page: PostDetailScreen(postId: postId)),
+          DashboardSlideRoute(page: PostDetailScreen(postId: postId)),
         );
       } else if (type == 'follow') {
         _onTabSelected(4); // Go to profile
@@ -373,7 +376,7 @@ class _HomeDashboardState extends State<HomeDashboard>
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: EdgeInsets.all(20),
-          child: _DraftMenuContent(
+          child: DraftMenuContent(
             initialDrafts: drafts,
             onNewPost: () {
               Navigator.pop(ctx);
@@ -496,7 +499,7 @@ class _HomeDashboardState extends State<HomeDashboard>
   List<Widget> _buildAppBarActions() {
     switch (_currentTabIndex) {
       case 0: // Home
-        return [_NotificationButton(onPressed: _showNotificationPopup)];
+        return [DashboardNotificationButton(onPressed: _showNotificationPopup)];
       case 2: // AI
         return [
           IconButton(
@@ -539,7 +542,7 @@ class _HomeDashboardState extends State<HomeDashboard>
         },
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: _AppBarAvatar(),
+          child: AppBarAvatar(),
         ),
       ),
       title: GestureDetector(
@@ -710,511 +713,4 @@ class _HomeDashboardState extends State<HomeDashboard>
       bottomNavigationBar: _buildBottomNavigationBar(isDarkMode),
     );
   }
-}
-
-// --- Supporting Widgets ---
-
-class _DraftMenuContent extends StatefulWidget {
-  final List<DraftPost> initialDrafts;
-  final VoidCallback onNewPost;
-  final Function(DraftPost) onOpenDraft;
-
-  const _DraftMenuContent({
-    required this.initialDrafts,
-    required this.onNewPost,
-    required this.onOpenDraft,
-  });
-
-  @override
-  State<_DraftMenuContent> createState() => _DraftMenuContentState();
-}
-
-class _DraftMenuContentState extends State<_DraftMenuContent> {
-  late List<DraftPost> _localDrafts;
-
-  @override
-  void initState() {
-    super.initState();
-    _localDrafts = widget.initialDrafts.take(3).toList();
-  }
-
-  Future<void> _deleteDraft(String id, int index) async {
-    // 1. Optimistic Update
-    setState(() {
-      _localDrafts.removeAt(index);
-    });
-
-    // 2. Persist Change
-    await DraftService().deleteDraft(id);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final bgColor = isDark ? Color(0xFF15202B) : Colors.white;
-
-    return FrostedSurface(
-      width: double.infinity,
-      padding: EdgeInsets.all(20),
-      borderRadius: BorderRadius.circular(24),
-      tint: bgColor.withOpacity(isDark ? 0.86 : 0.82),
-      blur: FrostedGlassTokens.strongBlurSigma,
-      border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
-      boxShadow: FrostedGlassTokens.materialDepth(context),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            "Create Post",
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24),
-          _buildNewPostButton(),
-          if (_localDrafts.isNotEmpty) ...[
-            SizedBox(height: 24),
-            _buildDraftsHeader(theme),
-            SizedBox(height: 8),
-            _buildDraftsList(theme),
-          ] else ...[
-            SizedBox(height: 16),
-            Center(
-              child: Text(
-                "No drafts saved",
-                style: TextStyle(color: theme.hintColor),
-              ),
-            ),
-          ],
-          SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: TextStyle(color: theme.hintColor)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNewPostButton() {
-    return ElevatedButton.icon(
-      onPressed: widget.onNewPost,
-      icon: Icon(Icons.add, color: Colors.white),
-      label: Text("Create New Post", style: TextStyle(fontSize: 16)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: SisapaTheme.blue,
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 0,
-      ),
-    );
-  }
-
-  Widget _buildDraftsHeader(ThemeData theme) {
-    return Row(
-      children: [
-        Text(
-          "Recent Drafts",
-          style: TextStyle(
-            color: theme.hintColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-        ),
-        Spacer(),
-        Text(
-          "${_localDrafts.length}/3",
-          style: TextStyle(color: theme.hintColor, fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDraftsList(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: List.generate(_localDrafts.length, (index) {
-            final draft = _localDrafts[index];
-            final bool isLast = index == _localDrafts.length - 1;
-            return Column(
-              children: [
-                _buildDraftItem(draft, index, theme),
-                if (!isLast) Divider(height: 1, indent: 60),
-              ],
-            );
-          }),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDraftItem(DraftPost draft, int index, ThemeData theme) {
-    return Dismissible(
-      key: Key(draft.id),
-      direction: DismissDirection.startToEnd,
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: EdgeInsets.only(left: 20),
-        color: Colors.red,
-        child: Row(
-          children: const [
-            Icon(Icons.delete, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              "Delete",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-      onDismissed: (_) => _deleteDraft(draft.id, index),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: SisapaTheme.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            draft.mediaUrls.isNotEmpty ? Icons.image : Icons.text_fields,
-            color: SisapaTheme.blue,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          draft.text.isEmpty ? "Untitled Draft" : draft.text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          timeago.format(DateTime.fromMillisecondsSinceEpoch(draft.timestamp)),
-          style: TextStyle(fontSize: 11),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 12,
-          color: theme.hintColor,
-        ),
-        onTap: () => widget.onOpenDraft(draft),
-      ),
-    );
-  }
-}
-
-class _AnimatedRoute extends PageRouteBuilder {
-  final Widget page;
-  _AnimatedRoute({required this.page})
-    : super(
-        pageBuilder: (context, animation, secondaryAnimation) => page,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeOutQuart;
-          var tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      );
-}
-
-class _AppBarAvatar extends StatelessWidget {
-  const _AppBarAvatar();
-
-  @override
-  Widget build(BuildContext context) {
-    final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUserId == null) return const SizedBox();
-
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: ApiService().getUser(currentUserId),
-      builder: (context, snapshot) {
-        int iconId = 0;
-        String? colorHex;
-        String? profileImageUrl;
-
-        if (snapshot.hasData && snapshot.data != null) {
-          final data = snapshot.data!;
-          iconId = data['avatar_icon_id'] ?? 0;
-          colorHex = data['avatar_hex'];
-          profileImageUrl = data['profile_image_url'];
-        }
-
-        return CircleAvatar(
-          radius: 18,
-          backgroundColor: profileImageUrl != null
-              ? Colors.transparent
-              : AvatarHelper.getColor(colorHex),
-          backgroundImage: profileImageUrl != null
-              ? CachedNetworkImageProvider(
-                  profileImageUrl,
-                  cacheManager: AppCacheManager.instance,
-                )
-              : null,
-          child: profileImageUrl == null
-              ? Icon(
-                  AvatarHelper.getIcon(iconId),
-                  size: 20,
-                  color: Colors.white,
-                )
-              : null,
-        );
-      },
-    );
-  }
-}
-
-class _NotificationButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  const _NotificationButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return IconButton(
-        icon: Icon(Icons.notifications_none),
-        onPressed: onPressed,
-      );
-    }
-
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: ApiService().getNotifications(),
-      builder: (context, snapshot) {
-        bool hasUnread = false;
-        if (snapshot.hasData && snapshot.data != null) {
-          hasUnread = snapshot.data!.any(
-            (n) => n['is_read'] == false || n['is_read'] == 0,
-          );
-        }
-
-        return Stack(
-          children: [
-            IconButton(
-              icon: Icon(
-                hasUnread ? Icons.notifications : Icons.notifications_none,
-              ),
-              onPressed: onPressed,
-            ),
-            if (hasUnread)
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: SisapaTheme.blue,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class KeepAlivePage extends StatefulWidget {
-  const KeepAlivePage({super.key, required this.child});
-  final Widget child;
-
-  @override
-  State<KeepAlivePage> createState() => _KeepAlivePageState();
-}
-
-class _KeepAlivePageState extends State<KeepAlivePage>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return widget.child;
-  }
-
-  @override
-  bool get wantKeepAlive => true;
-}
-
-class CustomAnimatedBottomBar extends StatelessWidget {
-  const CustomAnimatedBottomBar({
-    Key? key,
-    this.selectedIndex = 0,
-    this.showElevation = true,
-    this.iconSize = 24,
-    this.backgroundColor,
-    this.itemCornerRadius = 50,
-    this.containerHeight = 56,
-    this.animationDuration = const Duration(milliseconds: 150),
-    this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
-    required this.items,
-    required this.onItemSelected,
-    this.curve = Curves.linear,
-  }) : assert(items.length >= 2 && items.length <= 5),
-       super(key: key);
-
-  final int selectedIndex;
-  final double iconSize;
-  final Color? backgroundColor;
-  final bool showElevation;
-  final Duration animationDuration;
-  final List<BottomNavyBarItem> items;
-  final ValueChanged<int> onItemSelected;
-  final MainAxisAlignment mainAxisAlignment;
-  final double itemCornerRadius;
-  final double containerHeight;
-  final Curve curve;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        boxShadow: [
-          if (showElevation)
-            const BoxShadow(color: Colors.black12, blurRadius: 2),
-        ],
-      ),
-      child: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: containerHeight,
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-          child: Row(
-            mainAxisAlignment: mainAxisAlignment,
-            children: items.map((item) {
-              var index = items.indexOf(item);
-              return GestureDetector(
-                onTap: () => onItemSelected(index),
-                child: _ItemWidget(
-                  item: item,
-                  iconSize: iconSize,
-                  isSelected: index == selectedIndex,
-                  backgroundColor: Colors.transparent,
-                  itemCornerRadius: itemCornerRadius,
-                  animationDuration: animationDuration,
-                  curve: curve,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ItemWidget extends StatelessWidget {
-  final double iconSize;
-  final bool isSelected;
-  final BottomNavyBarItem item;
-  final Color? backgroundColor;
-  final double itemCornerRadius;
-  final Duration animationDuration;
-  final Curve curve;
-
-  const _ItemWidget({
-    Key? key,
-    required this.item,
-    required this.isSelected,
-    required this.backgroundColor,
-    required this.animationDuration,
-    required this.itemCornerRadius,
-    required this.iconSize,
-    this.curve = Curves.linear,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      selected: isSelected,
-      child: AnimatedContainer(
-        width: isSelected ? 130 : 50,
-        height: double.maxFinite,
-        duration: animationDuration,
-        curve: curve,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? item.activeColor.withOpacity(0.15)
-              : (backgroundColor ?? Colors.transparent),
-          borderRadius: BorderRadius.circular(itemCornerRadius),
-        ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: NeverScrollableScrollPhysics(),
-          child: Container(
-            width: isSelected ? 130 : 50,
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                IconTheme(
-                  data: IconThemeData(
-                    size: iconSize,
-                    color: isSelected ? item.activeColor : item.inactiveColor,
-                  ),
-                  child: item.icon,
-                ),
-                if (isSelected)
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: DefaultTextStyle.merge(
-                        style: TextStyle(
-                          color: item.activeColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        textAlign: item.textAlign,
-                        child: item.title,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class BottomNavyBarItem {
-  BottomNavyBarItem({
-    required this.icon,
-    required this.title,
-    this.activeColor = Colors.blue,
-    this.textAlign,
-    this.inactiveColor,
-  });
-
-  final Widget icon;
-  final Widget title;
-  final Color activeColor;
-  final Color? inactiveColor;
-  final TextAlign? textAlign;
 }
