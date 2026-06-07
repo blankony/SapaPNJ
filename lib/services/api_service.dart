@@ -63,6 +63,122 @@ class ApiService {
     };
   }
 
+  String? _postAuthorUid(Map<String, dynamic> post) {
+    final uid = post['user_uid'] ?? post['userId'] ?? post['user_id'];
+    return uid?.toString();
+  }
+
+  bool _hasText(dynamic value) =>
+      value != null && value.toString().trim().isNotEmpty;
+
+  void _copyIfMissing(
+    Map<String, dynamic> post,
+    String target,
+    List<String> sources,
+  ) {
+    if (_hasText(post[target])) return;
+    for (final source in sources) {
+      final value = post[source];
+      if (_hasText(value)) {
+        post[target] = value;
+        return;
+      }
+    }
+  }
+
+  void _normalizePostAuthorAliases(Map<String, dynamic> post) {
+    _copyIfMissing(post, 'user_name', ['userName', 'name']);
+    _copyIfMissing(post, 'user_email', ['userEmail', 'email']);
+    _copyIfMissing(post, 'avatar_icon_id', [
+      'user_avatar_icon_id',
+      'avatarIconId',
+      'userAvatarIconId',
+    ]);
+    _copyIfMissing(post, 'avatar_hex', [
+      'user_avatar_hex',
+      'avatarHex',
+      'userAvatarHex',
+    ]);
+    _copyIfMissing(post, 'profile_image_url', [
+      'user_profile_image_url',
+      'profileImageUrl',
+      'userProfileImageUrl',
+      'user_image_url',
+      'userImageUrl',
+      'avatar_url',
+      'avatarUrl',
+    ]);
+  }
+
+  void _mergeAuthorProfile(
+    Map<String, dynamic> post,
+    Map<String, dynamic> profile,
+  ) {
+    final profileEmail =
+        profile['email'] ?? profile['user_email'] ?? profile['userEmail'];
+    final postEmail = post['user_email'] ?? post['userEmail'];
+    if (_hasText(profileEmail) &&
+        (!_hasText(postEmail) || postEmail == 'user')) {
+      post['user_email'] = profileEmail;
+    }
+
+    final profileName =
+        profile['name'] ?? profile['user_name'] ?? profile['userName'];
+    if (_hasText(profileName) && !_hasText(post['user_name'])) {
+      post['user_name'] = profileName;
+    }
+
+    final profileImageUrl =
+        profile['profile_image_url'] ?? profile['profileImageUrl'];
+    if (_hasText(profileImageUrl) && !_hasText(post['profile_image_url'])) {
+      post['profile_image_url'] = profileImageUrl;
+    }
+
+    final iconId = post['avatar_icon_id'] ?? post['avatarIconId'];
+    final profileIconId = profile['avatar_icon_id'] ?? profile['avatarIconId'];
+    if ((iconId == null || iconId == 0) && profileIconId != null) {
+      post['avatar_icon_id'] = profileIconId;
+    }
+
+    final profileHex = profile['avatar_hex'] ?? profile['avatarHex'];
+    if (_hasText(profileHex) && !_hasText(post['avatar_hex'])) {
+      post['avatar_hex'] = profileHex;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _hydrateExplorePostAuthors(
+    List<Map<String, dynamic>> posts,
+  ) async {
+    final authorIds = <String>{};
+    for (final post in posts) {
+      _normalizePostAuthorAliases(post);
+      final uid = _postAuthorUid(post);
+      if (uid != null && uid.isNotEmpty) authorIds.add(uid);
+    }
+
+    if (authorIds.isEmpty) return posts;
+
+    final profiles = <String, Map<String, dynamic>>{};
+    await Future.wait(
+      authorIds.map((uid) async {
+        try {
+          final profile = await getUser(uid);
+          if (profile != null) profiles[uid] = profile;
+        } catch (_) {
+          // Keep rendering the original post payload if profile hydration fails.
+        }
+      }),
+    );
+
+    for (final post in posts) {
+      final uid = _postAuthorUid(post);
+      final profile = uid == null ? null : profiles[uid];
+      if (profile != null) _mergeAuthorProfile(post, profile);
+    }
+
+    return posts;
+  }
+
   // ─────────────────────────────────────────────
   // USERS
   // ─────────────────────────────────────────────
@@ -417,13 +533,15 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getDiscoverRecommendations() async {
     final resp = await http.get(Uri.parse('$_baseUrl/api/explore/discover'), headers: await _headers());
     if (resp.statusCode != 200) throw _error(resp);
-    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+    final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+    return _hydrateExplorePostAuthors(posts);
   }
 
   Future<List<Map<String, dynamic>>> getPersonalizedRecommendations() async {
     final resp = await http.get(Uri.parse('$_baseUrl/api/explore/recommended'), headers: await _headers());
     if (resp.statusCode != 200) throw _error(resp);
-    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+    final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+    return _hydrateExplorePostAuthors(posts);
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedCommunities() async {
