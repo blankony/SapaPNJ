@@ -52,12 +52,15 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   List<String> _blockedUserIds = [];
   List<String> _followingIds = [];
-  bool _userDataLoaded = false;
 
   Future<List<Map<String, dynamic>>>? _trendingFuture;
   Future<List<Map<String, dynamic>>>? _discoverFuture;
   Future<List<Map<String, dynamic>>>? _communityRecFuture;
   Future<List<Map<String, dynamic>>>? _peopleRecFuture;
+  Future<List<Map<String, dynamic>>>? _postSearchFuture;
+  Future<List<Map<String, dynamic>>>? _userSearchFuture;
+  Future<List<Map<String, dynamic>>>? _communitySearchFuture;
+  String _activeSearchQuery = '';
 
   @override
   void initState() {
@@ -70,44 +73,65 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       upperBound: 1.3,
     );
 
-    voiceService.initialize();
-    _fetchUserDataAndInitFutures();
+    _primeContentFutures();
+    _fetchUserData();
   }
 
-  Future<void> _fetchUserDataAndInitFutures() async {
+  Future<void> _fetchUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        final following = await ApiService().getFollowing(user.uid);
-        final blocked = await ApiService().getBlockedUsers();
+        final results = await Future.wait([
+          ApiService().getFollowing(user.uid),
+          ApiService().getBlockedUsers(),
+        ]);
         if (mounted) {
           setState(() {
-            _followingIds = following;
-            _blockedUserIds = blocked;
+            _followingIds = results[0];
+            _blockedUserIds = results[1];
           });
         }
       } catch (e) {
         debugPrint("Error fetching user cache: $e");
       }
     }
+  }
 
-    if (mounted) {
-      setState(() {
-        _userDataLoaded = true;
-        _refreshContent();
-      });
-    }
+  void _primeContentFutures() {
+    _trendingFuture = _fetchTrendingTopics();
+    _discoverFuture = _fetchDiscoverContent();
+    _communityRecFuture = _fetchCommunityRecs();
+    _peopleRecFuture = _getSuggestedUsers(
+      FirebaseAuth.instance.currentUser?.uid,
+    );
   }
 
   void _refreshContent() {
-    setState(() {
-      _trendingFuture = _fetchTrendingTopics();
-      _discoverFuture = _fetchDiscoverContent();
-      _communityRecFuture = _fetchCommunityRecs();
-      _peopleRecFuture = _getSuggestedUsers(
-        FirebaseAuth.instance.currentUser?.uid,
-      );
-    });
+    setState(_primeContentFutures);
+  }
+
+  void _updateSearchFutures(String query) {
+    if (_activeSearchQuery == query) return;
+
+    _activeSearchQuery = query;
+    if (query.isEmpty) {
+      _postSearchFuture = null;
+      _userSearchFuture = null;
+      _communitySearchFuture = null;
+      return;
+    }
+
+    _postSearchFuture = ApiService().getPosts(query: query, limit: 50);
+    _userSearchFuture = ApiService().searchUsers(query);
+    _communitySearchFuture = ApiService().getCommunities(query: query);
+  }
+
+  void _resetSearchState({bool clearController = true}) {
+    _debounce?.cancel();
+    if (clearController) _searchController.clear();
+    _searchText = '';
+    _searchSuggestion = null;
+    _updateSearchFutures('');
   }
 
   Future<List<Map<String, dynamic>>> _fetchTrendingTopics() async {
@@ -157,9 +181,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
 
     if (oldWidget.isSearching && !widget.isSearching) {
-      _searchController.clear();
-      _searchText = '';
-      _searchSuggestion = null;
+      _resetSearchState();
       _stopListening();
       FocusScope.of(context).unfocus();
     }
@@ -242,14 +264,18 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       if (!mounted) return;
 
       setState(() {
-        _searchText = value.toLowerCase().trim();
+        final query = value.toLowerCase().trim();
+        _searchText = query;
         _searchSuggestion = null;
+        _updateSearchFutures(query);
       });
 
-      if (value.trim().isEmpty) return;
+      final query = value.toLowerCase().trim();
+      if (query.isEmpty) return;
 
       final suggestion = await _predictionService.getLocalPrediction(value);
       if (mounted &&
+          _searchText == query &&
           suggestion != null &&
           suggestion.toLowerCase() != _searchText) {
         setState(() {
@@ -269,9 +295,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   void _clearSearch() {
     setState(() {
-      _searchController.clear();
-      _searchText = '';
-      _searchSuggestion = null;
+      _resetSearchState();
     });
     if (_isListening) _stopListening();
     if (widget.isSearching) widget.onSearchPressed();
@@ -279,10 +303,12 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   void _onTrendingTagClicked(String tag) {
     final query = tag.startsWith('#') ? tag : tag;
+    if (!widget.isSearching) widget.onSearchPressed();
     setState(() {
       _searchController.text = query;
-      _searchText = query.toLowerCase();
-      if (!widget.isSearching) widget.onSearchPressed();
+      _searchText = query.toLowerCase().trim();
+      _searchSuggestion = null;
+      _updateSearchFutures(_searchText);
     });
     FocusScope.of(context).unfocus();
   }
@@ -316,7 +342,7 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           Positioned.fill(
             child: Padding(
               padding: EdgeInsets.only(top: contentTopPadding),
-              child: _searchText.isEmpty && !widget.isSearching
+              child: _searchText.isEmpty
                   ? _buildExplorePage(theme, t)
                   : _buildSearchResults(theme, t),
             ),
@@ -509,9 +535,6 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildExplorePage(ThemeData theme, AppLocalizations t) {
-    if (!_userDataLoaded)
-      return const Center(child: CircularProgressIndicator());
-
     return RefreshIndicator(
       notificationPredicate: (notification) => !_isListening,
       onRefresh: () async {
@@ -990,6 +1013,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                         userId: userId,
                         userData: user,
                         currentUserId: FirebaseAuth.instance.currentUser?.uid,
+                        initialIsFollowing: _followingIds.contains(userId),
+                        onFollowStateChanged: _handleFollowStateChanged,
                       );
                     }).toList(),
 
@@ -1061,10 +1086,15 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Widget _buildPostResults(AppLocalizations t) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (_searchText.isEmpty) return const SizedBox.shrink();
+
+    final searchFuture = _postSearchFuture;
+    if (searchFuture == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _searchText.isNotEmpty
-          ? ApiService().getPosts(query: _searchText, limit: 50)
-          : Future.value(<Map<String, dynamic>>[]),
+      future: searchFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError)
           return CommonErrorWidget(
@@ -1073,8 +1103,6 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           );
         if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-
-        if (_searchText.isEmpty) return const SizedBox();
 
         final posts = snapshot.data ?? [];
         final filteredPosts = posts.where((p) {
@@ -1109,10 +1137,15 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Widget _buildUserResults(AppLocalizations t) {
     final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (_searchText.isEmpty) return const SizedBox.shrink();
+
+    final searchFuture = _userSearchFuture;
+    if (searchFuture == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _searchText.isNotEmpty
-          ? ApiService().searchUsers(_searchText)
-          : Future.value(<Map<String, dynamic>>[]),
+      future: searchFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError)
           return CommonErrorWidget(
@@ -1143,6 +1176,8 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               userId: userId,
               userData: user,
               currentUserId: myUid,
+              initialIsFollowing: _followingIds.contains(userId),
+              onFollowStateChanged: _handleFollowStateChanged,
             );
           },
         );
@@ -1151,10 +1186,15 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildCommunityResults(AppLocalizations t) {
+    if (_searchText.isEmpty) return const SizedBox.shrink();
+
+    final searchFuture = _communitySearchFuture;
+    if (searchFuture == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _searchText.isNotEmpty
-          ? ApiService().getCommunities(query: _searchText)
-          : Future.value(<Map<String, dynamic>>[]),
+      future: searchFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError)
           return CommonErrorWidget(
@@ -1218,17 +1258,31 @@ class SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       },
     );
   }
+
+  void _handleFollowStateChanged(String userId, bool isFollowing) {
+    setState(() {
+      if (isFollowing) {
+        if (!_followingIds.contains(userId)) _followingIds.add(userId);
+      } else {
+        _followingIds.remove(userId);
+      }
+    });
+  }
 }
 
 class _UserSearchTile extends StatefulWidget {
   final String userId;
   final Map<String, dynamic> userData;
   final String? currentUserId;
+  final bool initialIsFollowing;
+  final void Function(String userId, bool isFollowing)? onFollowStateChanged;
 
   const _UserSearchTile({
     required this.userId,
     required this.userData,
     this.currentUserId,
+    this.initialIsFollowing = false,
+    this.onFollowStateChanged,
   });
 
   @override
@@ -1236,32 +1290,21 @@ class _UserSearchTile extends StatefulWidget {
 }
 
 class _UserSearchTileState extends State<_UserSearchTile> {
-  bool _isFollowing = false;
+  late bool _isFollowing;
 
   @override
   void initState() {
     super.initState();
-    _checkFollowStatus();
+    _isFollowing = widget.initialIsFollowing;
   }
 
   @override
   void didUpdateWidget(covariant _UserSearchTile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.userData != oldWidget.userData) {
-      _checkFollowStatus();
+    if (widget.userId != oldWidget.userId ||
+        widget.initialIsFollowing != oldWidget.initialIsFollowing) {
+      _isFollowing = widget.initialIsFollowing;
     }
-  }
-
-  void _checkFollowStatus() async {
-    if (widget.currentUserId == null) return;
-    try {
-      final following = await ApiService().getFollowing(widget.currentUserId!);
-      if (mounted) {
-        setState(() {
-          _isFollowing = following.contains(widget.userId);
-        });
-      }
-    } catch (_) {}
   }
 
   Future<void> _toggleFollow() async {
@@ -1271,11 +1314,13 @@ class _UserSearchTileState extends State<_UserSearchTile> {
         final success = await ApiService().unfollowUser(widget.userId);
         if (success) {
           setState(() => _isFollowing = false);
+          widget.onFollowStateChanged?.call(widget.userId, false);
         }
       } else {
         final resp = await ApiService().followUser(widget.userId);
         if (resp['success'] == true) {
           setState(() => _isFollowing = true);
+          widget.onFollowStateChanged?.call(widget.userId, true);
           if (resp['type'] == 'request_sent') {
             OverlayService().showTopNotification(
               context,
@@ -1284,6 +1329,7 @@ class _UserSearchTileState extends State<_UserSearchTile> {
               () {},
             );
             setState(() => _isFollowing = false);
+            widget.onFollowStateChanged?.call(widget.userId, false);
           }
         }
       }
