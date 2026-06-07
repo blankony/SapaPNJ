@@ -5,22 +5,24 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 import '../screens/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../screens/community/community_detail_screen.dart';
 import '../services/overlay_service.dart';
-import '../services/moderation_service.dart';
 import '../services/app_localizations.dart';
 import '../services/gcs_service.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 
-// IMPORT COMPONENTS
-import 'blog_post_card/post_media_preview.dart';
+import 'blog_post_card/post_data_helpers.dart';
 import 'blog_post_card/post_header.dart';
 import 'blog_post_card/post_action_bar.dart';
+import 'blog_post_card/post_media_section.dart';
+import 'blog_post_card/post_moderation_actions.dart';
+import 'blog_post_card/post_repost_header.dart';
+import 'blog_post_card/post_upload_failed_notice.dart';
+import 'blog_post_card/post_upload_status.dart';
 
 class BlogPostCard extends StatefulWidget {
   final String postId;
@@ -133,20 +135,14 @@ class _BlogPostCardState extends State<BlogPostCard>
     _isVideoLoading = false;
 
     // Cek apakah ini Repost Wrapper
-    final origId =
-        widget.postData['originalPostId'] ??
-        widget.postData['original_post_id'];
-    final isRepostType =
-        widget.postData['type'] == 'repost' ||
-        widget.postData['is_repost'] == true ||
-        widget.postData['is_repost'] == 1 ||
-        origId != null;
+    final origId = postOriginalId(widget.postData);
+    final isRepostType = isRepostPost(widget.postData);
 
     if (isRepostType && origId != null) {
       _isRepostWrapper = true;
       _resolvedPostData = null; // Reset resolved data
       _originalError = '';
-      _fetchOriginalPost(origId.toString());
+      _fetchOriginalPost(origId);
     } else {
       _isRepostWrapper = false;
       _resolvedPostData = widget.postData;
@@ -186,20 +182,14 @@ class _BlogPostCardState extends State<BlogPostCard>
   }
 
   String get effectivePostId => _isRepostWrapper
-      ? (widget.postData['originalPostId'] ??
-                widget.postData['original_post_id'] ??
-                widget.postId)
-            .toString()
+      ? (postOriginalId(widget.postData) ?? widget.postId).toString()
       : widget.postId;
   Map<String, dynamic> get effectivePostData => _resolvedPostData ?? {};
 
   bool get effectiveIsOwner {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return false;
-    return (effectivePostData['user_uid'] ??
-            effectivePostData['userId'] ??
-            effectivePostData['user_id']) ==
-        currentUser.uid;
+    return postAuthorId(effectivePostData) == currentUser.uid;
   }
 
   Future<void> _fetchOriginalPost(String originalId) async {
@@ -237,9 +227,7 @@ class _BlogPostCardState extends State<BlogPostCard>
       return;
 
     final data = effectivePostData;
-    final String? singleUrl = data['mediaUrl'] ?? data['media_url'];
-    final List<dynamic> urls = data['mediaUrls'] ?? data['media_urls'] ?? [];
-    final String? videoUrl = (urls.isNotEmpty) ? urls.first : singleUrl;
+    final videoUrl = primaryPostMediaUrl(data);
 
     if (videoUrl != null) {
       setState(() => _isVideoLoading = true);
@@ -305,10 +293,7 @@ class _BlogPostCardState extends State<BlogPostCard>
 
         // If it's a repost wrapper created by the current user, it must be their repost!
         if (_isRepostWrapper) {
-          final wrapperUserId =
-              widget.postData['user_uid'] ??
-              widget.postData['userId'] ??
-              widget.postData['user_id'];
+          final wrapperUserId = postAuthorId(widget.postData);
           if (currentUser != null && wrapperUserId == currentUser.uid) {
             _isReposted = true;
           }
@@ -368,10 +353,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     if (hapticNotifier.value) HapticFeedback.lightImpact();
 
     final targetId = effectivePostId;
-    final wrapperUserId =
-        widget.postData['user_uid'] ??
-        widget.postData['userId'] ??
-        widget.postData['user_id'];
+    final wrapperUserId = postAuthorId(widget.postData);
     final isMyOwnWrapper = _isRepostWrapper && currentUser.uid == wrapperUserId;
 
     setState(() {
@@ -578,16 +560,7 @@ class _BlogPostCardState extends State<BlogPostCard>
         false;
     if (confirm) {
       try {
-        List<String> mediaUrls = [];
-        if (effectivePostData['mediaUrls'] != null) {
-          mediaUrls = List<String>.from(effectivePostData['mediaUrls']);
-        } else if (effectivePostData['media_urls'] != null) {
-          mediaUrls = List<String>.from(effectivePostData['media_urls']);
-        } else if (effectivePostData['mediaUrl'] != null) {
-          mediaUrls = [effectivePostData['mediaUrl']];
-        } else if (effectivePostData['media_url'] != null) {
-          mediaUrls = [effectivePostData['media_url']];
-        }
+        final mediaUrls = postMediaUrls(effectivePostData);
 
         for (String url in mediaUrls) {
           try {
@@ -703,7 +676,7 @@ class _BlogPostCardState extends State<BlogPostCard>
   }
 
   void _navigateToSource() {
-    final String? communityId = effectivePostData['communityId'];
+    final communityId = postCommunityId(effectivePostData);
 
     if (communityId != null) {
       Navigator.of(context).push(
@@ -717,10 +690,7 @@ class _BlogPostCardState extends State<BlogPostCard>
       return;
     }
 
-    final postUserId =
-        effectivePostData['user_uid'] ??
-        effectivePostData['userId'] ??
-        effectivePostData['user_id'];
+    final postUserId = postAuthorId(effectivePostData);
     if (postUserId == null) return;
 
     if (effectiveIsOwner) {
@@ -793,185 +763,6 @@ class _BlogPostCardState extends State<BlogPostCard>
     }
   }
 
-  void _reportPost() {
-    var t = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) {
-        return FrostedSimpleDialog(
-          title: Text(t.translate('report_post_title')),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => _submitReport('Spam'),
-              child: Text(t.translate('report_reason_spam')),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _submitReport('Harassment'),
-              child: Text(t.translate('report_reason_harass')),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _submitReport('Inappropriate Content'),
-              child: Text(t.translate('report_reason_inappropriate')),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _submitReport('Misinformation'),
-              child: Text(t.translate('report_reason_misinfo')),
-            ),
-            Padding(
-              padding: EdgeInsets.all(8),
-              child: TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(t.translate('general_cancel')),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _submitReport(String reason) {
-    var t = AppLocalizations.of(context)!;
-    Navigator.pop(context);
-    moderationService.reportContent(
-      targetId: effectivePostId,
-      targetType: 'post',
-      reason: reason,
-    );
-    OverlayService().showTopNotification(
-      context,
-      t.translate('report_submitted'),
-      Icons.flag,
-      () {},
-    );
-  }
-
-  void _reportCommunity() {
-    var t = AppLocalizations.of(context)!;
-    final String? communityId = effectivePostData['communityId'];
-    if (communityId == null) return;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return FrostedSimpleDialog(
-          title: Text(t.translate('report_comm_title')),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => _submitCommunityReport(communityId, 'Spam'),
-              child: Text(t.translate('report_reason_spam')),
-            ),
-            SimpleDialogOption(
-              onPressed: () =>
-                  _submitCommunityReport(communityId, 'Harassment'),
-              child: Text(t.translate('report_reason_harass')),
-            ),
-            SimpleDialogOption(
-              onPressed: () =>
-                  _submitCommunityReport(communityId, 'Inappropriate Content'),
-              child: Text(t.translate('report_reason_inappropriate')),
-            ),
-            SimpleDialogOption(
-              onPressed: () =>
-                  _submitCommunityReport(communityId, 'Misinformation'),
-              child: Text(t.translate('report_reason_misinfo')),
-            ),
-            Padding(
-              padding: EdgeInsets.all(8),
-              child: TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(t.translate('general_cancel')),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _submitCommunityReport(String communityId, String reason) {
-    var t = AppLocalizations.of(context)!;
-    Navigator.pop(context);
-    moderationService.reportContent(
-      targetId: communityId,
-      targetType: 'community',
-      reason: reason,
-    );
-    OverlayService().showTopNotification(
-      context,
-      t.translate('report_comm_submitted'),
-      Icons.flag,
-      () {},
-    );
-  }
-
-  void _blockUser() async {
-    var t = AppLocalizations.of(context)!;
-    final didConfirm =
-        await showDialog<bool>(
-          context: context,
-          builder: (context) => FrostedAlertDialog(
-            title: Text(t.translate('block_user_title')),
-            content: Text(t.translate('block_user_confirm')),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(t.translate('general_cancel')),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(
-                  t.translate('general_delete'),
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-
-    if (didConfirm) {
-      await moderationService.blockUser(
-        effectivePostData['userId'] ??
-            effectivePostData['user_uid'] ??
-            effectivePostData['user_id'],
-      );
-      if (mounted)
-        OverlayService().showTopNotification(
-          context,
-          t.translate('user_blocked'),
-          Icons.block,
-          () {},
-        );
-    }
-  }
-
-  Widget _buildUploadStatus(double progress) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Uploading media...",
-            style: TextStyle(
-              color: SisapaTheme.blue,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: null,
-            backgroundColor: Theme.of(context).dividerColor,
-            valueColor: AlwaysStoppedAnimation<Color>(SisapaTheme.blue),
-          ),
-          const SizedBox(height: 4),
-          Text('Processing...', style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
-
   void _onMenuAction(String value) {
     if (value == 'edit') {
       _showEditDialog();
@@ -980,79 +771,37 @@ class _BlogPostCardState extends State<BlogPostCard>
     } else if (value == 'pin') {
       _togglePin();
     } else if (value == 'report') {
-      _reportPost();
+      PostModerationActions.reportPost(
+        context: context,
+        postId: effectivePostId,
+      );
     } else if (value == 'block') {
-      _blockUser();
+      PostModerationActions.blockUser(
+        context: context,
+        authorId: postAuthorId(effectivePostData),
+      );
     } else if (value == 'toggle_visibility') {
       _toggleVisibility();
     } else if (value == 'report_community') {
-      _reportCommunity();
+      PostModerationActions.reportCommunity(
+        context: context,
+        communityId: postCommunityId(effectivePostData),
+      );
     }
   }
 
-  Widget _buildRepostHeader(BuildContext context) {
+  Widget _buildRepostHeader() {
     if (!_isRepostWrapper) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
-    final reposterId =
-        widget.postData['userId'] ??
-        widget.postData['user_uid'] ??
-        widget.postData['user_id'];
-    final createdAt =
-        widget.postData['created_at'] ?? widget.postData['timestamp'];
-    String timeStr;
-    if (createdAt != null) {
-      try {
-        final parsedDate = DateTime.parse(createdAt.toString());
-        timeStr = timeago.format(parsedDate, locale: 'en_short');
-      } catch (_) {
-        timeStr = 'just now';
-      }
-    } else {
-      timeStr = 'just now';
-    }
-
-    final displayName =
-        widget.postData['user_name'] ?? widget.postData['userName'] ?? 'User';
-
-    return Container(
-      padding: const EdgeInsets.only(left: 36.0, bottom: 6.0),
-      child: Row(
-        children: [
-          Icon(Icons.repeat, size: 14, color: theme.hintColor),
-          const SizedBox(width: 6),
-          Flexible(
-            child: GestureDetector(
-              onTap: () {
-                if (reposterId != null) {
-                  Navigator.of(context).push(
-                    _createSlideLeftRoute(
-                      ProfilePage(userId: reposterId, includeScaffold: true),
-                    ),
-                  );
-                }
-              },
-              child: RichText(
-                text: TextSpan(
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  children: [
-                    TextSpan(text: "$displayName "),
-                    TextSpan(
-                      text: "reposted · $timeStr",
-                      style: const TextStyle(fontWeight: FontWeight.normal),
-                    ),
-                  ],
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+    return PostRepostHeader(
+      postData: widget.postData,
+      onOpenReposter: (reposterId) {
+        Navigator.of(context).push(
+          _createSlideLeftRoute(
+            ProfilePage(userId: reposterId, includeScaffold: true),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1081,7 +830,7 @@ class _BlogPostCardState extends State<BlogPostCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildRepostHeader(context),
+              _buildRepostHeader(),
               const SizedBox(height: 12),
               const Center(
                 child: CircularProgressIndicator.adaptive(strokeWidth: 2),
@@ -1098,19 +847,11 @@ class _BlogPostCardState extends State<BlogPostCard>
       }
     }
 
-    if (widget.blockedUserIds.contains(
-      effectivePostData['userId'] ??
-          effectivePostData['user_uid'] ??
-          effectivePostData['user_id'],
-    )) {
+    if (widget.blockedUserIds.contains(postAuthorId(effectivePostData))) {
       return const SizedBox.shrink();
     }
     if (_isRepostWrapper &&
-        widget.blockedUserIds.contains(
-          widget.postData['userId'] ??
-              widget.postData['user_uid'] ??
-              widget.postData['user_id'],
-        )) {
+        widget.blockedUserIds.contains(postAuthorId(widget.postData))) {
       return const SizedBox.shrink();
     }
 
@@ -1118,31 +859,12 @@ class _BlogPostCardState extends State<BlogPostCard>
     final mediaType =
         effectivePostData['mediaType'] ?? effectivePostData['media_type'];
     final isUploading = effectivePostData['isUploading'] == true;
-    final uploadProgress =
-        effectivePostData['uploadProgress'] as double? ?? 0.0;
     final uploadFailed = effectivePostData['uploadFailed'] == true;
     final int commentCount = effectivePostData['commentCount'] ?? 0;
-
-    List<String> mediaUrls = [];
-    if (effectivePostData['mediaUrls'] != null) {
-      mediaUrls = List<String>.from(effectivePostData['mediaUrls']);
-    } else if (effectivePostData['media_urls'] != null) {
-      mediaUrls = List<String>.from(effectivePostData['media_urls']);
-    } else if (effectivePostData['mediaUrl'] != null) {
-      mediaUrls = [effectivePostData['mediaUrl']];
-    } else if (effectivePostData['media_url'] != null) {
-      mediaUrls = [effectivePostData['media_url']];
-    }
+    final mediaUrls = postMediaUrls(effectivePostData);
 
     if (uploadFailed) {
-      return Container(
-        padding: const EdgeInsets.all(12.0),
-        color: Colors.red.withOpacity(0.1),
-        child: Text(
-          "Post upload failed: $text",
-          style: const TextStyle(color: Colors.red),
-        ),
-      );
+      return PostUploadFailedNotice(text: text);
     }
 
     return GestureDetector(
@@ -1171,7 +893,7 @@ class _BlogPostCardState extends State<BlogPostCard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildRepostHeader(context),
+                  _buildRepostHeader(),
 
                   PostHeader(
                     postData: effectivePostData,
@@ -1202,58 +924,23 @@ class _BlogPostCardState extends State<BlogPostCard>
                             ),
                           ),
                         if (isUploading)
-                          _buildUploadStatus(uploadProgress)
+                          const PostUploadStatus()
                         else if (mediaUrls.isNotEmpty ||
                             (text.contains('http') && !widget.isDetailView))
                           Padding(
                             padding: const EdgeInsets.only(top: 12.0),
-                            child: Builder(
-                              builder: (context) {
-                                if (mediaType == 'video' &&
-                                    !_isVideoInitialized) {
-                                  return GestureDetector(
-                                    onTap: _initializeVideo,
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        PostMediaPreview(
-                                          mediaUrls: mediaUrls,
-                                          mediaType: mediaType,
-                                          text: text,
-                                          postData: effectivePostData,
-                                          postId: effectivePostId,
-                                          heroContextId: widget.heroContextId,
-                                          videoController: null,
-                                        ),
-                                        Container(
-                                          color: Colors.black26,
-                                          child: Center(
-                                            child: _isVideoLoading
-                                                ? const CircularProgressIndicator(
-                                                    color: Colors.white,
-                                                  )
-                                                : const Icon(
-                                                    Icons.play_circle_fill,
-                                                    size: 64,
-                                                    color: Colors.white70,
-                                                  ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-
-                                return PostMediaPreview(
-                                  mediaUrls: mediaUrls,
-                                  mediaType: mediaType,
-                                  text: text,
-                                  postData: effectivePostData,
-                                  postId: effectivePostId,
-                                  heroContextId: widget.heroContextId,
-                                  videoController: _videoController,
-                                );
-                              },
+                            child: PostMediaSection(
+                              mediaUrls: mediaUrls,
+                              mediaType: mediaType,
+                              text: text,
+                              postData: effectivePostData,
+                              postId: effectivePostId,
+                              heroContextId: widget.heroContextId,
+                              videoController: _videoController,
+                              isDetailView: widget.isDetailView,
+                              isVideoInitialized: _isVideoInitialized,
+                              isVideoLoading: _isVideoLoading,
+                              onInitializeVideo: _initializeVideo,
                             ),
                           ),
 

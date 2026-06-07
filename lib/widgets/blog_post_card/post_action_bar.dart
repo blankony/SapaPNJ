@@ -51,10 +51,31 @@ class PostActionBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildActionButton(context, Icons.repeat, repostCount.toString(), isReposted ? Colors.green : null, onRepostTap, repostAnimation),
-            _buildActionButton(context, isLiked ? Icons.favorite : Icons.favorite_border, likeCount.toString(), isLiked ? Colors.pink : null, onLikeTap, likeAnimation),
+            _buildActionButton(
+              context,
+              Icons.repeat,
+              repostCount.toString(),
+              isReposted ? Colors.green : null,
+              onRepostTap,
+              repostAnimation,
+            ),
+            _buildActionButton(
+              context,
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              likeCount.toString(),
+              isLiked ? Colors.pink : null,
+              onLikeTap,
+              likeAnimation,
+            ),
             _buildBookmarkButton(context),
-            _buildActionButton(context, Icons.share_outlined, 'Share', isSharing ? SisapaTheme.blue : null, onShareTap, shareAnimation),
+            _buildActionButton(
+              context,
+              Icons.share_outlined,
+              'Share',
+              isSharing ? SisapaTheme.blue : null,
+              onShareTap,
+              shareAnimation,
+            ),
           ],
         ),
       );
@@ -64,11 +85,38 @@ class PostActionBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildActionButton(context, Icons.chat_bubble_outline, commentCount.toString(), null, onCommentTap),
-            _buildActionButton(context, Icons.repeat, repostCount.toString(), isReposted ? Colors.green : null, onRepostTap, repostAnimation),
-            _buildActionButton(context, isLiked ? Icons.favorite : Icons.favorite_border, likeCount.toString(), isLiked ? Colors.pink : null, onLikeTap, likeAnimation),
+            _buildActionButton(
+              context,
+              Icons.chat_bubble_outline,
+              commentCount.toString(),
+              null,
+              onCommentTap,
+            ),
+            _buildActionButton(
+              context,
+              Icons.repeat,
+              repostCount.toString(),
+              isReposted ? Colors.green : null,
+              onRepostTap,
+              repostAnimation,
+            ),
+            _buildActionButton(
+              context,
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              likeCount.toString(),
+              isLiked ? Colors.pink : null,
+              onLikeTap,
+              likeAnimation,
+            ),
             _buildBookmarkButton(context),
-            _buildActionButton(context, Icons.share_outlined, null, isSharing ? SisapaTheme.blue : null, onShareTap, shareAnimation),
+            _buildActionButton(
+              context,
+              Icons.share_outlined,
+              null,
+              isSharing ? SisapaTheme.blue : null,
+              onShareTap,
+              shareAnimation,
+            ),
           ],
         ),
       );
@@ -90,9 +138,9 @@ class PostActionBar extends StatelessWidget {
     IconData icon,
     String? text,
     Color? color,
-    VoidCallback onTap,
-    [Animation<double>? animation]
-  ) {
+    VoidCallback onTap, [
+    Animation<double>? animation,
+  ]) {
     final theme = Theme.of(context);
     final iconColor = color ?? theme.textTheme.bodySmall?.color ?? Colors.grey;
     Widget iconWidget = Icon(icon, size: 20, color: iconColor);
@@ -111,7 +159,10 @@ class PostActionBar extends StatelessWidget {
             if (text != null && text != "0" && text.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 6.0),
-                child: Text(text, style: TextStyle(color: iconColor, fontSize: 13)),
+                child: Text(
+                  text,
+                  style: TextStyle(color: iconColor, fontSize: 13),
+                ),
               ),
           ],
         ),
