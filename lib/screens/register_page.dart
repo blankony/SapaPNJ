@@ -26,7 +26,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _nimController = TextEditingController();
 
@@ -50,7 +51,10 @@ class _RegisterPageState extends State<RegisterPage> {
         const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
         const curve = Curves.easeInOutQuart;
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
         return SlideTransition(position: animation.drive(tween), child: child);
       },
     );
@@ -61,7 +65,9 @@ class _RegisterPageState extends State<RegisterPage> {
     var t = AppLocalizations.of(context)!;
     try {
       // 1. Load file dari assets
-      final ByteData data = await rootBundle.load('documents/syarat_dan_ketentuan.pdf');
+      final ByteData data = await rootBundle.load(
+        'documents/syarat_dan_ketentuan.pdf',
+      );
       final Uint8List bytes = data.buffer.asUint8List();
 
       // 2. Dapatkan direktori temporary
@@ -76,20 +82,25 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${t.translate('error_open_pdf')}${result.message}')),
+          SnackBar(
+            content: Text('${t.translate('error_open_pdf')}${result.message}'),
+          ),
         );
       }
     } catch (e) {
       debugPrint('Error opening PDF: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.translate('error_load_pdf'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.translate('error_load_pdf'))));
     }
   }
 
   Future<void> _signUp() async {
-     setState(() { _errorMessage = ''; _isLoading = true; });
-     var t = AppLocalizations.of(context)!;
+    setState(() {
+      _errorMessage = '';
+      _isLoading = true;
+    });
+    var t = AppLocalizations.of(context)!;
 
     // VALIDASI PERSETUJUAN
     if (!_isAgreed) {
@@ -101,15 +112,18 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (!_formKey.currentState!.validate()) {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
 
       if (userCredential.user != null) {
         final String idNumber = _nimController.text.trim();
@@ -127,41 +141,50 @@ class _RegisterPageState extends State<RegisterPage> {
             await userCredential.user!.delete();
             throw FirebaseAuthException(
               code: 'nim-already-in-use',
-              message: t.translate('error_nim_registered')
+              message: t.translate('error_nim_registered'),
             );
           }
           rethrow;
         }
 
         if (mounted) {
-           Navigator.of(context).pushAndRemoveUntil(
-             MaterialPageRoute(builder: (context) => const SetupProfileScreen()),
-             (route) => false,
-           );
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const SetupProfileScreen()),
+            (route) => false,
+          );
         }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         // Handle specific firebase auth errors if needed, otherwise general
         if (e.code == 'email-already-in-use') {
-           _errorMessage = 'Email already in use.'; // You can add this to json too
+          _errorMessage =
+              'Email already in use.'; // You can add this to json too
         } else if (e.code == 'nim-already-in-use') {
-           _errorMessage = e.message!;
+          _errorMessage = e.message!;
         } else {
-           _errorMessage = e.message ?? t.translate('general_error');
+          _errorMessage = e.message ?? t.translate('general_error');
         }
       });
     } catch (e) {
-       setState(() { _errorMessage = '${t.translate('general_error')}: $e'; });
+      setState(() {
+        _errorMessage = '${t.translate('general_error')}: $e';
+      });
     } finally {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
     }
   }
 
   // --- VALIDATORS ---
 
   Future<void> _signUpWithGoogle() async {
-    setState(() { _errorMessage = ''; _isLoading = true; });
+    setState(() {
+      _errorMessage = '';
+      _isLoading = true;
+    });
     try {
       final googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
@@ -172,37 +195,52 @@ class _RegisterPageState extends State<RegisterPage> {
       final String email = googleUser.email;
       if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
         await googleSignIn.signOut();
-        setState(() => _errorMessage = 'Access Denied: Must use a valid PNJ email');
+        setState(
+          () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
+        );
         setState(() => _isLoading = false);
         return;
       }
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
-      
+
       UserCredential userCredential;
       try {
-        userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        userCredential = await FirebaseAuth.instance.signInWithCredential(
+          credential,
+        );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'account-exists-with-different-credential') {
           final String? existingEmail = e.email;
           if (existingEmail == null) {
             await googleSignIn.signOut();
-            setState(() => _errorMessage = 'Account merge failed: Unknown email.');
+            setState(
+              () => _errorMessage = 'Account merge failed: Unknown email.',
+            );
             setState(() => _isLoading = false);
             return;
           }
-          final String? password = await _showPasswordPromptDialog(existingEmail);
+          final String? password = await _showPasswordPromptDialog(
+            existingEmail,
+          );
           if (password == null || password.isEmpty) {
             await googleSignIn.signOut();
             setState(() => _isLoading = false);
             return;
           }
           setState(() => _isLoading = true);
-          final AuthCredential emailCred = EmailAuthProvider.credential(email: existingEmail, password: password);
-          final UserCredential existingUser = await FirebaseAuth.instance.signInWithCredential(emailCred);
-          userCredential = await existingUser.user!.linkWithCredential(credential);
+          final AuthCredential emailCred = EmailAuthProvider.credential(
+            email: existingEmail,
+            password: password,
+          );
+          final UserCredential existingUser = await FirebaseAuth.instance
+              .signInWithCredential(emailCred);
+          userCredential = await existingUser.user!.linkWithCredential(
+            credential,
+          );
         } else {
           rethrow;
         }
@@ -210,7 +248,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const UserInfoScreen(isSetupWizard: true)),
+          MaterialPageRoute(
+            builder: (context) => const UserInfoScreen(isSetupWizard: true),
+          ),
           (route) => false,
         );
       }
@@ -227,20 +267,27 @@ class _RegisterPageState extends State<RegisterPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Account Linking Required', style: TextStyle(fontWeight: FontWeight.bold)),
+        return FrostedAlertDialog(
+          title: Text(
+            'Account Linking Required',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('An account with $email already exists. Enter your password to merge and link your Google account.'),
+              Text(
+                'An account with $email already exists. Enter your password to merge and link your Google account.',
+              ),
               SizedBox(height: 16),
               TextField(
                 obscureText: true,
                 onChanged: (val) => password = val,
                 decoration: InputDecoration(
                   labelText: t.translate('auth_enter_password'),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
@@ -252,7 +299,10 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, password),
-              style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SisapaTheme.blue,
+                foregroundColor: Colors.white,
+              ),
               child: Text('Link Account'),
             ),
           ],
@@ -263,28 +313,32 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String? _validateName(String? value) {
     var t = AppLocalizations.of(context)!;
-    if (value == null || value.trim().isEmpty) return t.translate('val_name_empty');
+    if (value == null || value.trim().isEmpty)
+      return t.translate('val_name_empty');
     return null;
   }
 
   String? _validateIDNumber(String? value) {
     var t = AppLocalizations.of(context)!;
-    if (value == null || value.trim().isEmpty) return t.translate('val_nim_empty');
+    if (value == null || value.trim().isEmpty)
+      return t.translate('val_nim_empty');
 
     // Allow 10 digits (NIM) or 18 digits (NIP)
-    if (value.length != 10 && value.length != 18) return t.translate('val_nim_length');
+    if (value.length != 10 && value.length != 18)
+      return t.translate('val_nim_length');
     return null;
   }
 
   String? _validateEmail(String? value) {
     var t = AppLocalizations.of(context)!;
-    if (value == null || value.trim().isEmpty) return t.translate('val_email_empty');
+    if (value == null || value.trim().isEmpty)
+      return t.translate('val_email_empty');
 
     String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     RegExp regex = RegExp(pattern);
 
     if (!regex.hasMatch(value)) {
-        return t.translate('val_email_invalid');
+      return t.translate('val_email_invalid');
     }
 
     // Check if domain part contains "pnj" (e.g., @stu.pnj.ac.id, @pnj.ac.id)
@@ -295,7 +349,7 @@ class _RegisterPageState extends State<RegisterPage> {
         return t.translate('val_email_domain');
       }
     } else {
-       return t.translate('val_email_invalid');
+      return t.translate('val_email_invalid');
     }
 
     return null;
@@ -317,7 +371,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validateConfirmPassword(String? value) {
     var t = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) return t.translate('val_confirm_empty');
-    if (value != _passwordController.text) return t.translate('val_pass_mismatch');
+    if (value != _passwordController.text)
+      return t.translate('val_pass_mismatch');
     return null;
   }
 
@@ -348,12 +403,15 @@ class _RegisterPageState extends State<RegisterPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: theme.primaryColor),
       ),
       body: Stack(
         children: [
-           // --- BACKGROUND BLOBS ---
-           const Positioned.fill(child: DecorativeBackground()),
+          // --- BACKGROUND BLOBS ---
+          const Positioned.fill(child: DecorativeBackground()),
 
           // --- CONTENT ---
           TweenAnimationBuilder(
@@ -363,15 +421,15 @@ class _RegisterPageState extends State<RegisterPage> {
             builder: (context, double value, child) {
               return Transform.translate(
                 offset: Offset(0, value * 200),
-                child: Opacity(
-                  opacity: 1 - value,
-                  child: child,
-                ),
+                child: Opacity(opacity: 1 - value, child: child),
               );
             },
             child: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -380,25 +438,45 @@ class _RegisterPageState extends State<RegisterPage> {
                       // Rebranding Header
                       Row(
                         children: [
-                          Text("SAPA", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, color: SisapaTheme.blue, letterSpacing: -1.0)),
+                          Text(
+                            "SAPA",
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: SisapaTheme.blue,
+                              letterSpacing: -1.0,
+                            ),
+                          ),
                           SizedBox(width: 8),
-                          Text("PNJ", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+                          Text(
+                            "PNJ",
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.0,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: 40),
 
                       Text(
-                        t.translate('auth_create_title'), // "Create your account"
-                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        t.translate(
+                          'auth_create_title',
+                        ), // "Create your account"
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 32),
 
                       // NAME
                       TextFormField(
                         controller: _namaController,
-                        decoration: InputDecoration(labelText: t.translate('auth_name')), // "Name"
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_name'),
+                        ), // "Name"
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nimFocus),
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_nimFocus),
                         validator: _validateName,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
@@ -408,13 +486,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextFormField(
                         controller: _nimController,
                         focusNode: _nimFocus,
-                        decoration: InputDecoration(labelText: t.translate('auth_nim')), // "NIM/NIP"
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_nim'),
+                        ), // "NIM/NIP"
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_emailFocus),
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_emailFocus),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(18), // Supports NIP (18 chars)
+                          LengthLimitingTextInputFormatter(
+                            18,
+                          ), // Supports NIP (18 chars)
                         ],
                         validator: _validateIDNumber,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -425,10 +508,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextFormField(
                         controller: _emailController,
                         focusNode: _emailFocus,
-                        decoration: InputDecoration(labelText: t.translate('auth_email_hint')), // "Enter PNJ email..."
+                        decoration: InputDecoration(
+                          labelText: t.translate('auth_email_hint'),
+                        ), // "Enter PNJ email..."
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocus),
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_passwordFocus),
                         validator: _validateEmail,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
@@ -440,14 +526,18 @@ class _RegisterPageState extends State<RegisterPage> {
                         focusNode: _passwordFocus,
                         obscureText: _isPasswordObscured,
                         decoration: InputDecoration(
-                          labelText: t.translate('auth_pass_hint'), // "Enter password"
+                          labelText: t.translate(
+                            'auth_pass_hint',
+                          ), // "Enter password"
                           suffixIcon: Tooltip(
                             message: _isPasswordObscured
                                 ? t.translate('auth_show_password')
                                 : t.translate('auth_hide_password'),
                             child: IconButton(
                               icon: Icon(
-                                _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                                _isPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -458,11 +548,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocus),
+                        onFieldSubmitted: (_) => FocusScope.of(
+                          context,
+                        ).requestFocus(_confirmPasswordFocus),
                         validator: _validatePassword,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
-                       SizedBox(height: 16),
+                      SizedBox(height: 16),
 
                       // CONFIRM PASSWORD
                       TextFormField(
@@ -470,18 +562,23 @@ class _RegisterPageState extends State<RegisterPage> {
                         focusNode: _confirmPasswordFocus,
                         obscureText: _isConfirmPasswordObscured,
                         decoration: InputDecoration(
-                          labelText: t.translate('auth_confirm_pass_hint'), // "Confirm password"
+                          labelText: t.translate(
+                            'auth_confirm_pass_hint',
+                          ), // "Confirm password"
                           suffixIcon: Tooltip(
                             message: _isConfirmPasswordObscured
                                 ? t.translate('auth_show_password')
                                 : t.translate('auth_hide_password'),
                             child: IconButton(
                               icon: Icon(
-                                _isConfirmPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                                _isConfirmPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _isConfirmPasswordObscured = !_isConfirmPasswordObscured;
+                                  _isConfirmPasswordObscured =
+                                      !_isConfirmPasswordObscured;
                                 });
                               },
                             ),
@@ -507,7 +604,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               onChanged: (bool? value) {
                                 setState(() {
                                   _isAgreed = value ?? false;
-                                  if (_isAgreed) _errorMessage = ''; // Clear error if checked
+                                  if (_isAgreed)
+                                    _errorMessage =
+                                        ''; // Clear error if checked
                                 });
                               },
                             ),
@@ -521,11 +620,17 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: t.translate('auth_agree_start'), // "I agree to "
-                                    style: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                                    text: t.translate(
+                                      'auth_agree_start',
+                                    ), // "I agree to "
+                                    style: TextStyle(
+                                      color: theme.textTheme.bodyMedium?.color,
+                                    ),
                                   ),
                                   TextSpan(
-                                    text: t.translate('auth_agree_terms'), // "Terms and Conditions"
+                                    text: t.translate(
+                                      'auth_agree_terms',
+                                    ), // "Terms and Conditions"
                                     style: TextStyle(
                                       color: SisapaTheme.blue,
                                       fontWeight: FontWeight.bold,
@@ -535,8 +640,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ..onTap = _openTermsAndConditions,
                                   ),
                                   TextSpan(
-                                    text: t.translate('auth_agree_end'), // " and privacy policy"
-                                    style: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                                    text: t.translate(
+                                      'auth_agree_end',
+                                    ), // " and privacy policy"
+                                    style: TextStyle(
+                                      color: theme.textTheme.bodyMedium?.color,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -546,7 +655,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       SizedBox(height: 24),
 
-                       if (_errorMessage.isNotEmpty)
+                      if (_errorMessage.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Center(
@@ -563,9 +672,16 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _signUp,
                           child: _isLoading
-                            ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : Text(t.translate('auth_signup')), // "Sign up"
-                           style: ElevatedButton.styleFrom(
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(t.translate('auth_signup')), // "Sign up"
+                          style: ElevatedButton.styleFrom(
                             backgroundColor: SisapaTheme.blue,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -578,7 +694,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
 
                       SizedBox(height: 16),
-                      
+
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
@@ -594,16 +710,21 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                       ),
-                      
+
                       SizedBox(height: 24),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(t.translate('auth_have_account') + " ", style: TextStyle(color: theme.hintColor)), // "Have an account? "
+                          Text(
+                            t.translate('auth_have_account') + " ",
+                            style: TextStyle(color: theme.hintColor),
+                          ), // "Have an account? "
                           GestureDetector(
                             onTap: () {
-                              Navigator.of(context).pushReplacement(_createSlideUpRoute(LoginPage()));
+                              Navigator.of(context).pushReplacement(
+                                _createSlideUpRoute(LoginPage()),
+                              );
                             },
                             child: Text(
                               t.translate('auth_login'), // "Log in"

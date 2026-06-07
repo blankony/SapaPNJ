@@ -67,7 +67,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       _fetchMorePosts();
     }
   }
@@ -83,7 +84,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
   Future<void> _loadCommunityAndPosts() async {
     if (!mounted) return;
-    setState(() { _isLoadingPosts = true; _posts = []; });
+    setState(() {
+      _isLoadingPosts = true;
+      _posts = [];
+    });
 
     try {
       final results = await Future.wait([
@@ -98,7 +102,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           _communityData = communityResult;
           _posts = postsResult;
           _isLoadingPosts = false;
-          _lastCursor = postsResult.isNotEmpty ? postsResult.last['created_at']?.toString() : null;
+          _lastCursor = postsResult.isNotEmpty
+              ? postsResult.last['created_at']?.toString()
+              : null;
           _hasMorePosts = postsResult.length == _postsLimit;
         });
       }
@@ -123,7 +129,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       if (mounted) {
         setState(() {
           _posts.addAll(newPosts);
-          _lastCursor = newPosts.isNotEmpty ? newPosts.last['created_at']?.toString() : null;
+          _lastCursor = newPosts.isNotEmpty
+              ? newPosts.last['created_at']?.toString()
+              : null;
           _hasMorePosts = newPosts.length == _postsLimit;
           _isLoadingMore = false;
         });
@@ -137,7 +145,15 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(position: animation.drive(Tween(begin: Offset(0.0, 1.0), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutQuart))), child: child);
+        return SlideTransition(
+          position: animation.drive(
+            Tween(
+              begin: Offset(0.0, 1.0),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: Curves.easeOutQuart)),
+          ),
+          child: child,
+        );
       },
     );
   }
@@ -148,68 +164,171 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     try {
       if (isFollowing) {
         await _api.unfollowCommunity(widget.communityId);
-        if(mounted) OverlayService().showTopNotification(context, t.translate('profile_unfollow'), Icons.remove_circle_outline, (){});
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('profile_unfollow'),
+            Icons.remove_circle_outline,
+            () {},
+          );
       } else {
         await _api.followCommunity(widget.communityId);
-        if(mounted) OverlayService().showTopNotification(context, t.translate('community_following'), Icons.check_circle, (){}, color: Colors.green);
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('community_following'),
+            Icons.check_circle,
+            () {},
+            color: Colors.green,
+          );
       }
       // Refresh community data
       final updated = await _api.getCommunity(widget.communityId);
       if (mounted && updated != null) setState(() => _communityData = updated);
     } catch (e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('profile_action_fail'), Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('profile_action_fail'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     }
   }
 
   void _openFullImage(BuildContext context, String url, String heroTag) {
-    Navigator.of(context).push(PageRouteBuilder(opaque: false, pageBuilder: (_, __, ___) => ImageViewerScreen(imageUrl: url, heroTag: heroTag, mediaType: 'image')));
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (_, __, ___) => ImageViewerScreen(
+          imageUrl: url,
+          heroTag: heroTag,
+          mediaType: 'image',
+        ),
+      ),
+    );
   }
 
-  void _showImageOptions(BuildContext context, String? url, bool isBanner, bool hasControl) {
+  void _showImageOptions(
+    BuildContext context,
+    String? url,
+    bool isBanner,
+    bool hasControl,
+  ) {
     if (url == null && !hasControl) return;
 
     // LOCALIZATION inside modal
     var t = AppLocalizations.of(context)!;
 
-    showModalBottomSheet(context: context, shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))), builder: (ctx) {
-      return SafeArea(child: Wrap(children: [
-        if (url != null) ListTile(
-          leading: Icon(Icons.visibility_outlined, color: SisapaTheme.blue),
-          title: Text(isBanner ? t.translate('profile_view_banner') : t.translate('profile_view_photo')),
-          onTap: () { Navigator.pop(ctx); _openFullImage(context, url, isBanner ? 'community_banner' : 'community_icon'); }
-        ),
-        if (hasControl) ListTile(
-          leading: Icon(Icons.photo_library_outlined, color: SisapaTheme.blue),
-          title: Text(isBanner ? t.translate('profile_change_banner') : t.translate('profile_change_photo')),
-          onTap: () { Navigator.pop(ctx); _pickAndUploadImage(isBanner: isBanner); }
-        ),
-      ]));
-    });
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return FrostedBottomSheet(
+          child: SafeArea(
+            child: Wrap(
+              children: [
+                if (url != null)
+                  ListTile(
+                    leading: Icon(
+                      Icons.visibility_outlined,
+                      color: SisapaTheme.blue,
+                    ),
+                    title: Text(
+                      isBanner
+                          ? t.translate('profile_view_banner')
+                          : t.translate('profile_view_photo'),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _openFullImage(
+                        context,
+                        url,
+                        isBanner ? 'community_banner' : 'community_icon',
+                      );
+                    },
+                  ),
+                if (hasControl)
+                  ListTile(
+                    leading: Icon(
+                      Icons.photo_library_outlined,
+                      color: SisapaTheme.blue,
+                    ),
+                    title: Text(
+                      isBanner
+                          ? t.translate('profile_change_banner')
+                          : t.translate('profile_change_photo'),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _pickAndUploadImage(isBanner: isBanner);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _pickAndUploadImage({required bool isBanner}) async {
     var t = AppLocalizations.of(context)!;
 
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: ImageSource.gallery, imageQuality: 70);
+    final XFile? pickedFile = await picker.pickImage(
+      maxWidth: 1920,
+      maxHeight: 1920,
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
     if (pickedFile == null) return;
-    final croppedFile = await ImageCropper().cropImage(sourcePath: pickedFile.path, compressQuality: 70, aspectRatio: isBanner ? CropAspectRatio(ratioX: 3, ratioY: 1) : CropAspectRatio(ratioX: 1, ratioY: 1));
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      compressQuality: 70,
+      aspectRatio: isBanner
+          ? CropAspectRatio(ratioX: 3, ratioY: 1)
+          : CropAspectRatio(ratioX: 1, ratioY: 1),
+    );
     if (croppedFile == null) return;
     setState(() => _isUploadingImage = true);
     try {
-      final String? url = await _cloudinaryService.uploadImage(File(croppedFile.path));
+      final String? url = await _cloudinaryService.uploadImage(
+        File(croppedFile.path),
+      );
       if (url != null) {
-        Map<String, dynamic> update = isBanner ? {'banner_image_url': url} : {'image_url': url};
+        Map<String, dynamic> update = isBanner
+            ? {'banner_image_url': url}
+            : {'image_url': url};
         await _api.updateCommunity(widget.communityId, update);
         // Refresh
         final updated = await _api.getCommunity(widget.communityId);
-        if (mounted && updated != null) setState(() => _communityData = updated);
-        if(mounted) OverlayService().showTopNotification(context, t.translate('profile_update_success'), Icons.check_circle, (){}, color: Colors.green);
+        if (mounted && updated != null)
+          setState(() => _communityData = updated);
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            t.translate('profile_update_success'),
+            Icons.check_circle,
+            () {},
+            color: Colors.green,
+          );
       }
     } catch (e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('edit_error_upload'), Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('edit_error_upload'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     } finally {
-      if(mounted) setState(() => _isUploadingImage = false);
+      if (mounted) setState(() => _isUploadingImage = false);
     }
   }
 
@@ -234,9 +353,14 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     final bool hasFullControl = isOwner || isAdmin;
     final bool canPost = isOwner || isAdmin || isEditor;
     final String name = data['name'] ?? 'Channel';
-    final String? bannerUrl = data['banner_image_url'] ?? data['bannerImageUrl'];
+    final String? bannerUrl =
+        data['banner_image_url'] ?? data['bannerImageUrl'];
     final String? avatarUrl = data['image_url'] ?? data['imageUrl'];
-    final bool isVerified = data['is_verified'] == true || data['is_verified'] == 1 || data['isVerified'] == true || data['isVerified'] == 1;
+    final bool isVerified =
+        data['is_verified'] == true ||
+        data['is_verified'] == 1 ||
+        data['isVerified'] == true ||
+        data['isVerified'] == 1;
 
     return Scaffold(
       body: NestedScrollView(
@@ -247,39 +371,187 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             SliverAppBar(
               expandedHeight: 180.0,
               pinned: true,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 0,
               title: innerBoxIsScrolled ? Text(name) : null,
               elevation: 0,
               actions: [
                 if (hasFullControl)
                   IconButton(
                     icon: Icon(Icons.settings_outlined),
-                    onPressed: () => Navigator.push(context, _createSlideUpRoute(CommunitySettingsScreen(communityId: widget.communityId, communityData: data, isOwner: isOwner, isAdmin: isAdmin))),
-                  )
+                    onPressed: () => Navigator.push(
+                      context,
+                      _createSlideUpRoute(
+                        CommunitySettingsScreen(
+                          communityId: widget.communityId,
+                          communityData: data,
+                          isOwner: isOwner,
+                          isAdmin: isAdmin,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
                     GestureDetector(
-                      onTap: () => _showImageOptions(context, bannerUrl, true, hasFullControl),
-                      child: Hero(tag: 'community_banner', child: bannerUrl != null ? CachedNetworkImage(cacheManager: AppCacheManager.instance, imageUrl: bannerUrl, fit: BoxFit.cover, memCacheWidth: 800) : Container(color: isDarkMode ? Colors.grey[800] : Colors.grey[300], child: hasFullControl ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo, color: Colors.white), Text(t.translate('edit_banner_add'), style: TextStyle(color: Colors.white, fontSize: 12))])) : null)),
+                      onTap: () => _showImageOptions(
+                        context,
+                        bannerUrl,
+                        true,
+                        hasFullControl,
+                      ),
+                      child: Hero(
+                        tag: 'community_banner',
+                        child: bannerUrl != null
+                            ? CachedNetworkImage(
+                                cacheManager: AppCacheManager.instance,
+                                imageUrl: bannerUrl,
+                                fit: BoxFit.cover,
+                                memCacheWidth: 800,
+                              )
+                            : Container(
+                                color: isDarkMode
+                                    ? Colors.grey[800]
+                                    : Colors.grey[300],
+                                child: hasFullControl
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.add_a_photo,
+                                              color: Colors.white,
+                                            ),
+                                            Text(
+                                              t.translate('edit_banner_add'),
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                      ),
                     ),
-                    Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.8)]))),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.8),
+                          ],
+                        ),
+                      ),
+                    ),
                     Positioned(
-                      left: 16, bottom: 16, right: 16,
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height:
+                          MediaQuery.of(context).padding.top + kToolbarHeight,
+                      child: FrostedLayer(
+                        tint: theme.scaffoldBackgroundColor.withOpacity(
+                          isDarkMode ? 0.78 : 0.74,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 16,
+                      bottom: 16,
+                      right: 16,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           GestureDetector(
-                            onTap: () => _showImageOptions(context, avatarUrl, false, hasFullControl),
-                            child: Hero(tag: 'community_icon', child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.scaffoldBackgroundColor, width: 3)), child: CircleAvatar(radius: 36, backgroundColor: SisapaTheme.blue, backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl, cacheManager: AppCacheManager.instance) : null, child: avatarUrl == null ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 32, color: Colors.white)) : null))),
+                            onTap: () => _showImageOptions(
+                              context,
+                              avatarUrl,
+                              false,
+                              hasFullControl,
+                            ),
+                            child: Hero(
+                              tag: 'community_icon',
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.scaffoldBackgroundColor,
+                                    width: 3,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 36,
+                                  backgroundColor: SisapaTheme.blue,
+                                  backgroundImage: avatarUrl != null
+                                      ? CachedNetworkImageProvider(
+                                          avatarUrl,
+                                          cacheManager:
+                                              AppCacheManager.instance,
+                                        )
+                                      : null,
+                                  child: avatarUrl == null
+                                      ? Text(
+                                          name[0].toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 32,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
                           ),
                           SizedBox(width: 12),
                           Expanded(
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                              Row(children: [Flexible(child: Text(name, style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)), if (isVerified) ...[SizedBox(width: 4), Icon(Icons.verified, size: 18, color: SisapaTheme.blue)]]),
-                              Text(data['category'] == 'pnj_official' ? "Official Channel" : t.translate('general_community'), style: TextStyle(color: Colors.white70, fontSize: 12)),
-                            ]),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        name,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isVerified) ...[
+                                      SizedBox(width: 4),
+                                      Icon(
+                                        Icons.verified,
+                                        size: 18,
+                                        color: SisapaTheme.blue,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                Text(
+                                  data['category'] == 'pnj_official'
+                                      ? "Official Channel"
+                                      : t.translate('general_community'),
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -294,28 +566,102 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(data['description'] ?? t.translate('profile_no_bio'), style: theme.textTheme.bodyMedium),
+                    Text(
+                      data['description'] ?? t.translate('profile_no_bio'),
+                      style: theme.textTheme.bodyMedium,
+                    ),
                     SizedBox(height: 12),
                     Row(
                       children: [
                         InkWell(
-                          onTap: () => Navigator.push(context, _createSlideUpRoute(CommunityMembersScreen(communityId: widget.communityId, communityData: data, isStaff: hasFullControl))),
-                          child: Row(children: [Icon(Icons.group, size: 16, color: theme.hintColor), SizedBox(width: 4), Text("${followers.length} ${t.translate('comm_followers_count')}", style: TextStyle(fontWeight: FontWeight.bold)), Icon(Icons.arrow_forward_ios, size: 12, color: theme.hintColor)]),
+                          onTap: () => Navigator.push(
+                            context,
+                            _createSlideUpRoute(
+                              CommunityMembersScreen(
+                                communityId: widget.communityId,
+                                communityData: data,
+                                isStaff: hasFullControl,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.group,
+                                size: 16,
+                                color: theme.hintColor,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                "${followers.length} ${t.translate('comm_followers_count')}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 12,
+                                color: theme.hintColor,
+                              ),
+                            ],
+                          ),
                         ),
                         Spacer(),
                         if (!canPost)
-                          ElevatedButton(onPressed: () => _handleFollowAction(isFollower, t), style: ElevatedButton.styleFrom(backgroundColor: isFollower ? theme.cardColor : SisapaTheme.blue, foregroundColor: isFollower ? theme.textTheme.bodyLarge?.color : Colors.white, elevation: 0, side: isFollower ? BorderSide(color: theme.dividerColor) : null, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(isFollower ? t.translate('community_following') : t.translate('community_follow')))
+                          ElevatedButton(
+                            onPressed: () => _handleFollowAction(isFollower, t),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isFollower
+                                  ? theme.cardColor
+                                  : SisapaTheme.blue,
+                              foregroundColor: isFollower
+                                  ? theme.textTheme.bodyLarge?.color
+                                  : Colors.white,
+                              elevation: 0,
+                              side: isFollower
+                                  ? BorderSide(color: theme.dividerColor)
+                                  : null,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: Text(
+                              isFollower
+                                  ? t.translate('community_following')
+                                  : t.translate('community_follow'),
+                            ),
+                          )
                         else
                           ElevatedButton.icon(
-                            onPressed: () => Navigator.push(context, _createSlideUpRoute(CreatePostScreen(initialData: {'communityId': widget.communityId, 'communityName': name, 'communityIcon': avatarUrl}))),
+                            onPressed: () => Navigator.push(
+                              context,
+                              _createSlideUpRoute(
+                                CreatePostScreen(
+                                  initialData: {
+                                    'communityId': widget.communityId,
+                                    'communityName': name,
+                                    'communityIcon': avatarUrl,
+                                  },
+                                ),
+                              ),
+                            ),
                             icon: Icon(Icons.campaign, size: 18),
                             label: Text(t.translate('post_create_new')),
-                            style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: SisapaTheme.blue,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
                           ),
                       ],
                     ),
                     Divider(height: 24),
-                    Text(t.translate('community_broadcast'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      t.translate('community_broadcast'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -323,9 +669,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ];
         },
         body: _isLoadingPosts
-          ? Center(child: CircularProgressIndicator())
-          : _posts.isEmpty
-            ? Center(child: Padding(padding: EdgeInsets.only(top: 40), child: Text(t.translate('community_no_broadcasts'), style: TextStyle(color: Colors.grey))))
+            ? Center(child: CircularProgressIndicator())
+            : _posts.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Text(
+                    t.translate('community_no_broadcasts'),
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
             : ListView.builder(
                 padding: EdgeInsets.only(bottom: 80),
                 physics: NeverScrollableScrollPhysics(),
@@ -333,7 +687,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 itemCount: _posts.length + (_hasMorePosts ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == _posts.length) {
-                    return Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
+                    return Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
                   }
                   final pData = _posts[index];
 
@@ -345,7 +702,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     isCommunityAdmin: isAdmin || isOwner,
                     blockedUserIds: _blockedUserIds,
                   );
-                }
+                },
               ),
       ),
     );

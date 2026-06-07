@@ -26,10 +26,12 @@ class CommunitySettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<CommunitySettingsScreen> createState() => _CommunitySettingsScreenState();
+  State<CommunitySettingsScreen> createState() =>
+      _CommunitySettingsScreenState();
 }
 
-class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with SingleTickerProviderStateMixin {
+class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
+    with SingleTickerProviderStateMixin {
   final GcsService _cloudinaryService = GcsService();
   late TabController _tabController;
 
@@ -53,12 +55,17 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    _allowMemberPosts = widget.communityData['allowMemberPosts'] == true ||
+    _allowMemberPosts =
+        widget.communityData['allowMemberPosts'] == true ||
         widget.communityData['allowMemberPosts'] == 1 ||
         widget.communityData['allow_member_posts'] == true ||
         widget.communityData['allow_member_posts'] == 1;
-    _nameController = TextEditingController(text: widget.communityData['name'] ?? '');
-    _descController = TextEditingController(text: widget.communityData['description'] ?? '');
+    _nameController = TextEditingController(
+      text: widget.communityData['name'] ?? '',
+    );
+    _descController = TextEditingController(
+      text: widget.communityData['description'] ?? '',
+    );
 
     _loadData();
   }
@@ -77,13 +84,17 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     setState(() => _isLoading = true);
     try {
       final data = await ApiService().getCommunity(widget.communityId);
-      final membersList = await ApiService().getCommunityMembers(widget.communityId);
+      final membersList = await ApiService().getCommunityMembers(
+        widget.communityId,
+      );
       if (mounted) {
         setState(() {
           _communityData = data;
           _members = membersList;
           if (data != null) {
-            _allowMemberPosts = data['allow_member_posts'] == 1 || data['allow_member_posts'] == true;
+            _allowMemberPosts =
+                data['allow_member_posts'] == 1 ||
+                data['allow_member_posts'] == true;
             _nameController.text = data['name'] ?? '';
             _descController.text = data['description'] ?? '';
           }
@@ -92,7 +103,13 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
       }
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, "Error loading settings", Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          "Error loading settings",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
         setState(() => _isLoading = false);
       }
     }
@@ -100,7 +117,13 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
 
   Future<void> _saveInfo() async {
     if (_nameController.text.trim().isEmpty) {
-      OverlayService().showTopNotification(context, "Name cannot be empty", Icons.warning, (){}, color: Colors.orange);
+      OverlayService().showTopNotification(
+        context,
+        "Name cannot be empty",
+        Icons.warning,
+        () {},
+        color: Colors.orange,
+      );
       return;
     }
 
@@ -112,10 +135,24 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
         'name': _nameController.text.trim(),
         'description': _descController.text.trim(),
       });
-      if (mounted) OverlayService().showTopNotification(context, "Info Updated", Icons.check_circle, (){}, color: Colors.green);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          "Info Updated",
+          Icons.check_circle,
+          () {},
+          color: Colors.green,
+        );
       _loadData();
     } catch (e) {
-      if (mounted) OverlayService().showTopNotification(context, "Update Failed", Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          "Update Failed",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     } finally {
       if (mounted) setState(() => _isSavingInfo = false);
     }
@@ -125,17 +162,25 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     setState(() => _allowMemberPosts = value);
     try {
       await ApiService().updateCommunity(widget.communityId, {
-        'allow_member_posts': value
+        'allow_member_posts': value,
       });
     } catch (e) {
       setState(() => _allowMemberPosts = !value);
     }
   }
 
-  Future<void> _pickAndUploadImage({required bool isBanner, required ImageSource source}) async {
+  Future<void> _pickAndUploadImage({
+    required bool isBanner,
+    required ImageSource source,
+  }) async {
     final picker = ImagePicker();
     try {
-      final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 70);
+      final XFile? pickedFile = await picker.pickImage(
+        maxWidth: 1920,
+        maxHeight: 1920,
+        source: source,
+        imageQuality: 70,
+      );
       if (pickedFile == null) return;
 
       final croppedFile = await ImageCropper().cropImage(
@@ -149,16 +194,23 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
             toolbarTitle: isBanner ? 'Crop Banner' : 'Crop Icon',
             toolbarColor: SisapaTheme.blue,
             toolbarWidgetColor: Colors.white,
-            initAspectRatio: isBanner ? CropAspectRatioPreset.ratio3x2 : CropAspectRatioPreset.square,
+            initAspectRatio: isBanner
+                ? CropAspectRatioPreset.ratio3x2
+                : CropAspectRatioPreset.square,
             lockAspectRatio: true,
           ),
-          IOSUiSettings(title: isBanner ? 'Crop Banner' : 'Crop Icon', aspectRatioLockEnabled: true),
+          IOSUiSettings(
+            title: isBanner ? 'Crop Banner' : 'Crop Icon',
+            aspectRatioLockEnabled: true,
+          ),
         ],
       );
 
       if (croppedFile == null) return;
       setState(() => _isUploadingImage = true);
-      final String? downloadUrl = await _cloudinaryService.uploadImage(File(croppedFile.path));
+      final String? downloadUrl = await _cloudinaryService.uploadImage(
+        File(croppedFile.path),
+      );
 
       if (downloadUrl != null) {
         final Map<String, dynamic> update = isBanner
@@ -167,12 +219,25 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
 
         await ApiService().updateCommunity(widget.communityId, update);
         if (mounted) {
-          OverlayService().showTopNotification(context, "Updated successfully!", Icons.check_circle, (){}, color: Colors.green);
+          OverlayService().showTopNotification(
+            context,
+            "Updated successfully!",
+            Icons.check_circle,
+            () {},
+            color: Colors.green,
+          );
           _loadData();
         }
       }
     } catch (e) {
-      if (mounted) OverlayService().showTopNotification(context, "Error: $e", Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          "Error: $e",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }
@@ -181,33 +246,51 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
   void _showImageSourceSelection({required bool isBanner}) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              SizedBox(height: 16),
-              ListTile(
-                leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
-                title: Text("Take Photo"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAndUploadImage(isBanner: isBanner, source: ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
-                title: Text("Choose from Gallery"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAndUploadImage(isBanner: isBanner, source: ImageSource.gallery);
-                },
-              ),
-              SizedBox(height: 12),
-            ],
+        return FrostedBottomSheet(
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ListTile(
+                  leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
+                  title: Text("Take Photo"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndUploadImage(
+                      isBanner: isBanner,
+                      source: ImageSource.camera,
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
+                  title: Text("Choose from Gallery"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndUploadImage(
+                      isBanner: isBanner,
+                      source: ImageSource.gallery,
+                    );
+                  },
+                ),
+                SizedBox(height: 12),
+              ],
+            ),
           ),
         );
       },
@@ -218,7 +301,10 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     try {
       bool success = false;
       if (action == 'kick') {
-        success = await ApiService().removeCommunityMember(widget.communityId, targetUid);
+        success = await ApiService().removeCommunityMember(
+          widget.communityId,
+          targetUid,
+        );
       } else {
         String role = 'follower';
         if (action == 'make_admin') {
@@ -228,29 +314,53 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
         } else if (action == 'make_mod') {
           role = 'moderator';
         }
-        success = await ApiService().updateMemberRole(widget.communityId, targetUid, role);
+        success = await ApiService().updateMemberRole(
+          widget.communityId,
+          targetUid,
+          role,
+        );
       }
 
       if (success) {
-        OverlayService().showTopNotification(context, "Permissions Updated", Icons.check_circle, (){});
+        OverlayService().showTopNotification(
+          context,
+          "Permissions Updated",
+          Icons.check_circle,
+          () {},
+        );
         _loadData();
       } else {
         throw Exception("Failed to update role");
       }
     } catch (e) {
-      OverlayService().showTopNotification(context, "Action failed", Icons.error, (){}, color: Colors.red);
+      OverlayService().showTopNotification(
+        context,
+        "Action failed",
+        Icons.error,
+        () {},
+        color: Colors.red,
+      );
     }
   }
 
   Future<void> _deleteCommunity() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => FrostedAlertDialog(
         title: Text("Delete Channel?"),
-        content: Text("Are you sure? This will delete the identity and all data permanently."),
+        content: Text(
+          "Are you sure? This will delete the identity and all data permanently.",
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: Text("Delete")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text("Delete"),
+          ),
         ],
       ),
     );
@@ -261,13 +371,24 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     try {
       await ApiService().deleteCommunity(widget.communityId);
       if (mounted) {
-        OverlayService().showTopNotification(context, "Channel Deleted", Icons.delete_forever, (){});
+        OverlayService().showTopNotification(
+          context,
+          "Channel Deleted",
+          Icons.delete_forever,
+          () {},
+        );
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isDeleting = false);
-        OverlayService().showTopNotification(context, "Failed to delete", Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          "Failed to delete",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
     }
   }
@@ -279,7 +400,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text("Settings & Roles")),
+        appBar: FrostedAppBar(title: Text("Settings & Roles")),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -289,7 +410,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     final String bannerUrl = _communityData?['banner_image_url'] ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: Text("Settings & Roles")),
+      appBar: FrostedAppBar(title: Text("Settings & Roles")),
       body: Column(
         children: [
           SizedBox(
@@ -299,18 +420,32 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
               alignment: Alignment.topCenter,
               children: [
                 GestureDetector(
-                  onTap: (widget.isOwner || widget.isAdmin) ? () => _showImageSourceSelection(isBanner: true) : null,
+                  onTap: (widget.isOwner || widget.isAdmin)
+                      ? () => _showImageSourceSelection(isBanner: true)
+                      : null,
                   child: Container(
                     width: double.infinity,
                     height: 120,
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey[800] : Colors.grey[300],
                       image: bannerUrl.isNotEmpty
-                          ? DecorationImage(image: CachedNetworkImageProvider(bannerUrl, cacheManager: AppCacheManager.instance), fit: BoxFit.cover)
+                          ? DecorationImage(
+                              image: CachedNetworkImageProvider(
+                                bannerUrl,
+                                cacheManager: AppCacheManager.instance,
+                              ),
+                              fit: BoxFit.cover,
+                            )
                           : null,
                     ),
-                    child: bannerUrl.isEmpty && (widget.isOwner || widget.isAdmin)
-                        ? Center(child: Icon(Icons.add_a_photo, color: Colors.white70))
+                    child:
+                        bannerUrl.isEmpty && (widget.isOwner || widget.isAdmin)
+                        ? Center(
+                            child: Icon(
+                              Icons.add_a_photo,
+                              color: Colors.white70,
+                            ),
+                          )
                         : null,
                   ),
                 ),
@@ -319,16 +454,28 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                   bottom: 0,
                   left: 20,
                   child: GestureDetector(
-                    onTap: (widget.isOwner || widget.isAdmin) ? () => _showImageSourceSelection(isBanner: false) : null,
+                    onTap: (widget.isOwner || widget.isAdmin)
+                        ? () => _showImageSourceSelection(isBanner: false)
+                        : null,
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: theme.scaffoldBackgroundColor, width: 4),
+                        border: Border.all(
+                          color: theme.scaffoldBackgroundColor,
+                          width: 4,
+                        ),
                       ),
                       child: CircleAvatar(
                         radius: 40,
-                        backgroundImage: imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
-                        child: imageUrl.isEmpty ? Icon(Icons.groups, size: 40) : null,
+                        backgroundImage: imageUrl.isNotEmpty
+                            ? CachedNetworkImageProvider(
+                                imageUrl,
+                                cacheManager: AppCacheManager.instance,
+                              )
+                            : null,
+                        child: imageUrl.isEmpty
+                            ? Icon(Icons.groups, size: 40)
+                            : null,
                       ),
                     ),
                   ),
@@ -341,7 +488,10 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
             controller: _tabController,
             labelColor: SisapaTheme.blue,
             unselectedLabelColor: Colors.grey,
-            tabs: const [Tab(text: "General"), Tab(text: "Members & Roles")],
+            tabs: const [
+              Tab(text: "General"),
+              Tab(text: "Members & Roles"),
+            ],
           ),
 
           Expanded(
@@ -352,25 +502,41 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                 ListView(
                   padding: EdgeInsets.all(16),
                   children: [
-                    Text("Community Name", style: TextStyle(fontWeight: FontWeight.bold, color: theme.hintColor)),
+                    Text(
+                      "Community Name",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: theme.hintColor,
+                      ),
+                    ),
                     SizedBox(height: 8),
                     TextField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         prefixIcon: Icon(Icons.badge_outlined),
                       ),
                     ),
 
                     SizedBox(height: 16),
 
-                    Text("Description", style: TextStyle(fontWeight: FontWeight.bold, color: theme.hintColor)),
+                    Text(
+                      "Description",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: theme.hintColor,
+                      ),
+                    ),
                     SizedBox(height: 8),
                     TextField(
                       controller: _descController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         alignLabelWithHint: true,
                       ),
                     ),
@@ -386,10 +552,19 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                             backgroundColor: SisapaTheme.blue,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: _isSavingInfo
-                              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : Text("Save Changes"),
                         ),
                       ),
@@ -401,7 +576,9 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                       title: Text("Allow Members to Post"),
                       subtitle: Text("If off, only Admins/Editors can post."),
                       value: _allowMemberPosts,
-                      onChanged: (widget.isOwner || widget.isAdmin) ? _updatePermission : null,
+                      onChanged: (widget.isOwner || widget.isAdmin)
+                          ? _updatePermission
+                          : null,
                       contentPadding: EdgeInsets.zero,
                     ),
 
@@ -410,11 +587,14 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                     if (widget.isOwner)
                       ListTile(
                         leading: Icon(Icons.delete_forever, color: Colors.red),
-                        title: Text("Delete Community", style: TextStyle(color: Colors.red)),
+                        title: Text(
+                          "Delete Community",
+                          style: TextStyle(color: Colors.red),
+                        ),
                         subtitle: Text("Permanent action"),
                         onTap: _deleteCommunity,
                         contentPadding: EdgeInsets.zero,
-                      )
+                      ),
                   ],
                 ),
 
@@ -428,15 +608,16 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
                         decoration: InputDecoration(
                           hintText: "Search members...",
                           prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           contentPadding: EdgeInsets.symmetric(horizontal: 16),
                         ),
-                        onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                        onChanged: (val) =>
+                            setState(() => _searchQuery = val.toLowerCase()),
                       ),
                     ),
-                    Expanded(
-                      child: _buildMemberList(ownerId),
-                    ),
+                    Expanded(child: _buildMemberList(ownerId)),
                   ],
                 ),
               ],
@@ -452,10 +633,13 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
     final filteredMembers = _members.where((m) {
       final name = (m['name'] ?? '').toString().toLowerCase();
       final email = (m['email'] ?? '').toString().toLowerCase();
-      return _searchQuery.isEmpty || name.contains(_searchQuery) || email.contains(_searchQuery);
+      return _searchQuery.isEmpty ||
+          name.contains(_searchQuery) ||
+          email.contains(_searchQuery);
     }).toList();
 
-    if (filteredMembers.isEmpty) return Center(child: Text("No members found."));
+    if (filteredMembers.isEmpty)
+      return Center(child: Text("No members found."));
 
     return ListView.builder(
       itemCount: filteredMembers.length,
@@ -486,12 +670,20 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
           displayColor = Colors.orange;
         }
 
-        final bool canManageUser = widget.isOwner || (widget.isAdmin && userId != ownerId);
+        final bool canManageUser =
+            widget.isOwner || (widget.isAdmin && userId != ownerId);
 
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? CachedNetworkImageProvider(avatarUrl, cacheManager: AppCacheManager.instance) : null,
-            child: avatarUrl == null || avatarUrl.isEmpty ? Icon(Icons.person) : null,
+            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                ? CachedNetworkImageProvider(
+                    avatarUrl,
+                    cacheManager: AppCacheManager.instance,
+                  )
+                : null,
+            child: avatarUrl == null || avatarUrl.isEmpty
+                ? Icon(Icons.person)
+                : null,
           ),
           title: Text(name),
           subtitle: Container(
@@ -500,31 +692,54 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> with 
             decoration: BoxDecoration(
               color: displayColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: displayColor.withOpacity(0.5))
+              border: Border.all(color: displayColor.withOpacity(0.5)),
             ),
             child: Text(
               displayRole,
-              style: TextStyle(color: displayColor, fontWeight: FontWeight.bold, fontSize: 10)
+              style: TextStyle(
+                color: displayColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
             ),
           ),
 
           trailing: (isMe || canManageUser) && userId != ownerId
-            ? PopupMenuButton<String>(
-                onSelected: (val) {
-                  _updateRoleAccess(userId, val);
-                },
-                itemBuilder: (context) => [
-                  if (canManageUser && !isMe) ...[
-                    if (widget.isOwner) PopupMenuItem(value: 'make_admin', child: Text("Promote to Admin")),
-                    PopupMenuItem(value: 'make_editor', child: Text("Set as Editor")),
-                    PopupMenuItem(value: 'make_mod', child: Text("Set as Moderator")),
-                    PopupMenuItem(value: 'remove_role', child: Text("Demote to Member")),
-                    PopupMenuDivider(),
-                    PopupMenuItem(value: 'kick', child: Text("Kick User", style: TextStyle(color: Colors.red))),
-                  ]
-                ],
-              )
-            : null,
+              ? PopupMenuButton<String>(
+                  onSelected: (val) {
+                    _updateRoleAccess(userId, val);
+                  },
+                  itemBuilder: (context) => [
+                    if (canManageUser && !isMe) ...[
+                      if (widget.isOwner)
+                        PopupMenuItem(
+                          value: 'make_admin',
+                          child: Text("Promote to Admin"),
+                        ),
+                      PopupMenuItem(
+                        value: 'make_editor',
+                        child: Text("Set as Editor"),
+                      ),
+                      PopupMenuItem(
+                        value: 'make_mod',
+                        child: Text("Set as Moderator"),
+                      ),
+                      PopupMenuItem(
+                        value: 'remove_role',
+                        child: Text("Demote to Member"),
+                      ),
+                      PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 'kick',
+                        child: Text(
+                          "Kick User",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+              : null,
         );
       },
     );

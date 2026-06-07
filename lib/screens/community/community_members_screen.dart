@@ -25,7 +25,8 @@ class CommunityMembersScreen extends StatefulWidget {
   State<CommunityMembersScreen> createState() => _CommunityMembersScreenState();
 }
 
-class _CommunityMembersScreenState extends State<CommunityMembersScreen> with SingleTickerProviderStateMixin {
+class _CommunityMembersScreenState extends State<CommunityMembersScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   List<Map<String, dynamic>> _members = [];
@@ -48,8 +49,12 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final membersList = await ApiService().getCommunityMembers(widget.communityId);
-      final communityDetails = await ApiService().getCommunity(widget.communityId);
+      final membersList = await ApiService().getCommunityMembers(
+        widget.communityId,
+      );
+      final communityDetails = await ApiService().getCommunity(
+        widget.communityId,
+      );
       if (mounted) {
         setState(() {
           _members = membersList;
@@ -59,7 +64,13 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
       }
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, "Error loading members", Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          "Error loading members",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
         setState(() => _isLoading = false);
       }
     }
@@ -75,7 +86,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
+        appBar: FrostedAppBar(
           title: Text(t.translate('community_members')),
           centerTitle: true,
         ),
@@ -84,22 +95,31 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen> with Si
     }
 
     final ownerId = _communityData?['owner_uid'] ?? '';
-    final followers = _members.where((m) => m['role'] == 'follower' && m['uid'] != ownerId).toList();
-    final staff = _members.where((m) => m['role'] != 'follower' || m['uid'] == ownerId).toList();
+    final followers = _members
+        .where((m) => m['role'] == 'follower' && m['uid'] != ownerId)
+        .toList();
+    final staff = _members
+        .where((m) => m['role'] != 'follower' || m['uid'] == ownerId)
+        .toList();
 
     // Sort staff: owner first, then admins, then editors, then moderators
     staff.sort((a, b) {
       if (a['uid'] == ownerId) return -1;
       if (b['uid'] == ownerId) return 1;
 
-      final roleOrder = {'admin': 1, 'editor': 2, 'moderator': 3, 'follower': 4};
+      final roleOrder = {
+        'admin': 1,
+        'editor': 2,
+        'moderator': 3,
+        'follower': 4,
+      };
       final orderA = roleOrder[a['role']] ?? 5;
       final orderB = roleOrder[b['role']] ?? 5;
       return orderA.compareTo(orderB);
     });
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(t.translate('community_members')),
         centerTitle: true,
         bottom: TabBar(
@@ -221,8 +241,18 @@ class _StaffList extends StatelessWidget {
             userData: member,
             roleBadge: Container(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: roleColor, borderRadius: BorderRadius.circular(8)),
-              child: Text(roleTitle, style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              decoration: BoxDecoration(
+                color: roleColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                roleTitle,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         );
@@ -241,7 +271,8 @@ class _DelayedSlideFade extends StatefulWidget {
   State<_DelayedSlideFade> createState() => _DelayedSlideFadeState();
 }
 
-class _DelayedSlideFadeState extends State<_DelayedSlideFade> with SingleTickerProviderStateMixin {
+class _DelayedSlideFadeState extends State<_DelayedSlideFade>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<Offset> _slideAnim;
   late Animation<double> _fadeAnim;
@@ -249,9 +280,18 @@ class _DelayedSlideFadeState extends State<_DelayedSlideFade> with SingleTickerP
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-    _slideAnim = Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _slideAnim = Tween<Offset>(
+      begin: Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _fadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
 
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _animController.forward();
@@ -268,10 +308,7 @@ class _DelayedSlideFadeState extends State<_DelayedSlideFade> with SingleTickerP
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnim,
-      child: SlideTransition(
-        position: _slideAnim,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnim, child: widget.child),
     );
   }
 }
@@ -288,15 +325,23 @@ class _UserTile extends StatelessWidget {
     final String name = userData['name'] ?? 'User';
     final String email = userData['email'] ?? '';
     final String? url = userData['profile_image_url'];
-    final int iconId = userData['avatar_icon_id'] ?? userData['avatarIconId'] ?? 0;
+    final int iconId =
+        userData['avatar_icon_id'] ?? userData['avatarIconId'] ?? 0;
     final String? colorHex = userData['avatar_hex'] ?? userData['avatarHex'];
 
     return ListTile(
       contentPadding: EdgeInsets.symmetric(vertical: 4),
       leading: CircleAvatar(
-        backgroundImage: url != null && url.isNotEmpty ? CachedNetworkImageProvider(url, cacheManager: AppCacheManager.instance) : null,
+        backgroundImage: url != null && url.isNotEmpty
+            ? CachedNetworkImageProvider(
+                url,
+                cacheManager: AppCacheManager.instance,
+              )
+            : null,
         backgroundColor: AvatarHelper.getColor(colorHex),
-        child: url == null || url.isEmpty ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white) : null,
+        child: url == null || url.isEmpty
+            ? Icon(AvatarHelper.getIcon(iconId), color: Colors.white)
+            : null,
       ),
       title: Row(
         children: [
@@ -305,7 +350,12 @@ class _UserTile extends StatelessWidget {
         ],
       ),
       subtitle: Text("@${email.split('@')[0]}"),
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage(userId: userId, includeScaffold: true))),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProfilePage(userId: userId, includeScaffold: true),
+        ),
+      ),
     );
   }
 }

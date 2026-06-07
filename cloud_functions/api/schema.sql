@@ -18,7 +18,9 @@ CREATE TABLE users (
   banner_image_url    TEXT,
   is_private          BOOLEAN DEFAULT FALSE,
   pinned_post_id      VARCHAR(36),
-  verification_status ENUM('none','pending','verified') DEFAULT 'none',
+  role                ENUM('user','admin') DEFAULT 'user',
+  verification_status ENUM('none','pending','verified','rejected') DEFAULT 'none',
+  ktm_image_url       TEXT,
   agreed_to_terms     BOOLEAN DEFAULT FALSE,
   agreed_at           DATETIME,
   created_at          DATETIME DEFAULT CURRENT_TIMESTAMP

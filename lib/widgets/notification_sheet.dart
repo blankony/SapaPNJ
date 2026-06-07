@@ -87,11 +87,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
     final theme = Theme.of(context);
     var t = AppLocalizations.of(context)!;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+    return FrostedBottomSheet(
       child: Column(
         children: [
           Padding(
@@ -101,7 +97,9 @@ class _NotificationSheetState extends State<NotificationSheet> {
               children: [
                 Text(
                   t.translate('notif_activity_title'),
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 IconButton(
                   icon: Icon(Icons.check_circle_outline),
@@ -110,7 +108,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
                     await _markNotificationsAsRead();
                     _loadNotifications();
                   },
-                )
+                ),
               ],
             ),
           ),
@@ -121,17 +119,24 @@ class _NotificationSheetState extends State<NotificationSheet> {
             child: _isLoading
                 ? Center(child: CircularProgressIndicator())
                 : _notifications.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.notifications_none, size: 64, color: theme.hintColor.withOpacity(0.3)),
-                            SizedBox(height: 16),
-                            Text(t.translate('notif_empty'), style: TextStyle(color: theme.hintColor)),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_none,
+                          size: 64,
+                          color: theme.hintColor.withOpacity(0.3),
                         ),
-                      )
-                    : _buildNotificationsList(t, theme),
+                        SizedBox(height: 16),
+                        Text(
+                          t.translate('notif_empty'),
+                          style: TextStyle(color: theme.hintColor),
+                        ),
+                      ],
+                    ),
+                  )
+                : _buildNotificationsList(t, theme),
           ),
         ],
       ),
@@ -156,10 +161,10 @@ class _NotificationSheetState extends State<NotificationSheet> {
                 group,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.primaryColor
+                  color: theme.primaryColor,
                 ),
               ),
-            )
+            ),
           );
         }
       }
@@ -168,24 +173,22 @@ class _NotificationSheetState extends State<NotificationSheet> {
       final bool isRead = isReadVal == 1 || isReadVal == true;
 
       if (data['type'] == 'follow_request') {
-        listItems.add(_FollowRequestTile(
-          notificationId: data['id'],
-          notificationData: data,
-          isRead: isRead,
-          onRefresh: _loadNotifications,
-        ));
+        listItems.add(
+          _FollowRequestTile(
+            notificationId: data['id'],
+            notificationData: data,
+            isRead: isRead,
+            onRefresh: _loadNotifications,
+          ),
+        );
       } else {
-        listItems.add(_NotificationTile(
-          notificationData: data,
-          isRead: isRead,
-        ));
+        listItems.add(
+          _NotificationTile(notificationData: data, isRead: isRead),
+        );
       }
     }
 
-    return ListView(
-      controller: widget.scrollController,
-      children: listItems,
-    );
+    return ListView(controller: widget.scrollController, children: listItems);
   }
 }
 
@@ -211,7 +214,9 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
 
   Future<void> _handleRequest(bool isAccepted) async {
     setState(() => _isProcessing = true);
-    final senderId = widget.notificationData['sender_uid'] ?? widget.notificationData['senderId'];
+    final senderId =
+        widget.notificationData['sender_uid'] ??
+        widget.notificationData['senderId'];
     var t = AppLocalizations.of(context)!;
 
     try {
@@ -224,7 +229,13 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
 
       if (success) {
         if (isAccepted && mounted) {
-          OverlayService().showTopNotification(context, t.translate('notif_req_accepted'), Icons.person_add, (){}, color: Colors.green);
+          OverlayService().showTopNotification(
+            context,
+            t.translate('notif_req_accepted'),
+            Icons.person_add,
+            () {},
+            color: Colors.green,
+          );
         }
         // Mark current notification as read to clean up
         await ApiService().markNotificationRead(widget.notificationId);
@@ -234,7 +245,13 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
       }
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, t.translate('notif_req_error'), Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          t.translate('notif_req_error'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
       setState(() => _isProcessing = false);
     }
@@ -248,7 +265,9 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
     var t = AppLocalizations.of(context)!;
 
     return Container(
-      color: widget.isRead ? Colors.transparent : theme.primaryColor.withOpacity(0.05),
+      color: widget.isRead
+          ? Colors.transparent
+          : theme.primaryColor.withOpacity(0.05),
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         children: [
@@ -257,8 +276,15 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
               CircleAvatar(
                 radius: 22,
                 backgroundColor: theme.dividerColor,
-                backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl, cacheManager: AppCacheManager.instance) : null,
-                child: profileUrl == null || profileUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
+                backgroundImage: profileUrl != null && profileUrl.isNotEmpty
+                    ? CachedNetworkImageProvider(
+                        profileUrl,
+                        cacheManager: AppCacheManager.instance,
+                      )
+                    : null,
+                child: profileUrl == null || profileUrl.isEmpty
+                    ? Icon(Icons.person, color: Colors.white)
+                    : null,
               ),
               SizedBox(width: 16),
               Expanded(
@@ -266,7 +292,10 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
                   text: TextSpan(
                     style: theme.textTheme.bodyMedium,
                     children: [
-                      TextSpan(text: name, style: TextStyle(fontWeight: FontWeight.bold)),
+                      TextSpan(
+                        text: name,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       TextSpan(text: " ${t.translate('notif_req_body')}"),
                     ],
                   ),
@@ -279,28 +308,32 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               if (_isProcessing)
-                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               else ...[
                 OutlinedButton(
                   onPressed: () => _handleRequest(false),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red.withOpacity(0.5))
+                    side: BorderSide(color: Colors.red.withOpacity(0.5)),
                   ),
-                  child: Text(t.translate('notif_req_decline'))
+                  child: Text(t.translate('notif_req_decline')),
                 ),
                 SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: () => _handleRequest(true),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: SisapaTheme.blue,
-                    foregroundColor: Colors.white
+                    foregroundColor: Colors.white,
                   ),
-                  child: Text(t.translate('notif_req_confirm'))
+                  child: Text(t.translate('notif_req_confirm')),
                 ),
-              ]
+              ],
             ],
-          )
+          ),
         ],
       ),
     );
@@ -318,26 +351,32 @@ class _NotificationTile extends StatelessWidget {
 
   void _navigateToTarget(BuildContext context) {
     final String type = notificationData['type'];
-    final String? postId = notificationData['post_id'] ?? notificationData['postId'];
-    final String senderId = notificationData['sender_uid'] ?? notificationData['senderId'];
+    final String? postId =
+        notificationData['post_id'] ?? notificationData['postId'];
+    final String senderId =
+        notificationData['sender_uid'] ?? notificationData['senderId'];
 
     Navigator.of(context).pop();
 
     if (type == 'follow' || type == 'request_accepted') {
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => ProfilePage(userId: senderId, includeScaffold: true),
-      ));
-    } else if (postId != null && (type == 'like' || type == 'repost' || type == 'comment')) {
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => PostDetailScreen(postId: postId),
-      ));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProfilePage(userId: senderId, includeScaffold: true),
+        ),
+      );
+    } else if (postId != null &&
+        (type == 'like' || type == 'repost' || type == 'comment')) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PostDetailScreen(postId: postId)),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final String senderId = notificationData['sender_uid'] ?? notificationData['senderId'] ?? '';
+    final String senderId =
+        notificationData['sender_uid'] ?? notificationData['senderId'] ?? '';
     var t = AppLocalizations.of(context)!;
 
     if (senderId == 'system' || senderId.isEmpty) {
@@ -349,10 +388,18 @@ class _NotificationTile extends StatelessWidget {
     return _buildUserTile(context, theme, name, profileUrl, t);
   }
 
-  Widget _buildSystemTile(BuildContext context, ThemeData theme, AppLocalizations t) {
+  Widget _buildSystemTile(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations t,
+  ) {
     final String type = notificationData['type'];
-    final String text = notificationData['post_text_snippet'] ?? notificationData['postTextSnippet'] ?? '';
-    final dynamic timestamp = notificationData['created_at'] ?? notificationData['timestamp'];
+    final String text =
+        notificationData['post_text_snippet'] ??
+        notificationData['postTextSnippet'] ??
+        '';
+    final dynamic timestamp =
+        notificationData['created_at'] ?? notificationData['timestamp'];
 
     IconData icon = Icons.info;
     Color color = theme.primaryColor;
@@ -372,7 +419,10 @@ class _NotificationTile extends StatelessWidget {
           backgroundColor: color.withOpacity(0.1),
           child: Icon(icon, color: color),
         ),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        title: Text(
+          title,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -392,10 +442,20 @@ class _NotificationTile extends StatelessWidget {
     );
   }
 
-  Widget _buildUserTile(BuildContext context, ThemeData theme, String name, String? profileUrl, AppLocalizations t) {
+  Widget _buildUserTile(
+    BuildContext context,
+    ThemeData theme,
+    String name,
+    String? profileUrl,
+    AppLocalizations t,
+  ) {
     final String type = notificationData['type'];
-    final String snippet = notificationData['post_text_snippet'] ?? notificationData['postTextSnippet'] ?? '';
-    final dynamic timestamp = notificationData['created_at'] ?? notificationData['timestamp'];
+    final String snippet =
+        notificationData['post_text_snippet'] ??
+        notificationData['postTextSnippet'] ??
+        '';
+    final dynamic timestamp =
+        notificationData['created_at'] ?? notificationData['timestamp'];
 
     IconData badgeIcon;
     Color badgeColor;
@@ -436,7 +496,9 @@ class _NotificationTile extends StatelessWidget {
     return InkWell(
       onTap: () => _navigateToTarget(context),
       child: Container(
-        color: isRead ? Colors.transparent : theme.primaryColor.withOpacity(0.05),
+        color: isRead
+            ? Colors.transparent
+            : theme.primaryColor.withOpacity(0.05),
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,8 +509,15 @@ class _NotificationTile extends StatelessWidget {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: theme.dividerColor,
-                  backgroundImage: profileUrl != null && profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl, cacheManager: AppCacheManager.instance) : null,
-                  child: profileUrl == null || profileUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
+                  backgroundImage: profileUrl != null && profileUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(
+                          profileUrl,
+                          cacheManager: AppCacheManager.instance,
+                        )
+                      : null,
+                  child: profileUrl == null || profileUrl.isEmpty
+                      ? Icon(Icons.person, color: Colors.white)
+                      : null,
                 ),
                 Positioned(
                   bottom: -2,
@@ -458,11 +527,14 @@ class _NotificationTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: badgeColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.scaffoldBackgroundColor, width: 2),
+                      border: Border.all(
+                        color: theme.scaffoldBackgroundColor,
+                        width: 2,
+                      ),
                     ),
                     child: Icon(badgeIcon, size: 12, color: Colors.white),
                   ),
-                )
+                ),
               ],
             ),
 

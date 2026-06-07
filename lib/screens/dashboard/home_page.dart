@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/blog_post_card.dart';
@@ -11,18 +10,21 @@ import '../../services/api_service.dart';
 class HomePage extends StatefulWidget {
   final ScrollController scrollController;
   final ScrollController recommendedScrollController;
+  final ValueChanged<bool>? onScrollChange;
 
   const HomePage({
     super.key,
     required this.scrollController,
     required this.recommendedScrollController,
+    this.onScrollChange,
   });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ScrollController _localScrollController = ScrollController();
   bool _isScrolled = false;
@@ -36,7 +38,12 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
       if (_localScrollController.hasClients) {
         bool scrolled = _localScrollController.offset > 0;
         if (scrolled != _isScrolled) {
-          setState(() => _isScrolled = scrolled);
+          setState(() {
+            _isScrolled = scrolled;
+          });
+          if (widget.onScrollChange != null) {
+            widget.onScrollChange!(scrolled);
+          }
         }
       }
     });
@@ -67,6 +74,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
             floating: true,
             snap: true,
             elevation: 0,
+            scrolledUnderElevation: 0,
+            shadowColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
             backgroundColor: Colors.transparent,
             automaticallyImplyLeading: false,
             toolbarHeight: 0,
@@ -74,24 +84,24 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
             expandedHeight: 0,
 
             bottom: PreferredSize(
-              preferredSize: Size.fromHeight(48),
-              child: ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                  child: Container(
-                    color: theme.scaffoldBackgroundColor.withOpacity(0.85),
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: SisapaTheme.blue,
-                      unselectedLabelColor: theme.hintColor,
-                      indicatorColor: SisapaTheme.blue,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      tabs: [
-                        Tab(text: t.translate('home_recent')),
-                        Tab(text: t.translate('home_recommended')),
-                      ],
-                    ),
-                  ),
+              preferredSize: const Size.fromHeight(48),
+              child: FrostedLayer(
+                blur: _isScrolled ? FrostedGlassTokens.controlBlurSigma : 0.001,
+                tint: _isScrolled
+                    ? theme.scaffoldBackgroundColor.withOpacity(0.82)
+                    : Colors.transparent,
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: SisapaTheme.blue,
+                  unselectedLabelColor: theme.hintColor,
+                  indicatorColor: SisapaTheme.blue,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  dividerColor: Colors.transparent,
+                  dividerHeight: 0,
+                  tabs: [
+                    Tab(text: t.translate('home_recent')),
+                    Tab(text: t.translate('home_recommended')),
+                  ],
                 ),
               ),
             ),
@@ -122,14 +132,18 @@ class _PostFeedList extends StatefulWidget {
   final String feedType;
   final double refreshOffset;
 
-  const _PostFeedList({required this.scrollController, required this.feedType, required this.refreshOffset});
+  const _PostFeedList({
+    required this.scrollController,
+    required this.feedType,
+    required this.refreshOffset,
+  });
 
   @override
   State<_PostFeedList> createState() => _PostFeedListState();
 }
 
-class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveClientMixin {
-
+class _PostFeedListState extends State<_PostFeedList>
+    with AutomaticKeepAliveClientMixin {
   final ApiService _api = ApiService();
   List<Map<String, dynamic>> _posts = [];
   Map<String, dynamic> _userData = {};
@@ -148,15 +162,18 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
 
   Future<void> _loadData() async {
     if (!mounted) return;
-    setState(() { _isLoading = true; _hasError = false; });
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final results = await Future.wait([
-          widget.feedType == 'recommended' 
-            ? _api.getPersonalizedRecommendations() 
-            : _api.getPosts(limit: 50),
+          widget.feedType == 'recommended'
+              ? _api.getPersonalizedRecommendations()
+              : _api.getPosts(limit: 50),
           _api.getUser(user.uid),
         ]);
         if (mounted) {
@@ -168,13 +185,17 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
         }
       }
     } catch (e) {
-      if (mounted) setState(() { _isLoading = false; _hasError = true; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
     }
   }
 
   Future<void> _refresh() async {
     await _loadData();
-    if(mounted) setState(() => _refreshKey = DateTime.now().toString());
+    if (mounted) setState(() => _refreshKey = DateTime.now().toString());
   }
 
   @override
@@ -187,7 +208,8 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
     var t = AppLocalizations.of(context)!;
 
     if (_isLoading) return Center(child: CircularProgressIndicator());
-    if (_hasError) return CommonErrorWidget(message: t.translate('home_error_loading'));
+    if (_hasError)
+      return CommonErrorWidget(message: t.translate('home_error_loading'));
 
     List<Map<String, dynamic>> docs = List.from(_posts);
 
@@ -195,16 +217,23 @@ class _PostFeedListState extends State<_PostFeedList> with AutomaticKeepAliveCli
     // Note: visibility filtering is now handled server-side
 
     if (docs.isEmpty) {
-       return Center(
-         child: Column(
-           mainAxisAlignment: MainAxisAlignment.center,
-           children: [
-             Icon(Icons.feed_outlined, size: 64, color: Colors.grey.withOpacity(0.5)),
-             SizedBox(height: 16),
-             Text(t.translate('home_no_posts'), style: TextStyle(color: Colors.grey)),
-           ],
-         ),
-       );
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.feed_outlined,
+              size: 64,
+              color: Colors.grey.withOpacity(0.5),
+            ),
+            SizedBox(height: 16),
+            Text(
+              t.translate('home_no_posts'),
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
     }
 
     return RefreshIndicator(

@@ -2,11 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const functions = require('@google-cloud/functions-framework');
 const { authMiddleware } = require('./middleware/auth');
+const { adminMiddleware } = require('./middleware/admin');
 
 const usersRouter = require('./routes/users');
 const postRoutes = require('./routes/posts');
 const communityRoutes = require('./routes/communities');
 const exploreRoutes = require('./routes/explore');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -24,6 +26,7 @@ app.use('/api/users', authMiddleware, usersRouter);
 app.use('/api/posts', authMiddleware, postRoutes);
 app.use('/api/communities', authMiddleware, communityRoutes);
 app.use('/api/explore', authMiddleware, exploreRoutes);
+app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);
 
 // 404
 app.use((req, res) => {

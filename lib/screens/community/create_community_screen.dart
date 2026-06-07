@@ -29,7 +29,12 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
 
   Future<void> _pickVerificationDoc() async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: ImageSource.gallery, imageQuality: 80);
+    final XFile? pickedFile = await picker.pickImage(
+      maxWidth: 1920,
+      maxHeight: 1920,
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (pickedFile != null) {
       setState(() {
         _verificationDoc = File(pickedFile.path);
@@ -42,12 +47,24 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     var t = AppLocalizations.of(context)!;
 
     if (_nameController.text.isEmpty) {
-      OverlayService().showTopNotification(context, t.translate('comm_create_error_name'), Icons.warning, (){}, color: Colors.orange);
+      OverlayService().showTopNotification(
+        context,
+        t.translate('comm_create_error_name'),
+        Icons.warning,
+        () {},
+        color: Colors.orange,
+      );
       return;
     }
 
     if (_selectedCategory != 'casual' && _verificationDoc == null) {
-      OverlayService().showTopNotification(context, t.translate('comm_create_error_doc'), Icons.attach_file, (){}, color: Colors.red);
+      OverlayService().showTopNotification(
+        context,
+        t.translate('comm_create_error_doc'),
+        Icons.attach_file,
+        () {},
+        color: Colors.red,
+      );
       return;
     }
 
@@ -71,14 +88,27 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
         allowMemberPosts: _allowMemberPosts,
       );
 
-      if(mounted) {
-        OverlayService().showTopNotification(context, t.translate('comm_create_success'), Icons.check_circle, (){}, color: Colors.green);
+      if (mounted) {
+        OverlayService().showTopNotification(
+          context,
+          t.translate('comm_create_success'),
+          Icons.check_circle,
+          () {},
+          color: Colors.green,
+        );
         Navigator.pop(context);
       }
     } catch (e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('comm_create_error_generic'), Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('comm_create_error_generic'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     } finally {
-      if(mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -91,7 +121,9 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     final bool isOfficial = _selectedCategory != 'casual';
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.translate('comm_create_title'))), // "Create Public Channel"
+      appBar: FrostedAppBar(
+        title: Text(t.translate('comm_create_title')),
+      ), // "Create Public Channel"
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -99,24 +131,62 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
           children: [
             Text(
               t.translate('comm_create_subtitle'), // "Establish a new voice..."
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
             SizedBox(height: 24),
 
             // TYPE SELECTION
-            Text(t.translate('comm_type_label'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              t.translate('comm_type_label'),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             SizedBox(height: 8),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(border: Border.all(color: theme.dividerColor), borderRadius: BorderRadius.circular(12), color: theme.cardColor),
+              decoration: BoxDecoration(
+                border: Border.all(color: theme.dividerColor),
+                borderRadius: BorderRadius.circular(12),
+                color: theme.cardColor,
+              ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _selectedCategory,
                   isExpanded: true,
                   items: [
-                    DropdownMenuItem(value: 'casual', child: Row(children: [Icon(Icons.tag_faces, color: Colors.orange), SizedBox(width: 8), Text(t.translate('comm_type_casual'))])),
-                    DropdownMenuItem(value: 'partner_official', child: Row(children: [Icon(Icons.verified_outlined, color: Colors.blueGrey), SizedBox(width: 8), Text(t.translate('comm_type_partner'))])),
-                    DropdownMenuItem(value: 'pnj_official', child: Row(children: [Icon(Icons.account_balance, color: SisapaTheme.blue), SizedBox(width: 8), Text(t.translate('comm_type_official'))])),
+                    DropdownMenuItem(
+                      value: 'casual',
+                      child: Row(
+                        children: [
+                          Icon(Icons.tag_faces, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text(t.translate('comm_type_casual')),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'partner_official',
+                      child: Row(
+                        children: [
+                          Icon(Icons.verified_outlined, color: Colors.blueGrey),
+                          SizedBox(width: 8),
+                          Text(t.translate('comm_type_partner')),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'pnj_official',
+                      child: Row(
+                        children: [
+                          Icon(Icons.account_balance, color: SisapaTheme.blue),
+                          SizedBox(width: 8),
+                          Text(t.translate('comm_type_official')),
+                        ],
+                      ),
+                    ),
                   ],
                   onChanged: (val) => setState(() => _selectedCategory = val!),
                 ),
@@ -128,22 +198,63 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               SizedBox(height: 24),
               Container(
                 padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: SisapaTheme.blue.withOpacity(0.3))),
+                decoration: BoxDecoration(
+                  color: SisapaTheme.blue.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: SisapaTheme.blue.withOpacity(0.3)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [Icon(Icons.gpp_good, color: SisapaTheme.blue), SizedBox(width: 8), Text(t.translate('comm_verify_req'), style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue))]),
+                    Row(
+                      children: [
+                        Icon(Icons.gpp_good, color: SisapaTheme.blue),
+                        SizedBox(width: 8),
+                        Text(
+                          t.translate('comm_verify_req'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: SisapaTheme.blue,
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: 8),
-                    Text(t.translate('comm_verify_desc'), style: TextStyle(fontSize: 13, color: theme.textTheme.bodyMedium?.color)),
+                    Text(
+                      t.translate('comm_verify_desc'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
+                    ),
                     SizedBox(height: 12),
                     InkWell(
                       onTap: _pickVerificationDoc,
                       child: Container(
-                        height: 120, width: double.infinity,
-                        decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(8), border: Border.all(color: theme.dividerColor)),
+                        height: 120,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: theme.dividerColor),
+                        ),
                         child: _verificationDoc == null
-                          ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.cloud_upload_outlined, size: 32, color: theme.hintColor), SizedBox(height: 8), Text(t.translate('comm_upload_doc_hint'), style: TextStyle(color: theme.hintColor))])
-                          : Image.file(_verificationDoc!, fit: BoxFit.cover),
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_upload_outlined,
+                                    size: 32,
+                                    color: theme.hintColor,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    t.translate('comm_upload_doc_hint'),
+                                    style: TextStyle(color: theme.hintColor),
+                                  ),
+                                ],
+                              )
+                            : Image.file(_verificationDoc!, fit: BoxFit.cover),
                       ),
                     ),
                   ],
@@ -156,13 +267,24 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
             // DETAILS
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: t.translate('comm_name_label'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), prefixIcon: Icon(Icons.badge_outlined)),
+              decoration: InputDecoration(
+                labelText: t.translate('comm_name_label'),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
             ),
             SizedBox(height: 16),
             TextField(
               controller: _descController,
               maxLines: 3,
-              decoration: InputDecoration(labelText: t.translate('comm_desc_label'), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+              decoration: InputDecoration(
+                labelText: t.translate('comm_desc_label'),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
 
             SizedBox(height: 24),
@@ -181,12 +303,30 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _create,
-                style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white, padding: EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SisapaTheme.blue,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
                 child: _isLoading
-                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(isOfficial ? t.translate('comm_submit_verify') : t.translate('comm_create_btn')),
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        isOfficial
+                            ? t.translate('comm_submit_verify')
+                            : t.translate('comm_create_btn'),
+                      ),
               ),
-            )
+            ),
           ],
         ),
       ),

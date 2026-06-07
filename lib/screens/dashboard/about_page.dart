@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
@@ -9,7 +8,9 @@ class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
   Future<void> _launchRepo() async {
-    final Uri url = Uri.parse('https://github.com/blankony/myfirebaseflutterapp');
+    final Uri url = Uri.parse(
+      'https://github.com/blankony/myfirebaseflutterapp',
+    );
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         throw Exception('Could not launch $url');
@@ -30,7 +31,7 @@ class AboutPage extends StatelessWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text(t('about_page_title')),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -65,10 +66,14 @@ class AboutPage extends StatelessWidget {
                           color: SisapaTheme.blue.withOpacity(0.2),
                           blurRadius: 20,
                           spreadRadius: 2,
-                        )
+                        ),
                       ],
                     ),
-                    child: Image.asset('images/app_icon.png', height: 80, width: 80),
+                    child: Image.asset(
+                      'images/app_icon.png',
+                      height: 80,
+                      width: 80,
+                    ),
                   ),
 
                   SizedBox(height: 24),
@@ -82,7 +87,6 @@ class AboutPage extends StatelessWidget {
                       letterSpacing: 1.2,
                     ),
                   ),
-
 
                   SizedBox(height: 32),
 
@@ -123,7 +127,8 @@ class AboutPage extends StatelessWidget {
                           t('about_app_desc'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             height: 1.5,
-                            color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+                            color: theme.textTheme.bodyMedium?.color
+                                ?.withOpacity(0.85),
                           ),
                         ),
                         SizedBox(height: 16),
@@ -132,7 +137,11 @@ class AboutPage extends StatelessWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.school, color: SisapaTheme.blue, size: 20),
+                            Icon(
+                              Icons.school,
+                              color: SisapaTheme.blue,
+                              size: 20,
+                            ),
                             SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -200,7 +209,10 @@ class AboutPage extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: _launchRepo,
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
                       side: BorderSide(color: SisapaTheme.blue, width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
@@ -235,7 +247,12 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCreatorProfile(BuildContext context, String name, String nim, String imagePath) {
+  Widget _buildCreatorProfile(
+    BuildContext context,
+    String name,
+    String nim,
+    String imagePath,
+  ) {
     final theme = Theme.of(context);
 
     return Container(
@@ -247,10 +264,7 @@ class AboutPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: SisapaTheme.blue.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: SisapaTheme.blue.withOpacity(0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -258,10 +272,7 @@ class AboutPage extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: SisapaTheme.blue,
-                width: 2.5,
-              ),
+              border: Border.all(color: SisapaTheme.blue, width: 2.5),
             ),
             child: CircleAvatar(
               radius: 38,

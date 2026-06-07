@@ -8,6 +8,7 @@ import '../screens/dashboard/profile_page.dart';
 import '../screens/image_viewer_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../theme/avatar_helper.dart';
+import '../theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/overlay_service.dart';
 import '../services/api_service.dart';
@@ -41,8 +42,12 @@ class CommentTile extends StatefulWidget {
 class _CommentTileState extends State<CommentTile> {
   Future<void> _shareComment() async {
     final String text = widget.commentData['text'] ?? '';
-    final String? mediaUrl = widget.commentData['mediaUrl'] ?? widget.commentData['media_url'];
-    final String userName = widget.commentData['user_name'] ?? widget.commentData['userName'] ?? 'User';
+    final String? mediaUrl =
+        widget.commentData['mediaUrl'] ?? widget.commentData['media_url'];
+    final String userName =
+        widget.commentData['user_name'] ??
+        widget.commentData['userName'] ??
+        'User';
     final String shareText = 'Replying to post: "$text" - by $userName';
 
     try {
@@ -58,28 +63,51 @@ class _CommentTileState extends State<CommentTile> {
   }
 
   Future<void> _deleteComment() async {
-    final didConfirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Delete Reply"),
-        content: Text("Are you sure you want to delete this reply?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text("Cancel")),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text("Delete")),
-        ],
-      ),
-    ) ?? false;
+    final didConfirm =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => FrostedAlertDialog(
+            title: Text("Delete Reply"),
+            content: Text("Are you sure you want to delete this reply?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text("Delete"),
+              ),
+            ],
+          ),
+        ) ??
+        false;
     if (!didConfirm) return;
     try {
-      final success = await ApiService().deleteComment(widget.postId, widget.commentId);
+      final success = await ApiService().deleteComment(
+        widget.postId,
+        widget.commentId,
+      );
       if (success) {
-        if (mounted) OverlayService().showTopNotification(context, "Reply deleted", Icons.delete_outline, (){});
+        if (mounted)
+          OverlayService().showTopNotification(
+            context,
+            "Reply deleted",
+            Icons.delete_outline,
+            () {},
+          );
       } else {
         throw Exception("Delete failed");
       }
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, "Failed to delete", Icons.error, (){}, color: Colors.red);
+        OverlayService().showTopNotification(
+          context,
+          "Failed to delete",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
       }
     }
   }
@@ -91,10 +119,8 @@ class _CommentTileState extends State<CommentTile> {
       if (post != null && mounted) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => PostDetailScreen(
-              postId: widget.postId,
-              initialPostData: post,
-            ),
+            builder: (context) =>
+                PostDetailScreen(postId: widget.postId, initialPostData: post),
           ),
         );
       }
@@ -104,15 +130,19 @@ class _CommentTileState extends State<CommentTile> {
   }
 
   void _navigateToUserProfile() {
-    final commentUserId = widget.commentData['user_uid'] ?? widget.commentData['userId'];
+    final commentUserId =
+        widget.commentData['user_uid'] ?? widget.commentData['userId'];
     if (commentUserId == null) return;
     if (commentUserId == FirebaseAuth.instance.currentUser?.uid) return;
 
-    if (widget.currentProfileUserId != null && commentUserId == widget.currentProfileUserId) return;
+    if (widget.currentProfileUserId != null &&
+        commentUserId == widget.currentProfileUserId)
+      return;
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ProfilePage(userId: commentUserId, includeScaffold: true),
+        builder: (context) =>
+            ProfilePage(userId: commentUserId, includeScaffold: true),
       ),
     );
   }
@@ -124,14 +154,11 @@ class _CommentTileState extends State<CommentTile> {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
-        pageBuilder: (_, __, ___) => ImageViewerScreen(
-          imageUrl: url,
-          mediaType: type,
-          heroTag: heroTag,
-        ),
+        pageBuilder: (_, __, ___) =>
+            ImageViewerScreen(imageUrl: url, mediaType: type, heroTag: heroTag),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
-        }
+        },
       ),
     );
   }
@@ -148,50 +175,75 @@ class _CommentTileState extends State<CommentTile> {
 
   @override
   Widget build(BuildContext context) {
-    final String? profileImageUrl = widget.commentData['profile_image_url'] ?? widget.commentData['profileImageUrl'];
+    final String? profileImageUrl =
+        widget.commentData['profile_image_url'] ??
+        widget.commentData['profileImageUrl'];
 
     if (widget.showPostContext) {
       return FutureBuilder<Map<String, dynamic>?>(
         future: ApiService().getPost(widget.postId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data == null) return SizedBox.shrink();
+          if (!snapshot.hasData || snapshot.data == null)
+            return SizedBox.shrink();
           final parentData = snapshot.data!;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildParentPostSnippet(context, parentData),
-              _buildReplyTile(context, isThreaded: true, profileImageUrl: profileImageUrl),
+              _buildReplyTile(
+                context,
+                isThreaded: true,
+                profileImageUrl: profileImageUrl,
+              ),
             ],
           );
         },
       );
     }
-    return _buildReplyTile(context, isThreaded: true, profileImageUrl: profileImageUrl);
+    return _buildReplyTile(
+      context,
+      isThreaded: true,
+      profileImageUrl: profileImageUrl,
+    );
   }
 
-  Widget _buildParentPostSnippet(BuildContext context, Map<String, dynamic> parentData) {
+  Widget _buildParentPostSnippet(
+    BuildContext context,
+    Map<String, dynamic> parentData,
+  ) {
     final theme = Theme.of(context);
-    final String parentName = parentData['user_name'] ?? parentData['userName'] ?? 'Unknown';
+    final String parentName =
+        parentData['user_name'] ?? parentData['userName'] ?? 'Unknown';
     final String parentText = parentData['text'] ?? '';
 
-    final int parentIconId = parentData['avatar_icon_id'] ?? parentData['avatarIconId'] ?? 0;
-    final String? parentColorHex = parentData['avatar_hex'] ?? parentData['avatarHex'];
+    final int parentIconId =
+        parentData['avatar_icon_id'] ?? parentData['avatarIconId'] ?? 0;
+    final String? parentColorHex =
+        parentData['avatar_hex'] ?? parentData['avatarHex'];
     final Color parentAvatarBg = AvatarHelper.getColor(parentColorHex);
-    final String? parentProfileImageUrl = parentData['profile_image_url'] ?? parentData['profileImageUrl'];
+    final String? parentProfileImageUrl =
+        parentData['profile_image_url'] ?? parentData['profileImageUrl'];
 
     Widget parentAvatarWidget;
     if (parentProfileImageUrl != null && parentProfileImageUrl.isNotEmpty) {
       parentAvatarWidget = CircleAvatar(
         radius: 16,
         backgroundColor: Colors.transparent,
-        backgroundImage: CachedNetworkImageProvider(parentProfileImageUrl, cacheManager: AppCacheManager.instance),
+        backgroundImage: CachedNetworkImageProvider(
+          parentProfileImageUrl,
+          cacheManager: AppCacheManager.instance,
+        ),
       );
     } else {
       parentAvatarWidget = CircleAvatar(
         radius: 16,
         backgroundColor: parentAvatarBg,
-        child: Icon(AvatarHelper.getIcon(parentIconId), size: 16, color: Colors.white),
+        child: Icon(
+          AvatarHelper.getIcon(parentIconId),
+          size: 16,
+          color: Colors.white,
+        ),
       );
     }
 
@@ -210,10 +262,7 @@ class _CommentTileState extends State<CommentTile> {
                   children: [
                     parentAvatarWidget,
                     Expanded(
-                      child: Container(
-                        width: 2,
-                        color: theme.dividerColor,
-                      ),
+                      child: Container(width: 2, color: theme.dividerColor),
                     ),
                   ],
                 ),
@@ -223,13 +272,20 @@ class _CommentTileState extends State<CommentTile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("$parentName • Original Post", style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+                    Text(
+                      "$parentName • Original Post",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                     SizedBox(height: 2),
                     Text(
                       parentText,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.hintColor,
+                      ),
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 8),
                   ],
@@ -242,10 +298,15 @@ class _CommentTileState extends State<CommentTile> {
     );
   }
 
-  Widget _buildReplyTile(BuildContext context, {required bool isThreaded, String? profileImageUrl}) {
+  Widget _buildReplyTile(
+    BuildContext context, {
+    required bool isThreaded,
+    String? profileImageUrl,
+  }) {
     final data = widget.commentData;
     final theme = Theme.of(context);
-    final String userName = data['user_name'] ?? data['userName'] ?? 'Anonymous';
+    final String userName =
+        data['user_name'] ?? data['userName'] ?? 'Anonymous';
     final String text = data['text'] ?? '';
     final dynamic timestamp = data['created_at'] ?? data['timestamp'];
 
@@ -261,13 +322,20 @@ class _CommentTileState extends State<CommentTile> {
       avatarWidget = CircleAvatar(
         radius: 18,
         backgroundColor: Colors.transparent,
-        backgroundImage: CachedNetworkImageProvider(profileImageUrl, cacheManager: AppCacheManager.instance),
+        backgroundImage: CachedNetworkImageProvider(
+          profileImageUrl,
+          cacheManager: AppCacheManager.instance,
+        ),
       );
     } else {
       avatarWidget = CircleAvatar(
         radius: 18,
         backgroundColor: avatarBg,
-        child: Icon(AvatarHelper.getIcon(iconId), size: 20, color: Colors.white),
+        child: Icon(
+          AvatarHelper.getIcon(iconId),
+          size: 20,
+          color: Colors.white,
+        ),
       );
     }
 
@@ -283,13 +351,13 @@ class _CommentTileState extends State<CommentTile> {
                 width: 48,
                 color: Colors.transparent,
                 child: isThreaded
-                  ? CustomPaint(
-                      painter: ThreadLinePainter(
-                        context: context,
-                        isLast: widget.isLast,
-                      ),
-                    )
-                  : null,
+                    ? CustomPaint(
+                        painter: ThreadLinePainter(
+                          context: context,
+                          isLast: widget.isLast,
+                        ),
+                      )
+                    : null,
               ),
 
               Align(
@@ -307,7 +375,10 @@ class _CommentTileState extends State<CommentTile> {
 
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 8.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -329,8 +400,7 @@ class _CommentTileState extends State<CommentTile> {
                             _formatTimestamp(timestamp),
                             style: theme.textTheme.titleSmall,
                           ),
-                          if (widget.isOwner)
-                            _buildOptionsButton(),
+                          if (widget.isOwner) _buildOptionsButton(),
                         ],
                       ),
                       SizedBox(height: 2),
@@ -349,21 +419,40 @@ class _CommentTileState extends State<CommentTile> {
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: Colors.black,
-                                  border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
+                                  border: Border.all(
+                                    color: theme.dividerColor.withOpacity(0.3),
+                                  ),
                                 ),
                                 child: mediaType == 'video'
-                                    ? Center(child: Icon(Icons.play_circle_fill, color: Colors.white, size: 40))
+                                    ? Center(
+                                        child: Icon(
+                                          Icons.play_circle_fill,
+                                          color: Colors.white,
+                                          size: 40,
+                                        ),
+                                      )
                                     : Hero(
-                                        tag: '${widget.heroContextId}_${widget.commentId}_$mediaUrl',
-                                        child: CachedNetworkImage(cacheManager: AppCacheManager.instance, 
+                                        tag:
+                                            '${widget.heroContextId}_${widget.commentId}_$mediaUrl',
+                                        child: CachedNetworkImage(
+                                          cacheManager:
+                                              AppCacheManager.instance,
                                           imageUrl: mediaUrl,
                                           fit: BoxFit.cover,
                                           memCacheWidth: 400,
-                                          placeholder: (context, url) => Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                                          errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.grey),
+                                          placeholder: (context, url) => Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Icon(
+                                                Icons.error,
+                                                color: Colors.grey,
+                                              ),
                                         ),
                                       ),
-                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -377,7 +466,7 @@ class _CommentTileState extends State<CommentTile> {
                               icon: Icons.share_outlined,
                               text: "Share",
                               color: null,
-                              onTap: _shareComment
+                              onTap: _shareComment,
                             ),
                           ],
                         ),
@@ -425,13 +514,17 @@ class _CommentTileState extends State<CommentTile> {
       onTap: () {
         showModalBottomSheet(
           context: context,
+          backgroundColor: Colors.transparent,
           builder: (context) {
-            return Container(
+            return FrostedBottomSheet(
               child: Wrap(
                 children: [
                   ListTile(
                     leading: Icon(Icons.delete_outline, color: Colors.red),
-                    title: Text('Delete Reply', style: TextStyle(color: Colors.red)),
+                    title: Text(
+                      'Delete Reply',
+                      style: TextStyle(color: Colors.red),
+                    ),
                     onTap: () {
                       Navigator.of(context).pop();
                       _deleteComment();
@@ -443,7 +536,11 @@ class _CommentTileState extends State<CommentTile> {
           },
         );
       },
-      child: Icon(Icons.more_horiz, color: Theme.of(context).textTheme.titleSmall?.color, size: 18),
+      child: Icon(
+        Icons.more_horiz,
+        color: Theme.of(context).textTheme.titleSmall?.color,
+        size: 18,
+      ),
     );
   }
 }
@@ -478,7 +575,12 @@ class ThreadLinePainter extends CustomPainter {
 
       Path branchPath = Path();
       branchPath.moveTo(x, avatarCenterY - curveRadius);
-      branchPath.quadraticBezierTo(x, avatarCenterY, x + curveRadius, avatarCenterY);
+      branchPath.quadraticBezierTo(
+        x,
+        avatarCenterY,
+        x + curveRadius,
+        avatarCenterY,
+      );
       branchPath.lineTo(size.width, avatarCenterY);
 
       canvas.drawPath(branchPath, paint);

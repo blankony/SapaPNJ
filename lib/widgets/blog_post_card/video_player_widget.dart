@@ -38,7 +38,8 @@ class VideoPlayerWidget extends StatelessWidget {
             Image.file(
               File(thumbnailPath!),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => Container(color: Colors.black),
+              errorBuilder: (context, error, stack) =>
+                  Container(color: Colors.black),
             ),
 
           // Layer 2: Video Player (Hanya jika playing)
@@ -68,7 +69,11 @@ class VideoPlayerWidget extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
               ),
             ),
           ],

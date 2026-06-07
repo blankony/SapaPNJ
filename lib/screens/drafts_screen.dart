@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/draft_service.dart';
+import '../theme/app_theme.dart';
 import 'create_post_screen.dart';
 
 class DraftsScreen extends StatefulWidget {
@@ -57,7 +58,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => FrostedAlertDialog(
         title: const Text('Delete Draft'),
         content: const Text('Are you sure you want to delete this draft?'),
         actions: [
@@ -67,10 +68,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -112,38 +110,35 @@ class _DraftsScreenState extends State<DraftsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Draft Posts'),
-        elevation: 0,
-      ),
+      appBar: FrostedAppBar(title: const Text('Draft Posts'), elevation: 0),
       body: RefreshIndicator(
         onRefresh: _loadDrafts,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _drafts.isEmpty
-                ? _buildEmptyState()
-                : ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _drafts.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final draft = _drafts[index];
+            ? _buildEmptyState()
+            : ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: _drafts.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final draft = _drafts[index];
 
-                      return Dismissible(
-                        key: ValueKey(draft.id),
-                        direction: DismissDirection.endToStart,
-                        background: _buildDismissBackground(),
-                        confirmDismiss: (direction) async {
-                          // Prevent dismissible from auto-removing
-                          await _deleteDraft(index);
-                          return false; // We handle removal manually
-                        },
-                        child: _buildDraftCard(draft, index),
-                      );
+                  return Dismissible(
+                    key: ValueKey(draft.id),
+                    direction: DismissDirection.endToStart,
+                    background: _buildDismissBackground(),
+                    confirmDismiss: (direction) async {
+                      // Prevent dismissible from auto-removing
+                      await _deleteDraft(index);
+                      return false; // We handle removal manually
                     },
-                  ),
+                    child: _buildDraftCard(draft, index),
+                  );
+                },
+              ),
       ),
     );
   }
@@ -170,10 +165,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
               SizedBox(height: 8),
               Text(
                 'Your saved drafts will appear here',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],
           ),
@@ -216,115 +208,123 @@ class _DraftsScreenState extends State<DraftsScreen> {
     final DateTime date = DateTime.fromMillisecondsSinceEpoch(draft.timestamp);
     final String dateStr = DateFormat('dd/MM/yyyy HH:mm').format(date);
 
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CreatePostScreen(
-                draftData: draft,
+    return FrostedSurface(
+      margin: const EdgeInsets.all(4.0),
+      borderRadius: BorderRadius.circular(12),
+      tint: Theme.of(context).cardColor.withOpacity(
+        Theme.of(context).brightness == Brightness.dark ? 0.78 : 0.74,
+      ),
+      blur: FrostedGlassTokens.blurSigma,
+      border: Border.all(
+        color: FrostedGlassTokens.subtleBorderSide(context).color,
+      ),
+      boxShadow: FrostedGlassTokens.materialDepth(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreatePostScreen(draftData: draft),
               ),
-            ),
-          );
+            );
 
-          // Reload drafts if changes were made
-          if (result == true) {
-            await _loadDrafts();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image Thumbnail Section
-              if (images.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: _buildImageThumbnail(images.first),
-                    ),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+            // Reload drafts if changes were made
+            if (result == true) {
+              await _loadDrafts();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image Thumbnail Section
+                if (images.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.text_fields, color: Colors.grey),
-                  ),
-                ),
-
-              // Content Section
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      content.isEmpty ? '(No Content)' : content,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: content.isEmpty ? Colors.grey : Colors.black87,
+                      child: SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: _buildImageThumbnail(images.first),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: Colors.grey.shade600,
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.text_fields, color: Colors.grey),
+                    ),
+                  ),
+
+                // Content Section
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        content.isEmpty ? '(No Content)' : content,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: content.isEmpty ? Colors.grey : Colors.black87,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          dateStr,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        if (images.length > 1) ...[
-                          const SizedBox(width: 12),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
                           Icon(
-                            Icons.image,
+                            Icons.access_time,
                             size: 12,
                             color: Colors.grey.shade600,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${images.length}',
+                            dateStr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
                             ),
                           ),
+                          if (images.length > 1) ...[
+                            const SizedBox(width: 12),
+                            Icon(
+                              Icons.image,
+                              size: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${images.length}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              const Icon(Icons.chevron_right, color: Colors.grey),
-            ],
+                const Icon(Icons.chevron_right, color: Colors.grey),
+              ],
+            ),
           ),
         ),
       ),
@@ -335,12 +335,15 @@ class _DraftsScreenState extends State<DraftsScreen> {
     final theme = Theme.of(context);
     try {
       if (path.startsWith('http') || path.startsWith('https')) {
-        return CachedNetworkImage(cacheManager: AppCacheManager.instance, 
+        return CachedNetworkImage(
+          cacheManager: AppCacheManager.instance,
           imageUrl: path,
           fit: BoxFit.cover,
           memCacheWidth: 400,
-          placeholder: (context, url) => Container(color: theme.dividerColor.withOpacity(0.1)),
-          errorWidget: (context, url, error) => Icon(Icons.broken_image, color: theme.hintColor),
+          placeholder: (context, url) =>
+              Container(color: theme.dividerColor.withOpacity(0.1)),
+          errorWidget: (context, url, error) =>
+              Icon(Icons.broken_image, color: theme.hintColor),
         );
       } else {
         return Image.file(

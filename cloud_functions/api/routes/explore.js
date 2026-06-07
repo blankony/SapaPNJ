@@ -118,14 +118,14 @@ router.get('/discover', async (req, res) => {
       SELECT p.*,
              u.name as user_name, u.email as user_email,
              u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
-             u.name as user_name, u.avatar_icon_id as user_avatar_icon_id,
-             u.avatar_hex as user_avatar_hex, u.profile_image_url as user_profile_image_url,
              u.department_code,
+             c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified,
              (p.like_count * 2.0) + (p.comment_count * 3.0) +
              IF(TIMESTAMPDIFF(HOUR, p.created_at, NOW()) < 24, 20, 100.0 / (TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 5)) +
              IF(p.media_urls IS NOT NULL, 15.0, 0) AS score
       FROM posts p
       JOIN users u ON p.user_uid = u.uid
+      LEFT JOIN communities c ON p.community_id = c.id
       WHERE p.user_uid != ? 
         AND p.is_repost = FALSE
         AND p.user_uid NOT IN (SELECT following_uid FROM follows WHERE follower_uid = ?)
@@ -164,14 +164,14 @@ router.get('/recommended', async (req, res) => {
       SELECT p.*,
              u.name as user_name, u.email as user_email,
              u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
-             u.name as user_name, u.avatar_icon_id as user_avatar_icon_id,
-             u.avatar_hex as user_avatar_hex, u.profile_image_url as user_profile_image_url,
              u.department_code,
+             c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified,
              IF(f.following_uid IS NOT NULL, 50.0, 0.0) +
              IF(LOWER(p.text) REGEXP ?, 30.0, 0.0) +
              (80.0 / (TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 1)) AS score
       FROM posts p
       JOIN users u ON p.user_uid = u.uid
+      LEFT JOIN communities c ON p.community_id = c.id
       LEFT JOIN follows f ON f.following_uid = p.user_uid AND f.follower_uid = ?
       WHERE p.user_uid != ? AND p.is_repost = FALSE
       ORDER BY score DESC LIMIT 50;

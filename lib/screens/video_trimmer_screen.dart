@@ -10,7 +10,7 @@ class VideoTrimmerScreen extends StatefulWidget {
   const VideoTrimmerScreen({
     super.key,
     required this.file,
-    this.maxDurationSeconds = 600 // Default 10 mins
+    this.maxDurationSeconds = 600, // Default 10 mins
   });
 
   @override
@@ -39,7 +39,8 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
 
     setState(() {
       _isInitialized = true;
-      _totalDuration = _videoController.value.duration.inMilliseconds.toDouble();
+      _totalDuration = _videoController.value.duration.inMilliseconds
+          .toDouble();
       _endValue = _totalDuration;
 
       // Pre-trim to max limit if video is too long
@@ -89,7 +90,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
       'file': widget.file,
       'startTime': _startValue,
       'endTime': _endValue,
-      'duration': _endValue - _startValue
+      'duration': _endValue - _startValue,
     });
   }
 
@@ -105,97 +106,114 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: Text('Trim Video'),
         actions: [
           TextButton(
             onPressed: _isInitialized ? _saveTrimmedVideo : null,
-            child: Text("Done", style: TextStyle(fontWeight: FontWeight.bold, color: SisapaTheme.blue)),
-          ),
-        ],
-      ),
-      body: _isInitialized ? Column(
-        children: [
-          // 1. Video Preview Area (Fixed 4:3 or Aspect Ratio)
-          Expanded(
-            child: Container(
-              color: Colors.black,
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: _videoController.value.aspectRatio,
-                  child: VideoPlayer(_videoController),
-                ),
+            child: Text(
+              "Done",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: SisapaTheme.blue,
               ),
             ),
           ),
-
-          // 2. Controls & Slider
-          Container(
-            padding: EdgeInsets.all(16),
-            color: theme.scaffoldBackgroundColor,
-            child: Column(
+        ],
+      ),
+      body: _isInitialized
+          ? Column(
               children: [
-                // Play/Pause Control
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      iconSize: 40,
-                      icon: Icon(_isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
-                      color: SisapaTheme.blue,
-                      onPressed: () {
-                        setState(() {
-                          if (_isPlaying) {
-                            _videoController.pause();
-                            _isPlaying = false;
-                          } else {
-                            _playTrimmedSection();
-                          }
-                        });
-                      },
+                // 1. Video Preview Area (Fixed 4:3 or Aspect Ratio)
+                Expanded(
+                  child: Container(
+                    color: Colors.black,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: _videoController.value.aspectRatio,
+                        child: VideoPlayer(_videoController),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
 
-                SizedBox(height: 8),
+                // 2. Controls & Slider
+                Container(
+                  padding: EdgeInsets.all(16),
+                  color: theme.scaffoldBackgroundColor,
+                  child: Column(
+                    children: [
+                      // Play/Pause Control
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            iconSize: 40,
+                            icon: Icon(
+                              _isPlaying
+                                  ? Icons.pause_circle_filled
+                                  : Icons.play_circle_filled,
+                            ),
+                            color: SisapaTheme.blue,
+                            onPressed: () {
+                              setState(() {
+                                if (_isPlaying) {
+                                  _videoController.pause();
+                                  _isPlaying = false;
+                                } else {
+                                  _playTrimmedSection();
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
 
-                // Time Info
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(_formatDuration(_startValue)),
-                    Text("Duration: ${_formatDuration(_endValue - _startValue)}", style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(_formatDuration(_endValue)),
-                  ],
-                ),
+                      SizedBox(height: 8),
 
-                // Range Slider (The Trimmer UI)
-                RangeSlider(
-                  activeColor: SisapaTheme.blue,
-                  inactiveColor: Colors.grey.shade300,
-                  min: 0.0,
-                  max: _totalDuration,
-                  values: RangeValues(_startValue, _endValue),
-                  onChanged: (RangeValues values) {
-                    setState(() {
-                      _startValue = values.start;
-                      _endValue = values.end;
-                    });
-                    // Seek to start when user drags start handle
-                    _videoController.seekTo(Duration(milliseconds: _startValue.toInt()));
-                  },
-                ),
+                      // Time Info
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(_formatDuration(_startValue)),
+                          Text(
+                            "Duration: ${_formatDuration(_endValue - _startValue)}",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(_formatDuration(_endValue)),
+                        ],
+                      ),
 
-                SizedBox(height: 8),
-                Text(
-                  "Drag sliders to trim. Max length: ${widget.maxDurationSeconds ~/ 60} min.",
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                      // Range Slider (The Trimmer UI)
+                      RangeSlider(
+                        activeColor: SisapaTheme.blue,
+                        inactiveColor: Colors.grey.shade300,
+                        min: 0.0,
+                        max: _totalDuration,
+                        values: RangeValues(_startValue, _endValue),
+                        onChanged: (RangeValues values) {
+                          setState(() {
+                            _startValue = values.start;
+                            _endValue = values.end;
+                          });
+                          // Seek to start when user drags start handle
+                          _videoController.seekTo(
+                            Duration(milliseconds: _startValue.toInt()),
+                          );
+                        },
+                      ),
+
+                      SizedBox(height: 8),
+                      Text(
+                        "Drag sliders to trim. Max length: ${widget.maxDurationSeconds ~/ 60} min.",
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ) : Center(child: CircularProgressIndicator()),
+            )
+          : Center(child: CircularProgressIndicator()),
     );
   }
 }

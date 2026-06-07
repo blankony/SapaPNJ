@@ -30,10 +30,11 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return const Scaffold(body: Center(child: Text("Please log in")));
+    if (user == null)
+      return const Scaffold(body: Center(child: Text("Please log in")));
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: FrostedAppBar(
         title: const Text("Saved Posts"),
         centerTitle: true,
       ),
@@ -47,7 +48,10 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
           future: _bookmarksFuture,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-               return CommonErrorWidget(message: "Error loading bookmarks", isConnectionError: true);
+              return CommonErrorWidget(
+                message: "Error loading bookmarks",
+                isConnectionError: true,
+              );
             }
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -56,22 +60,29 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
             final posts = snapshot.data ?? [];
 
             if (posts.isEmpty) {
-               return ListView(
-                 physics: const AlwaysScrollableScrollPhysics(),
-                 children: [
-                   SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                   Center(
-                     child: Column(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                       children: [
-                         Icon(Icons.bookmark_border, size: 64, color: Theme.of(context).hintColor.withOpacity(0.5)),
-                         const SizedBox(height: 16),
-                         Text("No saved posts yet", style: TextStyle(color: Theme.of(context).hintColor)),
-                       ],
-                     ),
-                   ),
-                 ],
-               );
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.bookmark_border,
+                          size: 64,
+                          color: Theme.of(context).hintColor.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No saved posts yet",
+                          style: TextStyle(color: Theme.of(context).hintColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
             }
 
             return ListView.builder(
@@ -84,7 +95,9 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
                 return BlogPostCard(
                   postId: postId,
                   postData: postData,
-                  isOwner: postData['user_uid'] == user.uid || postData['userId'] == user.uid,
+                  isOwner:
+                      postData['user_uid'] == user.uid ||
+                      postData['userId'] == user.uid,
                   heroContextId: 'saved_posts', // Unique hero tag context
                 );
               },

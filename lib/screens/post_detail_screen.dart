@@ -47,13 +47,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   String? _mediaType;
 
   void _onCommentChanged(String text) {
-    setState(() { _predictedText = null; });
+    setState(() {
+      _predictedText = null;
+    });
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (text.trim().isEmpty) return;
       final suggestion = await _predictionService.getLocalPrediction(text);
       if (mounted && suggestion != null && suggestion.isNotEmpty) {
-        setState(() { _predictedText = suggestion; });
+        setState(() {
+          _predictedText = suggestion;
+        });
       }
     });
   }
@@ -64,8 +68,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       final separator = currentText.endsWith(' ') ? '' : ' ';
       final newText = "$currentText$separator$_predictedText ";
       _commentController.text = newText;
-      _commentController.selection = TextSelection.fromPosition(TextPosition(offset: newText.length));
-      setState(() { _predictedText = null; });
+      _commentController.selection = TextSelection.fromPosition(
+        TextPosition(offset: newText.length),
+      );
+      setState(() {
+        _predictedText = null;
+      });
       _onCommentChanged(newText);
     }
   }
@@ -77,30 +85,62 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (isVideo) {
         pickedFile = await picker.pickVideo(source: source);
         if (pickedFile != null) {
-          setState(() { _selectedMediaFile = File(pickedFile!.path); _mediaType = 'video'; });
+          setState(() {
+            _selectedMediaFile = File(pickedFile!.path);
+            _mediaType = 'video';
+          });
         }
       } else {
-        pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 70);
+        pickedFile = await picker.pickImage(
+          maxWidth: 1920,
+          maxHeight: 1920,
+          source: source,
+          imageQuality: 70,
+        );
         if (pickedFile != null) {
-          setState(() { _selectedMediaFile = File(pickedFile!.path); _mediaType = 'image'; });
+          setState(() {
+            _selectedMediaFile = File(pickedFile!.path);
+            _mediaType = 'image';
+          });
         }
       }
-    } catch (e) { debugPrint("Error picking media: $e"); }
+    } catch (e) {
+      debugPrint("Error picking media: $e");
+    }
   }
 
-  void _clearMedia() { setState(() { _selectedMediaFile = null; _mediaType = null; }); }
+  void _clearMedia() {
+    setState(() {
+      _selectedMediaFile = null;
+      _mediaType = null;
+    });
+  }
 
   Future<void> _postComment() async {
-    if ((_commentController.text.trim().isEmpty && _selectedMediaFile == null) || _currentUser == null || _isSending) return;
-    setState(() { _isSending = true; });
+    if ((_commentController.text.trim().isEmpty &&
+            _selectedMediaFile == null) ||
+        _currentUser == null ||
+        _isSending)
+      return;
+    setState(() {
+      _isSending = true;
+    });
 
     String? mediaUrl;
     if (_selectedMediaFile != null) {
       mediaUrl = await _cloudinaryService.uploadMedia(_selectedMediaFile!);
       if (mediaUrl == null) {
         if (mounted) {
-          OverlayService().showTopNotification(context, "Media upload failed", Icons.cloud_off, (){}, color: Colors.red);
-          setState(() { _isSending = false; });
+          OverlayService().showTopNotification(
+            context,
+            "Media upload failed",
+            Icons.cloud_off,
+            () {},
+            color: Colors.red,
+          );
+          setState(() {
+            _isSending = false;
+          });
         }
         return;
       }
@@ -117,13 +157,24 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (mounted) {
         _commentController.clear();
         _clearMedia();
-        setState(() { _predictedText = null; _isSending = false; });
+        setState(() {
+          _predictedText = null;
+          _isSending = false;
+        });
         FocusScope.of(context).unfocus();
       }
     } catch (e) {
       if (mounted) {
-        OverlayService().showTopNotification(context, "Failed to reply", Icons.error, (){}, color: Colors.red);
-        setState(() { _isSending = false; });
+        OverlayService().showTopNotification(
+          context,
+          "Failed to reply",
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
+        setState(() {
+          _isSending = false;
+        });
       }
     }
   }
@@ -138,7 +189,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Post")),
+      appBar: FrostedAppBar(title: Text("Post")),
       body: Column(
         children: [
           Expanded(
@@ -152,14 +203,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         return Padding(
                           padding: const EdgeInsets.all(32.0),
                           child: CommonErrorWidget(
-                            message: "Failed to load post. It may have been deleted.",
+                            message:
+                                "Failed to load post. It may have been deleted.",
                             isConnectionError: true,
                           ),
                         );
                       }
 
-                      if (snapshot.connectionState == ConnectionState.waiting && widget.initialPostData == null) {
-                        return Center(child: Padding(padding: const EdgeInsets.all(24.0), child: CircularProgressIndicator()));
+                      if (snapshot.connectionState == ConnectionState.waiting &&
+                          widget.initialPostData == null) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
                       }
 
                       Map<String, dynamic>? data = snapshot.hasData
@@ -167,13 +225,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           : widget.initialPostData;
 
                       if (data == null) {
-                         return Center(child: Padding(padding: const EdgeInsets.all(24.0), child: Text("Post not found or has been deleted.")));
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Text("Post not found or has been deleted."),
+                          ),
+                        );
                       }
 
                       return BlogPostCard(
                         postId: widget.postId,
                         postData: data,
-                        isOwner: (data['user_uid'] ?? data['userId']) == _currentUser?.uid,
+                        isOwner:
+                            (data['user_uid'] ?? data['userId']) ==
+                            _currentUser?.uid,
                         isClickable: false,
                         isDetailView: true,
                         heroContextId: widget.heroContextId,
@@ -196,9 +261,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _apiService.getComments(widget.postId),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16.0), child: Text("Could not load comments.", style: TextStyle(color: Colors.red)));
-        if (snapshot.connectionState == ConnectionState.waiting) return Padding(padding: const EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator()));
-        if (!snapshot.hasData || snapshot.data!.isEmpty) return Padding(padding: const EdgeInsets.all(32.0), child: Center(child: Text("No replies yet. Be the first!", style: TextStyle(color: Colors.grey))));
+        if (snapshot.hasError)
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "Could not load comments.",
+              style: TextStyle(color: Colors.red),
+            ),
+          );
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        if (!snapshot.hasData || snapshot.data!.isEmpty)
+          return Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Center(
+              child: Text(
+                "No replies yet. Be the first!",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
 
         final docs = snapshot.data!;
         return ListView.builder(
@@ -214,7 +299,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               commentId: data['id'] ?? '',
               commentData: data,
               postId: widget.postId,
-              isOwner: (data['user_uid'] ?? data['userId']) == _currentUser?.uid,
+              isOwner:
+                  (data['user_uid'] ?? data['userId']) == _currentUser?.uid,
               heroContextId: '${widget.heroContextId}_comments',
               isLast: isLast,
             );
@@ -227,11 +313,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget _buildCommentInput() {
     final theme = Theme.of(context);
     return Container(
-      padding: EdgeInsets.only(left: 12.0, right: 12.0, bottom: MediaQuery.of(context).padding.bottom + 12.0, top: 12.0),
+      padding: EdgeInsets.only(
+        left: 12.0,
+        right: 12.0,
+        bottom: MediaQuery.of(context).padding.bottom + 12.0,
+        top: 12.0,
+      ),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: theme.dividerColor)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, -2))]
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,13 +339,27 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 margin: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                  color: SisapaTheme.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.auto_awesome, size: 14, color: SisapaTheme.blue),
                     SizedBox(width: 6),
-                    Flexible(child: Text("Suggested: ...$_predictedText", style: TextStyle(color: SisapaTheme.blue, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Flexible(
+                      child: Text(
+                        "Suggested: ...$_predictedText",
+                        style: TextStyle(
+                          color: SisapaTheme.blue,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -257,16 +368,38 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           if (_selectedMediaFile != null)
             Container(
               margin: EdgeInsets.only(bottom: 10),
-              height: 100, width: 100,
+              height: 100,
+              width: 100,
               child: Stack(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: _mediaType == 'video'
-                        ? Container(color: Colors.black, child: Center(child: Icon(Icons.videocam, color: Colors.white)))
-                        : Image.file(_selectedMediaFile!, fit: BoxFit.cover, width: 100, height: 100),
+                        ? Container(
+                            color: Colors.black,
+                            child: Center(
+                              child: Icon(Icons.videocam, color: Colors.white),
+                            ),
+                          )
+                        : Image.file(
+                            _selectedMediaFile!,
+                            fit: BoxFit.cover,
+                            width: 100,
+                            height: 100,
+                          ),
                   ),
-                  Positioned(top: 2, right: 2, child: GestureDetector(onTap: _clearMedia, child: CircleAvatar(radius: 10, backgroundColor: Colors.black54, child: Icon(Icons.close, size: 14, color: Colors.white)))),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: GestureDetector(
+                      onTap: _clearMedia,
+                      child: CircleAvatar(
+                        radius: 10,
+                        backgroundColor: Colors.black54,
+                        child: Icon(Icons.close, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -274,26 +407,66 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              IconButton(onPressed: () => _pickMedia(ImageSource.gallery), icon: Icon(Icons.add_photo_alternate_outlined, color: SisapaTheme.blue), padding: EdgeInsets.zero, constraints: BoxConstraints(minWidth: 40, minHeight: 40)),
+              IconButton(
+                onPressed: () => _pickMedia(ImageSource.gallery),
+                icon: Icon(
+                  Icons.add_photo_alternate_outlined,
+                  color: SisapaTheme.blue,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+              ),
               Expanded(
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: theme.brightness == Brightness.dark ? SisapaTheme.darkGrey.withOpacity(0.2) : SisapaTheme.extraLightGrey, borderRadius: BorderRadius.circular(24)),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark
+                        ? SisapaTheme.darkGrey.withOpacity(0.2)
+                        : SisapaTheme.extraLightGrey,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   child: TextField(
                     controller: _commentController,
                     onChanged: _onCommentChanged,
-                    decoration: InputDecoration(hintText: "Post your reply", hintStyle: TextStyle(color: theme.hintColor), filled: false, border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4)),
-                    maxLines: 4, minLines: 1,
+                    decoration: InputDecoration(
+                      hintText: "Post your reply",
+                      hintStyle: TextStyle(color: theme.hintColor),
+                      filled: false,
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 4),
+                    ),
+                    maxLines: 4,
+                    minLines: 1,
                   ),
                 ),
               ),
               SizedBox(width: 8),
               _isSending
-                ? Padding(padding: const EdgeInsets.all(10.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-                : Container(
-                    decoration: BoxDecoration(color: SisapaTheme.blue, shape: BoxShape.circle),
-                    child: IconButton(onPressed: _postComment, icon: Icon(Icons.send_rounded, size: 20, color: Colors.white), padding: EdgeInsets.all(10), constraints: BoxConstraints()),
-                  ),
+                  ? Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: SisapaTheme.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        onPressed: _postComment,
+                        icon: Icon(
+                          Icons.send_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                        padding: EdgeInsets.all(10),
+                        constraints: BoxConstraints(),
+                      ),
+                    ),
             ],
           ),
         ],

@@ -20,6 +20,8 @@ import '../services/gcs_service.dart';
 import '../services/overlay_service.dart';
 import '../services/draft_service.dart';
 import '../services/bad_word_service.dart';
+import 'create_post/background_uploader.dart';
+import 'create_post/media_preview_item.dart';
 import 'video_trimmer_screen.dart';
 import '../services/app_localizations.dart';
 
@@ -55,7 +57,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   bool _canPost = false;
   bool _isProcessing = false;
-  String _scanStatus = 'none'; // State for scan status: 'loading', 'success', 'none'
+  String _scanStatus =
+      'none'; // State for scan status: 'loading', 'success', 'none'
   bool _isSavingDraft = false;
 
   String _visibility = 'public';
@@ -159,23 +162,37 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   bool _hasChanges() {
     bool textChanged = _postController.text.trim() != _initialText.trim();
-    bool mediaChanged = _selectedMediaFiles.isNotEmpty ||
-                        _existingMediaUrls.length != _initialMediaUrls.length;
+    bool mediaChanged =
+        _selectedMediaFiles.isNotEmpty ||
+        _existingMediaUrls.length != _initialMediaUrls.length;
     return textChanged || mediaChanged;
   }
 
   Future<void> _checkEmailVerification() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      try { await user.reload(); } catch (_) {}
+      try {
+        await user.reload();
+      } catch (_) {}
       if (!user.emailVerified) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           var t = AppLocalizations.of(context)!;
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              title: Row(children: [Icon(Icons.mark_email_unread, color: Colors.orange), SizedBox(width: 8), Expanded(child: Text(t.translate('verify_required'), overflow: TextOverflow.ellipsis))]),
+            builder: (context) => FrostedAlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.mark_email_unread, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      t.translate('verify_required'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
               content: Text(t.translate('verify_email_msg')),
               actions: [
                 TextButton(
@@ -183,11 +200,22 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     user.sendEmailVerification();
                     Navigator.pop(context);
                     Navigator.pop(context);
-                    OverlayService().showTopNotification(context, t.translate('post_verify_sent'), Icons.check, (){});
+                    OverlayService().showTopNotification(
+                      context,
+                      t.translate('post_verify_sent'),
+                      Icons.check,
+                      () {},
+                    );
                   },
-                  child: Text(t.translate('verify_resend'))
+                  child: Text(t.translate('verify_resend')),
                 ),
-                ElevatedButton(onPressed: () { Navigator.pop(context); Navigator.pop(context); }, child: Text(t.translate('general_close'))),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: Text(t.translate('general_close')),
+                ),
               ],
             ),
           );
@@ -210,7 +238,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           _myAvatarIconId = data['avatar_icon_id'] ?? 0;
           _myAvatarHex = data['avatar_hex'] ?? '';
           _myAvatarUrl = data['profile_image_url'];
-          _isAccountPrivate = data['is_private'] == true || data['is_private'] == 1 || data['isPrivate'] == true || data['isPrivate'] == 1;
+          _isAccountPrivate =
+              data['is_private'] == true ||
+              data['is_private'] == 1 ||
+              data['isPrivate'] == true ||
+              data['isPrivate'] == 1;
         });
       }
     } catch (_) {}
@@ -221,12 +253,23 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       try {
         final data = await api.getCommunity(_communityId!);
         if (data != null) {
-          _communityVerified = data['is_verified'] == true || data['is_verified'] == 1 || data['isVerified'] == true || data['isVerified'] == 1;
-          final bool allowMembers = data['allow_member_posts'] == true || data['allow_member_posts'] == 1 || data['allowMemberPosts'] == true || data['allowMemberPosts'] == 1;
+          _communityVerified =
+              data['is_verified'] == true ||
+              data['is_verified'] == 1 ||
+              data['isVerified'] == true ||
+              data['isVerified'] == 1;
+          final bool allowMembers =
+              data['allow_member_posts'] == true ||
+              data['allow_member_posts'] == 1 ||
+              data['allowMemberPosts'] == true ||
+              data['allowMemberPosts'] == 1;
           final String ownerId = data['owner_uid'] ?? '';
           final List admins = data['admins'] ?? [];
           final List editors = data['editors'] ?? [];
-          final bool isStaff = ownerId == user.uid || admins.contains(user.uid) || editors.contains(user.uid);
+          final bool isStaff =
+              ownerId == user.uid ||
+              admins.contains(user.uid) ||
+              editors.contains(user.uid);
 
           if (mounted) {
             setState(() {
@@ -238,23 +281,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           }
 
           if (!allowMembers && !isStaff) {
-            if(mounted) {
+            if (mounted) {
               setState(() => _isRestricted = true);
               var t = AppLocalizations.of(context)!;
-              OverlayService().showTopNotification(context, t.translate('post_restricted_admin'), Icons.lock, (){}, color: Colors.red);
+              OverlayService().showTopNotification(
+                context,
+                t.translate('post_restricted_admin'),
+                Icons.lock,
+                () {},
+                color: Colors.red,
+              );
               Navigator.pop(context);
             }
           }
         }
-      } catch (e) { debugPrint("Error checking community permissions: $e"); }
+      } catch (e) {
+        debugPrint("Error checking community permissions: $e");
+      }
     } else if (!_isEditing && widget.draftData == null) {
-      if (mounted) setState(() { _visibility = _isAccountPrivate ? 'followers' : 'public'; });
+      if (mounted)
+        setState(() {
+          _visibility = _isAccountPrivate ? 'followers' : 'public';
+        });
     }
   }
 
   void _checkCanPost() {
     final textNotEmpty = _postController.text.trim().isNotEmpty;
-    final hasMedia = _selectedMediaFiles.isNotEmpty || _existingMediaUrls.isNotEmpty;
+    final hasMedia =
+        _selectedMediaFiles.isNotEmpty || _existingMediaUrls.isNotEmpty;
     setState(() => _canPost = textNotEmpty || hasMedia);
   }
 
@@ -263,7 +318,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (user == null) return;
     try {
       final posts = await ApiService().getPosts(userUid: user.uid, limit: 20);
-      List<String> postHistory = posts.map((p) => (p['text'] ?? '').toString()).toList();
+      List<String> postHistory = posts
+          .map((p) => (p['text'] ?? '').toString())
+          .toList();
       _predictionService.learnFromUserPosts(postHistory);
     } catch (_) {}
   }
@@ -294,12 +351,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         safetySettings: [
           SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
           SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.medium),
-          SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.medium),
-          SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.medium),
-        ]
+          SafetySetting(
+            HarmCategory.sexuallyExplicit,
+            HarmBlockThreshold.medium,
+          ),
+          SafetySetting(
+            HarmCategory.dangerousContent,
+            HarmBlockThreshold.medium,
+          ),
+        ],
       );
 
-      int limit = _selectedMediaFiles.length > 3 ? 3 : _selectedMediaFiles.length;
+      int limit = _selectedMediaFiles.length > 3
+          ? 3
+          : _selectedMediaFiles.length;
 
       for (int i = 0; i < limit; i++) {
         final File imageFile = _selectedMediaFiles[i];
@@ -312,29 +377,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           mimeType = 'image/webp';
         }
 
-        final promptText = "Deskripsikan objek utama gambar ini dengan sangat singkat (max 1 kalimat).";
+        final promptText =
+            "Deskripsikan objek utama gambar ini dengan sangat singkat (max 1 kalimat).";
 
         final content = [
-          Content.multi([
-            TextPart(promptText),
-            DataPart(mimeType, imageBytes),
-          ])
+          Content.multi([TextPart(promptText), DataPart(mimeType, imageBytes)]),
         ];
 
         try {
           final response = await model.generateContent(content);
 
           if (response.text != null && response.text!.isNotEmpty) {
-             continue; // Safe
+            continue; // Safe
           } else {
-             // UNSAFE: Matikan loading segera dan tampilkan popup
-             if (mounted) {
-               setState(() => _isProcessing = false);
-               _showRejectDialog(t.translate('post_sensitive_content'));
-             }
-             return false;
+            // UNSAFE: Matikan loading segera dan tampilkan popup
+            if (mounted) {
+              setState(() => _isProcessing = false);
+              _showRejectDialog(t.translate('post_sensitive_content'));
+            }
+            return false;
           }
-
         } catch (e) {
           // ERROR/BLOCKED: Matikan loading segera dan tampilkan popup
           if (mounted) {
@@ -357,7 +419,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         setState(() => _isProcessing = false);
       }
       return true;
-
     } catch (e) {
       debugPrint("System Error in Image Check: $e");
       // System error (network etc) -> Fail open (allow) or closed? Usually fail open for user exp.
@@ -370,7 +431,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool _checkTextForBadWords(String text, {bool silent = false}) {
     if (_badwordGuard.containsBadLanguage(text)) {
       if (!silent) {
-         var t = AppLocalizations.of(context)!;
+        var t = AppLocalizations.of(context)!;
         _showRejectDialog(t.translate('post_bad_words'));
       }
       return true;
@@ -385,9 +446,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           lowerText.contains(" $cleanWord ") ||
           lowerText.startsWith("$cleanWord ") ||
           lowerText.endsWith(" $cleanWord")) {
-
         if (!silent) {
-           var t = AppLocalizations.of(context)!;
+          var t = AppLocalizations.of(context)!;
           _showRejectDialog("${t.translate('post_bad_words')} ($cleanWord)");
         }
         return true;
@@ -400,10 +460,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     var t = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(children: [Icon(Icons.gpp_bad, color: Colors.red), SizedBox(width: 8), Text(t.translate('general_rejected'))]),
-        content: Text("${t.translate('post_rejected_desc')}\n\nReason: $reason"),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.translate('general_edit'), style: TextStyle(color: SisapaTheme.blue)))],
+      builder: (ctx) => FrostedAlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.gpp_bad, color: Colors.red),
+            SizedBox(width: 8),
+            Text(t.translate('general_rejected')),
+          ],
+        ),
+        content: Text(
+          "${t.translate('post_rejected_desc')}\n\nReason: $reason",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              t.translate('general_edit'),
+              style: TextStyle(color: SisapaTheme.blue),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -415,7 +491,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (text.trim().isEmpty) return;
       final suggestion = await _predictionService.getLocalPrediction(text);
-      if (mounted && suggestion != null && suggestion.isNotEmpty) setState(() => _predictedText = suggestion);
+      if (mounted && suggestion != null && suggestion.isNotEmpty)
+        setState(() => _predictedText = suggestion);
     });
   }
 
@@ -423,8 +500,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_predictedText != null) {
       final newText = "${_postController.text.trimRight()} $_predictedText ";
       _postController.text = newText;
-      _postController.selection = TextSelection.fromPosition(TextPosition(offset: newText.length));
-      setState(() { _predictedText = null; _canPost = true; });
+      _postController.selection = TextSelection.fromPosition(
+        TextPosition(offset: newText.length),
+      );
+      setState(() {
+        _predictedText = null;
+        _canPost = true;
+      });
       _onTextChanged(newText);
     }
   }
@@ -432,12 +514,37 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void _showMediaSourceSelection({required bool isVideo}) {
     var t = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
-    showModalBottomSheet(context: context, builder: (context) {
-      return SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        ListTile(leading: const Icon(Icons.camera_alt), title: Text(t.translate('profile_camera')), onTap: () { Navigator.pop(context); _pickMedia(ImageSource.camera, isVideo: isVideo); }),
-        ListTile(leading: const Icon(Icons.photo_library), title: Text(t.translate('profile_gallery')), onTap: () { Navigator.pop(context); _pickMedia(ImageSource.gallery, isVideo: isVideo); }),
-      ]));
-    });
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return FrostedBottomSheet(
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: Text(t.translate('profile_camera')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickMedia(ImageSource.camera, isVideo: isVideo);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: Text(t.translate('profile_gallery')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickMedia(ImageSource.gallery, isVideo: isVideo);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<File?> _cropImage(File imageFile) async {
@@ -467,9 +574,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final picker = ImagePicker();
     try {
       if (isVideo) {
-        final XFile? pickedFile = await picker.pickVideo(source: source, maxDuration: const Duration(minutes: 10));
+        final XFile? pickedFile = await picker.pickVideo(
+          source: source,
+          maxDuration: const Duration(minutes: 10),
+        );
         if (pickedFile != null && mounted) {
-          final result = await Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoTrimmerScreen(file: File(pickedFile.path))));
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => VideoTrimmerScreen(file: File(pickedFile.path)),
+            ),
+          );
           if (result != null && result['file'] is File) {
             setState(() {
               _mediaType = 'video';
@@ -482,7 +596,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         }
       } else {
         if (source == ImageSource.gallery) {
-          final List<XFile> pickedFiles = await picker.pickMultiImage(imageQuality: 80);
+          final List<XFile> pickedFiles = await picker.pickMultiImage(
+            imageQuality: 80,
+          );
           if (pickedFiles.isNotEmpty) {
             List<File> croppedFiles = [];
             for (var xfile in pickedFiles) {
@@ -491,7 +607,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             }
             if (croppedFiles.isNotEmpty) {
               setState(() {
-                if (_mediaType == 'video') { _selectedMediaFiles = []; _existingMediaUrls = []; _existingPublicIds = []; }
+                if (_mediaType == 'video') {
+                  _selectedMediaFiles = [];
+                  _existingMediaUrls = [];
+                  _existingPublicIds = [];
+                }
                 _mediaType = 'image';
                 _selectedMediaFiles.addAll(croppedFiles);
                 _checkCanPost();
@@ -499,25 +619,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             }
           }
         } else {
-          final XFile? pickedFile = await picker.pickImage(maxWidth: 1920, maxHeight: 1920, source: source, imageQuality: 80);
+          final XFile? pickedFile = await picker.pickImage(
+            maxWidth: 1920,
+            maxHeight: 1920,
+            source: source,
+            imageQuality: 80,
+          );
           if (pickedFile != null) {
-             File? cropped = await _cropImage(File(pickedFile.path));
-             if (cropped != null) {
-                setState(() {
-                  if (_mediaType == 'video') { _selectedMediaFiles = []; _existingMediaUrls = []; _existingPublicIds = []; }
-                  _mediaType = 'image';
-                  _selectedMediaFiles.add(cropped);
-                  _checkCanPost();
-                });
-             }
+            File? cropped = await _cropImage(File(pickedFile.path));
+            if (cropped != null) {
+              setState(() {
+                if (_mediaType == 'video') {
+                  _selectedMediaFiles = [];
+                  _existingMediaUrls = [];
+                  _existingPublicIds = [];
+                }
+                _mediaType = 'image';
+                _selectedMediaFiles.add(cropped);
+                _checkCanPost();
+              });
+            }
           }
         }
       }
-    } catch (e) { debugPrint("Error picking media: $e"); }
+    } catch (e) {
+      debugPrint("Error picking media: $e");
+    }
   }
 
   void _removeFile(int index) {
-    setState(() { _selectedMediaFiles.removeAt(index); _checkCanPost(); if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty) _mediaType = null; });
+    setState(() {
+      _selectedMediaFiles.removeAt(index);
+      _checkCanPost();
+      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty)
+        _mediaType = null;
+    });
   }
 
   void _removeExistingUrl(int index) {
@@ -525,7 +661,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _existingMediaUrls.removeAt(index);
       if (_existingPublicIds.length > index) _existingPublicIds.removeAt(index);
       _checkCanPost();
-      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty) _mediaType = null;
+      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty)
+        _mediaType = null;
     });
   }
 
@@ -534,58 +671,79 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     FocusScope.of(context).unfocus();
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(t.translate('post_visibility_title'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-              if (_isAccountPrivate) ...[
-                 ListTile(
-                  leading: const Icon(Icons.people, color: SisapaTheme.blue),
-                  title: Text(t.translate('profile_followers')),
-                  subtitle: Text(t.translate('post_vis_followers_desc')),
-                  trailing: _visibility == 'followers' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
+        return FrostedBottomSheet(
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    t.translate('post_visibility_title'),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                if (_isAccountPrivate) ...[
+                  ListTile(
+                    leading: const Icon(Icons.people, color: SisapaTheme.blue),
+                    title: Text(t.translate('profile_followers')),
+                    subtitle: Text(t.translate('post_vis_followers_desc')),
+                    trailing: _visibility == 'followers'
+                        ? const Icon(Icons.check, color: SisapaTheme.blue)
+                        : null,
+                    onTap: () {
+                      setState(() => _visibility = 'followers');
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.public, color: Colors.grey),
+                    title: Text(t.translate('post_vis_public')),
+                    subtitle: Text(t.translate('post_vis_private_warn')),
+                    enabled: false,
+                  ),
+                ] else ...[
+                  ListTile(
+                    leading: const Icon(Icons.public, color: SisapaTheme.blue),
+                    title: Text(t.translate('post_vis_public')),
+                    subtitle: Text(t.translate('post_vis_public_desc')),
+                    trailing: _visibility == 'public'
+                        ? const Icon(Icons.check, color: SisapaTheme.blue)
+                        : null,
+                    onTap: () {
+                      setState(() => _visibility = 'public');
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+                ListTile(
+                  leading: const Icon(Icons.lock, color: Colors.red),
+                  title: Text(t.translate('post_vis_me')),
+                  trailing: _visibility == 'private'
+                      ? const Icon(Icons.check, color: SisapaTheme.blue)
+                      : null,
                   onTap: () {
-                    setState(() => _visibility = 'followers');
+                    setState(() => _visibility = 'private');
                     Navigator.pop(context);
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.public, color: Colors.grey),
-                  title: Text(t.translate('post_vis_public')),
-                  subtitle: Text(t.translate('post_vis_private_warn')),
-                  enabled: false,
-                ),
-              ] else ...[
-                ListTile(
-                  leading: const Icon(Icons.public, color: SisapaTheme.blue),
-                  title: Text(t.translate('post_vis_public')),
-                  subtitle: Text(t.translate('post_vis_public_desc')),
-                  trailing: _visibility == 'public' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
-                  onTap: () {
-                    setState(() => _visibility = 'public');
-                    Navigator.pop(context);
-                  },
-                ),
+                const SizedBox(height: 12),
               ],
-              ListTile(
-                leading: const Icon(Icons.lock, color: Colors.red),
-                title: Text(t.translate('post_vis_me')),
-                trailing: _visibility == 'private' ? const Icon(Icons.check, color: SisapaTheme.blue) : null,
-                onTap: () {
-                  setState(() => _visibility = 'private');
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         );
       },
@@ -615,7 +773,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       children: [
         Icon(icon, color: color, size: 18),
         const SizedBox(width: 6),
-        Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
         const SizedBox(width: 4),
         Icon(Icons.keyboard_arrow_down, color: color, size: 18),
       ],
@@ -630,7 +795,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_isEditing) {
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) => FrostedAlertDialog(
           title: Text(t.translate('post_discard_title')),
           content: Text(t.translate('post_discard_desc')),
           actions: [
@@ -640,7 +805,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(t.translate('post_discard'), style: TextStyle(color: Colors.red)),
+              child: Text(
+                t.translate('post_discard'),
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         ),
@@ -648,18 +816,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       return confirm ?? false;
     }
 
-    final String title = _currentDraftId != null ? t.translate('post_draft_update_title') : t.translate('post_draft_save_title');
-    final String content = _currentDraftId != null ? t.translate('post_draft_update_desc') : t.translate('post_draft_save_desc');
+    final String title = _currentDraftId != null
+        ? t.translate('post_draft_update_title')
+        : t.translate('post_draft_save_title');
+    final String content = _currentDraftId != null
+        ? t.translate('post_draft_update_desc')
+        : t.translate('post_draft_save_desc');
 
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => FrostedAlertDialog(
         title: Text(title),
         content: Text(content),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop('discard'),
-            child: Text(t.translate('post_discard'), style: TextStyle(color: Colors.red)),
+            child: Text(
+              t.translate('post_discard'),
+              style: TextStyle(color: Colors.red),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop('cancel'),
@@ -667,7 +842,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop('save'),
-            style: ElevatedButton.styleFrom(backgroundColor: SisapaTheme.blue, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SisapaTheme.blue,
+              foregroundColor: Colors.white,
+            ),
             child: Text(t.translate('general_save')),
           ),
         ],
@@ -691,19 +869,32 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       List<String> finalPublicIds = [..._existingPublicIds];
 
       if (_selectedMediaFiles.isNotEmpty) {
-        OverlayService().showTopNotification(context, t.translate('post_draft_uploading'), Icons.cloud_upload, (){});
+        OverlayService().showTopNotification(
+          context,
+          t.translate('post_draft_uploading'),
+          Icons.cloud_upload,
+          () {},
+        );
         for (var file in _selectedMediaFiles) {
           File fileToUp = file;
           if (_mediaType == 'video') {
-             try {
-               final MediaInfo? info = await VideoCompress.compressVideo(file.path, quality: VideoQuality.MediumQuality, deleteOrigin: false);
-               if (info != null && info.file != null) fileToUp = info.file!;
-             } catch(e) {}
+            try {
+              final MediaInfo? info = await VideoCompress.compressVideo(
+                file.path,
+                quality: VideoQuality.MediumQuality,
+                deleteOrigin: false,
+              );
+              if (info != null && info.file != null) fileToUp = info.file!;
+            } catch (e) {}
           }
-          final response = await _cloudinaryService.uploadFileWithDetails(fileToUp, _mediaType == 'video' ? 'video' : 'auto');
+          final response = await _cloudinaryService.uploadFileWithDetails(
+            fileToUp,
+            _mediaType == 'video' ? 'video' : 'auto',
+          );
           if (response.secureUrl != null) {
             finalUrls.add(response.secureUrl!);
-            if (response.publicId != null) finalPublicIds.add(response.publicId!);
+            if (response.publicId != null)
+              finalPublicIds.add(response.publicId!);
           }
         }
       }
@@ -722,11 +913,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
 
       await _draftService.saveDraft(draft);
-      if (mounted) OverlayService().showTopNotification(context, t.translate('post_draft_saved'), Icons.save, (){}, color: Colors.green);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('post_draft_saved'),
+          Icons.save,
+          () {},
+          color: Colors.green,
+        );
     } catch (e) {
-      if(mounted) OverlayService().showTopNotification(context, t.translate('post_draft_failed'), Icons.error, (){}, color: Colors.red);
+      if (mounted)
+        OverlayService().showTopNotification(
+          context,
+          t.translate('post_draft_failed'),
+          Icons.error,
+          () {},
+          color: Colors.red,
+        );
     } finally {
-      if(mounted) setState(() => _isSavingDraft = false);
+      if (mounted) setState(() => _isSavingDraft = false);
     }
   }
 
@@ -760,11 +965,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       'failed': t.translate('post_failed'),
     };
 
-    final String communityNameSafe = _communityName ?? t.translate('general_community');
-    final String myUserNameSafe = _myUserName == 'Anonymous' ? t.translate('general_anonymous') : _myUserName;
+    final String communityNameSafe =
+        _communityName ?? t.translate('general_community');
+    final String myUserNameSafe = _myUserName == 'Anonymous'
+        ? t.translate('general_anonymous')
+        : _myUserName;
 
     if (overlayState != null) {
-      _BackgroundUploader.startUploadSequence(
+      BackgroundUploader.startUploadSequence(
         overlayState: overlayState,
         text: _postController.text,
         filesToUpload: _selectedMediaFiles,
@@ -805,16 +1013,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     var t = AppLocalizations.of(context)!;
 
-    final String? currentAvatarUrl = _postAsCommunity ? _communityIcon : _myAvatarUrl;
+    final String? currentAvatarUrl = _postAsCommunity
+        ? _communityIcon
+        : _myAvatarUrl;
     final String currentDisplayName = _postAsCommunity
         ? (_communityName ?? t.translate('general_community'))
-        : (_myUserName == 'Anonymous' ? t.translate('general_anonymous') : _myUserName);
+        : (_myUserName == 'Anonymous'
+              ? t.translate('general_anonymous')
+              : _myUserName);
 
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
+        appBar: FrostedAppBar(
           leading: IconButton(
             icon: Icon(Icons.close, color: theme.primaryColor),
             onPressed: () async {
@@ -828,60 +1040,99 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   children: [
                     const Icon(Icons.groups, color: SisapaTheme.blue, size: 20),
                     const SizedBox(width: 8),
-                    Flexible(child: Text(_communityName ?? t.translate('general_community'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+                    Flexible(
+                      child: Text(
+                        _communityName ?? t.translate('general_community'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 )
-              : Text(_isEditing ? t.translate('post_edit_title') : t.translate('post_create_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              : Text(
+                  _isEditing
+                      ? t.translate('post_edit_title')
+                      : t.translate('post_create_title'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
           centerTitle: false,
           actions: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: ElevatedButton(
-                onPressed: _canPost && !_isProcessing && !_isSavingDraft ? _submitPost : null,
+                onPressed: _canPost && !_isProcessing && !_isSavingDraft
+                    ? _submitPost
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: SisapaTheme.blue,
                   foregroundColor: Colors.white,
-                  shape: const StadiumBorder()
+                  shape: const StadiumBorder(),
                 ),
                 child: Text(t.translate('post_button')),
               ),
-            )
+            ),
           ],
         ),
         body: Stack(
           children: [
             Positioned.fill(
               child: SingleChildScrollView(
-                padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: bottomInset + 80),
+                padding: EdgeInsets.only(
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: bottomInset + 80,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_hasOfficialAuthority)
                       Container(
                         margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.dividerColor)
+                          border: Border.all(color: theme.dividerColor),
                         ),
                         child: Row(
                           children: [
-                            Text(t.translate('post_identity_label'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(
+                              t.translate('post_identity_label'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                             const Spacer(),
                             ChoiceChip(
                               label: Text(t.translate('post_identity_me')),
                               selected: !_postAsCommunity,
-                              onSelected: (val) => setState(() => _postAsCommunity = false),
+                              onSelected: (val) =>
+                                  setState(() => _postAsCommunity = false),
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: 8),
                             ChoiceChip(
                               label: Text(t.translate('nav_community')),
                               selected: _postAsCommunity,
-                              onSelected: (val) => setState(() => _postAsCommunity = true),
+                              onSelected: (val) =>
+                                  setState(() => _postAsCommunity = true),
                               selectedColor: SisapaTheme.blue.withOpacity(0.2),
-                              labelStyle: TextStyle(color: _postAsCommunity ? SisapaTheme.blue : null),
+                              labelStyle: TextStyle(
+                                color: _postAsCommunity
+                                    ? SisapaTheme.blue
+                                    : null,
+                              ),
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -893,12 +1144,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       children: [
                         CircleAvatar(
                           radius: 24,
-                          backgroundColor: currentAvatarUrl != null ? Colors.transparent : AvatarHelper.getColor(_myAvatarHex),
-                          backgroundImage: currentAvatarUrl != null ? CachedNetworkImageProvider(currentAvatarUrl, cacheManager: AppCacheManager.instance) : null,
+                          backgroundColor: currentAvatarUrl != null
+                              ? Colors.transparent
+                              : AvatarHelper.getColor(_myAvatarHex),
+                          backgroundImage: currentAvatarUrl != null
+                              ? CachedNetworkImageProvider(
+                                  currentAvatarUrl,
+                                  cacheManager: AppCacheManager.instance,
+                                )
+                              : null,
                           child: currentAvatarUrl == null
                               ? (_postAsCommunity
-                                  ? const Icon(Icons.groups, color: Colors.white)
-                                  : Icon(AvatarHelper.getIcon(_myAvatarIconId), color: Colors.white))
+                                    ? const Icon(
+                                        Icons.groups,
+                                        color: Colors.white,
+                                      )
+                                    : Icon(
+                                        AvatarHelper.getIcon(_myAvatarIconId),
+                                        color: Colors.white,
+                                      ))
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -911,15 +1175,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: _postAsCommunity ? SisapaTheme.blue : null
-                                )
+                                  color: _postAsCommunity
+                                      ? SisapaTheme.blue
+                                      : null,
+                                ),
                               ),
                               if (_isCommunityContext)
                                 Text(
                                   _postAsCommunity
-                                    ? t.translate('post_as_comm_id')
-                                    : "${t.translate('post_in_comm')} $_communityName",
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)
+                                      ? t.translate('post_as_comm_id')
+                                      : "${t.translate('post_in_comm')} $_communityName",
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
 
                               TextField(
@@ -930,20 +1200,45 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 maxLines: null,
                                 style: const TextStyle(fontSize: 18),
                                 decoration: InputDecoration(
-                                  hintText: _postAsCommunity ? t.translate('post_hint_official') : t.translate('post_hint'),
+                                  hintText: _postAsCommunity
+                                      ? t.translate('post_hint_official')
+                                      : t.translate('post_hint'),
                                   border: InputBorder.none,
                                 ),
                               ),
 
-                              if (_existingMediaUrls.isNotEmpty || _selectedMediaFiles.isNotEmpty)
+                              if (_existingMediaUrls.isNotEmpty ||
+                                  _selectedMediaFiles.isNotEmpty)
                                 Container(
                                   height: 100,
                                   margin: const EdgeInsets.only(top: 10),
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
                                     children: [
-                                      ..._existingMediaUrls.asMap().entries.map((e) => _buildPreviewItem(CachedNetworkImageProvider(e.value, cacheManager: AppCacheManager.instance), () => _removeExistingUrl(e.key), _mediaType == 'video')),
-                                      ..._selectedMediaFiles.asMap().entries.map((e) => _buildPreviewItem(FileImage(e.value), () => _removeFile(e.key), _mediaType == 'video')),
+                                      ..._existingMediaUrls.asMap().entries.map(
+                                        (e) => MediaPreviewItem(
+                                          imageProvider:
+                                              CachedNetworkImageProvider(
+                                                e.value,
+                                                cacheManager:
+                                                    AppCacheManager.instance,
+                                              ),
+                                          onRemove: () =>
+                                              _removeExistingUrl(e.key),
+                                          isVideo: _mediaType == 'video',
+                                        ),
+                                      ),
+                                      ..._selectedMediaFiles
+                                          .asMap()
+                                          .entries
+                                          .map(
+                                            (e) => MediaPreviewItem(
+                                              imageProvider: FileImage(e.value),
+                                              onRemove: () =>
+                                                  _removeFile(e.key),
+                                              isVideo: _mediaType == 'video',
+                                            ),
+                                          ),
                                     ],
                                   ),
                                 ),
@@ -954,10 +1249,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   child: Container(
                                     margin: const EdgeInsets.only(top: 8),
                                     padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(color: SisapaTheme.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                    child: Text("${t.translate('search_suggestion_prefix')} $_predictedText", style: const TextStyle(color: SisapaTheme.blue)),
+                                    decoration: BoxDecoration(
+                                      color: SisapaTheme.blue.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      "${t.translate('search_suggestion_prefix')} $_predictedText",
+                                      style: const TextStyle(
+                                        color: SisapaTheme.blue,
+                                      ),
+                                    ),
                                   ),
-                                )
+                                ),
                             ],
                           ),
                         ),
@@ -969,23 +1272,40 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
 
             Positioned(
-              left: 0, right: 0, bottom: bottomInset,
+              left: 0,
+              right: 0,
+              bottom: bottomInset,
               child: Container(
                 color: theme.scaffoldBackgroundColor,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
-                    IconButton(icon: const Icon(Icons.image, color: SisapaTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: false)),
-                    IconButton(icon: const Icon(Icons.videocam, color: SisapaTheme.blue), onPressed: () => _showMediaSourceSelection(isVideo: true)),
+                    IconButton(
+                      icon: const Icon(Icons.image, color: SisapaTheme.blue),
+                      onPressed: () =>
+                          _showMediaSourceSelection(isVideo: false),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.videocam, color: SisapaTheme.blue),
+                      onPressed: () => _showMediaSourceSelection(isVideo: true),
+                    ),
 
                     if (!_isCommunityContext)
                       InkWell(
                         onTap: _showVisibilityPicker,
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.brightness == Brightness.dark ? Colors.white10 : Colors.grey[200],
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.white10
+                                : Colors.grey[200],
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: _buildVisibilityButtonContent(),
@@ -1009,11 +1329,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               key: const ValueKey('success'),
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.check_circle, color: Colors.green, size: 60),
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 60,
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   t.translate('general_success'),
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             )
@@ -1021,11 +1349,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               key: const ValueKey('loading'),
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const CircularProgressIndicator(color: Colors.white),
+                                const CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   t.translate('post_scan_images'),
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1036,249 +1370,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPreviewItem(ImageProvider imageProvider, VoidCallback onRemove, bool isVideo) {
-    return Stack(
-      children: [
-        Container(
-          width: 100, margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(8), image: !isVideo ? DecorationImage(image: imageProvider, fit: BoxFit.cover) : null),
-          child: isVideo ? const Center(child: Icon(Icons.play_circle_fill, color: Colors.white)) : null,
-        ),
-        Positioned(top: 4, right: 12, child: GestureDetector(onTap: onRemove, child: Container(padding: const EdgeInsets.all(2), decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle), child: const Icon(Icons.close, size: 14, color: Colors.white))))
-      ],
-    );
-  }
-}
-
-// ... (Bagian _BackgroundUploader dan _PostUploadOverlay tidak berubah dari sebelumnya)
-class _BackgroundUploader {
-  static void startUploadSequence({
-    required OverlayState overlayState,
-    required String text,
-    required List<File> filesToUpload,
-    required List<String> existingMediaUrls,
-    String? mediaType,
-    required String visibility,
-    required bool isEditing,
-    String? postId,
-    required String uid,
-    required String userName,
-    required String userEmail,
-    required int avatarIconId,
-    required String avatarHex,
-    required String? profileImageUrl,
-    required String? communityId,
-    String? communityName,
-    String? communityIcon,
-    bool? communityVerified,
-    bool isCommunityIdentity = false,
-    String? draftIdToDelete,
-    required Map<String, String> localizedStrings,
-  }) {
-    final GlobalKey<_PostUploadOverlayState> overlayKey = GlobalKey();
-    late OverlayEntry overlayEntry;
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => _PostUploadOverlay(
-        key: overlayKey,
-        onDismissRequest: () {
-          overlayKey.currentState?.dismissToIcon();
-        },
-        initialMessage: localizedStrings['uploading'] ?? "Uploading...",
-      ),
-    );
-
-    overlayState.insert(overlayEntry);
-
-    _processUpload(
-      text, filesToUpload, existingMediaUrls, mediaType, visibility, isEditing, postId,
-      uid, userName, userEmail, avatarIconId, avatarHex, profileImageUrl, communityId,
-      communityName, communityIcon, communityVerified, isCommunityIdentity, draftIdToDelete,
-      localizedStrings,
-      (status) => overlayKey.currentState?.updateStatus(status),
-      () {
-        overlayKey.currentState?.handleSuccess(localizedStrings['posted'] ?? "Posted");
-        Future.delayed(const Duration(seconds: 7), () { if (overlayEntry.mounted) overlayEntry.remove(); });
-      },
-      (error) {
-        overlayKey.currentState?.handleFailure(localizedStrings['failed'] ?? "Failed");
-        Future.delayed(const Duration(seconds: 4), () { if (overlayEntry.mounted) overlayEntry.remove(); });
-      },
-    );
-  }
-
-  static Future<void> _processUpload(
-    String text, List<File> files, List<String> urls, String? type, String vis, bool edit, String? pid,
-    String uid, String uName, String uEmail, int icon, String hex, String? img, String? comId,
-    String? comName, String? comIcon, bool? comVerified, bool isCommunityIdentity, String? draftId,
-    Map<String, String> locStrings,
-    Function(String) onProgress, VoidCallback onSuccess, Function(dynamic) onFailure,
-  ) async {
-    try {
-      List<String> finalUrls = [...urls];
-      if (files.isNotEmpty) {
-        int count = 1;
-        for (var file in files) {
-          String msg = locStrings['uploading'] ?? "Uploading...";
-          onProgress("$msg ($count/${files.length})");
-
-          File fileToUp = file;
-          if (type == 'video') {
-             try {
-               final MediaInfo? info = await VideoCompress.compressVideo(file.path, quality: VideoQuality.MediumQuality, deleteOrigin: false);
-               if (info != null && info.file != null) fileToUp = info.file!;
-             } catch(e) {}
-          }
-          String? url = await GcsService().uploadMedia(fileToUp);
-          if (url != null) {
-            finalUrls.add(url);
-          } else {
-            onFailure(locStrings['uploading_error'] ?? "Failed to upload media. Please check your internet connection.");
-            return;
-          }
-          count++;
-        }
-      }
-
-      if (finalUrls.isEmpty && text.isEmpty) { onFailure(locStrings['no_content'] ?? "No content"); return; }
-
-      final api = ApiService();
-
-      if (edit && pid != null) {
-        await api.updatePost(pid, {
-          'text': text,
-          'media_urls': finalUrls,
-          'visibility': vis,
-        });
-      } else {
-        await api.createPost(
-          text: text,
-          mediaUrls: finalUrls.isNotEmpty ? finalUrls : null,
-          mediaType: type,
-          visibility: vis,
-          communityId: comId,
-          communityName: comName,
-          communityIcon: comIcon,
-          communityVerified: comVerified ?? false,
-          isCommunityIdentity: isCommunityIdentity,
-        );
-
-        if (draftId != null) {
-          await DraftService().discardDraftAfterPosting(draftId);
-        }
-      }
-
-      if (type == 'video') await VideoCompress.deleteAllCache();
-      onSuccess();
-    } catch (e) {
-      onFailure(e);
-    }
-  }
-}
-
-class _PostUploadOverlay extends StatefulWidget {
-  final VoidCallback onDismissRequest;
-  final String initialMessage;
-  const _PostUploadOverlay({super.key, required this.onDismissRequest, required this.initialMessage});
-  @override State<_PostUploadOverlay> createState() => _PostUploadOverlayState();
-}
-
-class _PostUploadOverlayState extends State<_PostUploadOverlay> {
-  bool _isCardVisible = true;
-  bool _isMiniVisible = false;
-  bool _isSuccess = false;
-  bool _isError = false;
-  bool _dismissedBySwipe = false;
-  late String _message;
-  Timer? _autoDismissTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _message = widget.initialMessage;
-  }
-
-  double get _targetTop => MediaQuery.of(context).padding.top + 10;
-  double get _targetRight => 12.0;
-  double get _miniRight => 60.0;
-
-  @override void dispose() { _autoDismissTimer?.cancel(); super.dispose(); }
-  void updateStatus(String status) { if (!mounted) return; setState(() => _message = status); }
-  void dismissToIcon() { setState(() => _isCardVisible = false); Future.delayed(const Duration(milliseconds: 400), () { if (mounted) setState(() => _isMiniVisible = true); }); }
-
-  void _expandToCard() {
-    setState(() { _isMiniVisible = false; });
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        setState(() {
-            _isCardVisible = true;
-            _dismissedBySwipe = false;
-        });
-        _autoDismissTimer?.cancel();
-        _autoDismissTimer = Timer(const Duration(seconds: 2), dismissToIcon);
-      }
-    });
-  }
-
-  void handleSuccess(String msg) { setState(() { _isSuccess = true; _message = msg; }); if (_isMiniVisible) Future.delayed(const Duration(seconds: 5), () { if (mounted) setState(() => _isMiniVisible = false); }); else if (_isCardVisible) Future.delayed(const Duration(seconds: 5), () { if (mounted) setState(() => _isCardVisible = false); }); }
-  void handleFailure(String msg) { setState(() { _isError = true; _message = msg; }); if (!_isCardVisible) setState(() => _isCardVisible = true); }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Stack(
-      children: [
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 400), curve: Curves.easeOutQuart,
-          top: _targetTop, right: _isMiniVisible ? _miniRight : _targetRight,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 300),
-            opacity: _isMiniVisible ? 1.0 : 0.0,
-            child: GestureDetector(
-              onTap: _expandToCard,
-              child: Material(
-                elevation: 4,
-                shape: const CircleBorder(),
-                color: _isSuccess ? Colors.green : theme.cardColor,
-                child: Container(
-                  width: 36, height: 36, padding: const EdgeInsets.all(8),
-                  child: _isSuccess
-                    ? const Icon(Icons.check, size: 20, color: Colors.white)
-                    : const CircularProgressIndicator(strokeWidth: 3, color: SisapaTheme.blue),
-                ),
-              ),
-            ),
-          ),
-        ),
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 500), curve: Curves.easeInOutBack,
-          top: _isCardVisible ? _targetTop : -100, left: 16, right: _targetRight,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 300), opacity: _isCardVisible ? 1.0 : 0.0,
-            child: _dismissedBySwipe
-                ? const SizedBox.shrink()
-                : Dismissible(
-                    key: const ValueKey('upload_card_dismiss'),
-                    direction: DismissDirection.horizontal,
-                    onDismissed: (_) {
-                        setState(() => _dismissedBySwipe = true);
-                        widget.onDismissRequest();
-                    },
-                    child: Material(
-                        elevation: 8, borderRadius: BorderRadius.circular(12), color: theme.cardColor,
-                        child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [
-                        if (_isSuccess) const Icon(Icons.check_circle, color: SisapaTheme.blue) else if (_isError) const Icon(Icons.error, color: Colors.red) else const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                        const SizedBox(width: 12), Expanded(child: Text(_message, style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color))),
-                        ])),
-                    ),
-                ),
-          ),
-        )
-      ],
     );
   }
 }

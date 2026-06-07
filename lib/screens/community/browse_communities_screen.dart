@@ -12,7 +12,8 @@ class BrowseCommunitiesScreen extends StatefulWidget {
   const BrowseCommunitiesScreen({super.key});
 
   @override
-  State<BrowseCommunitiesScreen> createState() => _BrowseCommunitiesScreenState();
+  State<BrowseCommunitiesScreen> createState() =>
+      _BrowseCommunitiesScreenState();
 }
 
 class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
@@ -65,12 +66,18 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
     }
   }
 
-  void _showUnfollowDialog(BuildContext context, String communityId, String communityName) {
+  void _showUnfollowDialog(
+    BuildContext context,
+    String communityId,
+    String communityName,
+  ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => FrostedAlertDialog(
         title: Text("Unfollow $communityName?"),
-        content: const Text("Apakah Anda yakin ingin berhenti mengikuti komunitas ini?"),
+        content: const Text(
+          "Apakah Anda yakin ingin berhenti mengikuti komunitas ini?",
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
@@ -82,7 +89,10 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
               Navigator.pop(ctx);
               _unfollowCommunity(communityId);
             },
-            child: const Text("Unfollow", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Unfollow",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -96,21 +106,24 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
     final theme = Theme.of(context);
 
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // Sorting logic
-    final sortedCommunities = List<Map<String, dynamic>>.from(_communities)..sort((a, b) {
-      final catA = a['category'] ?? 'casual';
-      final catB = b['category'] ?? 'casual';
-      final priority = {'pnj_official': 3, 'partner_official': 2, 'casual': 1};
-      return (priority[catB] ?? 0).compareTo(priority[catA] ?? 0);
-    });
+    final sortedCommunities = List<Map<String, dynamic>>.from(_communities)
+      ..sort((a, b) {
+        final catA = a['category'] ?? 'casual';
+        final catB = b['category'] ?? 'casual';
+        final priority = {
+          'pnj_official': 3,
+          'partner_official': 2,
+          'casual': 1,
+        };
+        return (priority[catB] ?? 0).compareTo(priority[catA] ?? 0);
+      });
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.translate('comm_explore_title'))),
+      appBar: FrostedAppBar(title: Text(t.translate('comm_explore_title'))),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadCommunities,
@@ -140,58 +153,117 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
               }
 
               return RepaintBoundary(
-                child: Card(
+                child: FrostedSurface(
                   margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    leading: CircleAvatar(
-                      radius: 28,
-                      backgroundColor: badgeColor.withOpacity(0.1),
-                      backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl, cacheManager: AppCacheManager.instance) : null,
-                      child: imageUrl == null ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold)) : null,
+                  borderRadius: BorderRadius.circular(16),
+                  tint: theme.cardColor.withOpacity(
+                    theme.brightness == Brightness.dark ? 0.78 : 0.74,
+                  ),
+                  blur: FrostedGlassTokens.blurSigma,
+                  border: Border.all(
+                    color: FrostedGlassTokens.subtleBorderSide(context).color,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 28,
+                        backgroundColor: badgeColor.withOpacity(0.1),
+                        backgroundImage: imageUrl != null
+                            ? CachedNetworkImageProvider(
+                                imageUrl,
+                                cacheManager: AppCacheManager.instance,
+                              )
+                            : null,
+                        child: imageUrl == null
+                            ? Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: TextStyle(
+                                  color: badgeColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
+                      ),
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (category == 'pnj_official')
+                            const Icon(
+                              Icons.verified,
+                              size: 16,
+                              color: SisapaTheme.blue,
+                            ),
+                        ],
+                      ),
+                      subtitle: Row(
+                        children: [
+                          Icon(badgeIcon, size: 12, color: badgeColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            "$followerCount ${t.translate('comm_followers_count')}",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      trailing: isFollowing
+                          ? IconButton(
+                              tooltip: "Unfollow",
+                              icon: const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 28,
+                              ),
+                              onPressed: () {
+                                if (user != null) {
+                                  _showUnfollowDialog(context, id, name);
+                                }
+                              },
+                            )
+                          : IconButton(
+                              tooltip: "Follow",
+                              icon: const Icon(
+                                Icons.add_circle,
+                                color: SisapaTheme.blue,
+                                size: 28,
+                              ),
+                              onPressed: () {
+                                if (user != null) {
+                                  _followCommunity(id);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Please login to follow channels",
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CommunityDetailScreen(
+                              communityId: id,
+                              communityData: data,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.bold))),
-                        if (category == 'pnj_official') const Icon(Icons.verified, size: 16, color: SisapaTheme.blue),
-                      ],
-                    ),
-                    subtitle: Row(
-                      children: [
-                        Icon(badgeIcon, size: 12, color: badgeColor),
-                        const SizedBox(width: 4),
-                        Text("$followerCount ${t.translate('comm_followers_count')}", style: const TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                    trailing: isFollowing
-                      ? IconButton(
-                          tooltip: "Unfollow",
-                          icon: const Icon(Icons.check_circle, color: Colors.green, size: 28),
-                          onPressed: () {
-                            if (user != null) {
-                              _showUnfollowDialog(context, id, name);
-                            }
-                          },
-                        )
-                      : IconButton(
-                          tooltip: "Follow",
-                          icon: const Icon(Icons.add_circle, color: SisapaTheme.blue, size: 28),
-                          onPressed: () {
-                            if (user != null) {
-                              _followCommunity(id);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Please login to follow channels"))
-                              );
-                            }
-                          },
-                        ),
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => CommunityDetailScreen(communityId: id, communityData: data)
-                      ));
-                    },
                   ),
                 ),
               );

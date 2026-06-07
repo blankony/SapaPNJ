@@ -35,7 +35,8 @@ class PostMediaPreview extends StatefulWidget {
   State<PostMediaPreview> createState() => _PostMediaPreviewState();
 }
 
-class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepAliveClientMixin {
+class _PostMediaPreviewState extends State<PostMediaPreview>
+    with AutomaticKeepAliveClientMixin {
   int _currentIndex = 0;
   String? _cachedThumbnailPath;
   bool _isPlaying = false;
@@ -115,9 +116,13 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
 
     Navigator.of(context).push(
       PageRouteBuilder(
-        opaque: false, // Penting agar background feed tetap terlihat samar di awal
-        barrierColor: Colors.black, // Warna latar belakang saat transisi selesai
-        transitionDuration: const Duration(milliseconds: 350), // Duration slightly slowed down for smoothness
+        opaque:
+            false, // Penting agar background feed tetap terlihat samar di awal
+        barrierColor:
+            Colors.black, // Warna latar belakang saat transisi selesai
+        transitionDuration: const Duration(
+          milliseconds: 350,
+        ), // Duration slightly slowed down for smoothness
         reverseTransitionDuration: const Duration(milliseconds: 300),
         // FadeTransition di sini hanya mempengaruhi opacity background (scrim),
         // DOES NOT affect the Hero content flying above it.
@@ -145,7 +150,8 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
     // --- BAGIAN VIDEO ---
     if (widget.mediaType == 'video' && widget.mediaUrls.isNotEmpty) {
       final String videoUrl = widget.mediaUrls.first;
-      final String heroTag = '${widget.heroContextId}_${widget.postId}_$videoUrl';
+      final String heroTag =
+          '${widget.heroContextId}_${widget.postId}_$videoUrl';
 
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -155,19 +161,20 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
           child: Hero(
             tag: heroTag,
             // flightShuttleBuilder opsional: menjaga tampilan tetap solid selama terbang
-            flightShuttleBuilder: (flightContext, animation, direction, fromContext, toContext) {
-              return Material(
-                color: Colors.transparent,
-                child: AspectRatio(
-                  aspectRatio: 4 / 3, // Pertahankan rasio saat terbang
-                  child: VideoPlayerWidget(
-                    controller: widget.videoController,
-                    thumbnailPath: _cachedThumbnailPath,
-                    isPlaying: _isPlaying,
-                  ),
-                ),
-              );
-            },
+            flightShuttleBuilder:
+                (flightContext, animation, direction, fromContext, toContext) {
+                  return Material(
+                    color: Colors.transparent,
+                    child: AspectRatio(
+                      aspectRatio: 4 / 3, // Pertahankan rasio saat terbang
+                      child: VideoPlayerWidget(
+                        controller: widget.videoController,
+                        thumbnailPath: _cachedThumbnailPath,
+                        isPlaying: _isPlaying,
+                      ),
+                    ),
+                  );
+                },
             child: Material(
               color: Colors.transparent,
               child: AspectRatio(
@@ -196,20 +203,26 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                     aspectRatio: 1.0,
                     child: PageView.builder(
                       itemCount: widget.mediaUrls.length,
-                      onPageChanged: (index) => setState(() => _currentIndex = index),
+                      onPageChanged: (index) =>
+                          setState(() => _currentIndex = index),
                       itemBuilder: (context, index) {
                         final url = widget.mediaUrls[index];
-                        final tag = '${widget.heroContextId}_${widget.postId}_$url';
+                        final tag =
+                            '${widget.heroContextId}_${widget.postId}_$url';
                         return GestureDetector(
                           onTap: () => _navigateToViewer(context, url),
                           child: Hero(
                             tag: tag,
-                            child: CachedNetworkImage(cacheManager: AppCacheManager.instance, 
+                            child: CachedNetworkImage(
+                              cacheManager: AppCacheManager.instance,
                               imageUrl: url,
                               fit: BoxFit.cover,
                               memCacheWidth: 600,
-                              placeholder: (context, url) => Container(color: theme.dividerColor.withOpacity(0.1)),
-                              errorWidget: (context, url, error) => const Icon(Icons.error),
+                              placeholder: (context, url) => Container(
+                                color: theme.dividerColor.withOpacity(0.1),
+                              ),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error),
                             ),
                           ),
                         );
@@ -219,15 +232,21 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                 : AspectRatio(
                     aspectRatio: 4 / 3,
                     child: GestureDetector(
-                      onTap: () => _navigateToViewer(context, widget.mediaUrls.first),
+                      onTap: () =>
+                          _navigateToViewer(context, widget.mediaUrls.first),
                       child: Hero(
-                        tag: '${widget.heroContextId}_${widget.postId}_${widget.mediaUrls.first}',
-                        child: CachedNetworkImage(cacheManager: AppCacheManager.instance, 
+                        tag:
+                            '${widget.heroContextId}_${widget.postId}_${widget.mediaUrls.first}',
+                        child: CachedNetworkImage(
+                          cacheManager: AppCacheManager.instance,
                           imageUrl: widget.mediaUrls.first,
                           fit: BoxFit.cover,
                           memCacheWidth: 600,
-                          placeholder: (context, url) => Container(color: theme.dividerColor.withOpacity(0.1)),
-                          errorWidget: (context, url, error) => const Icon(Icons.error),
+                          placeholder: (context, url) => Container(
+                            color: theme.dividerColor.withOpacity(0.1),
+                          ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
                         ),
                       ),
                     ),
@@ -237,14 +256,21 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     "${_currentIndex + 1}/${widget.mediaUrls.length}",
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -279,7 +305,13 @@ class _PostMediaPreviewState extends State<PostMediaPreview> with AutomaticKeepA
                 children: [
                   Icon(Icons.ondemand_video, color: Colors.white, size: 50),
                   SizedBox(height: 8),
-                  Text('Watch on YouTube', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Watch on YouTube',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
