@@ -6,6 +6,8 @@ import '../../theme/app_theme.dart';
 
 import '../../services/app_localizations.dart';
 import '../../services/api_service.dart';
+import '../../services/feed_preferences_service.dart';
+import 'feed_controls_sheet.dart';
 
 class HomePage extends StatefulWidget {
   final ScrollController scrollController;
@@ -31,7 +33,11 @@ class _HomePageState extends State<HomePage>
 
   late TabController _tabController;
   final ScrollController _localScrollController = ScrollController();
+  final FeedPreferencesService _feedPreferencesService =
+      FeedPreferencesService.instance;
   bool _isScrolled = false;
+  FeedPreferences _feedPreferences = FeedPreferences.defaults;
+  int _feedPreferencesVersion = 0;
 
   @override
   void initState() {
@@ -43,6 +49,7 @@ class _HomePageState extends State<HomePage>
     widget.recommendedScrollController.addListener(_handleScrollChange);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _handleScrollChange());
+    _loadFeedPreferences();
   }
 
   @override
@@ -74,6 +81,34 @@ class _HomePageState extends State<HomePage>
   void _handleTabChange() {
     widget.onFeedTabChange?.call(_tabController.index);
     _handleScrollChange();
+  }
+
+  Future<void> _loadFeedPreferences() async {
+    final preferences = await _feedPreferencesService.load();
+    if (!mounted || preferences == _feedPreferences) return;
+    setState(() {
+      _feedPreferences = preferences;
+      _feedPreferencesVersion++;
+    });
+  }
+
+  Future<void> _showFeedControls() async {
+    final updated = await showModalBottomSheet<FeedPreferences>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return FeedControlsSheet(initialPreferences: _feedPreferences);
+      },
+    );
+
+    if (updated == null || updated == _feedPreferences) return;
+    await _feedPreferencesService.save(updated);
+    if (!mounted) return;
+    setState(() {
+      _feedPreferences = updated;
+      _feedPreferencesVersion++;
+    });
   }
 
   @override
@@ -133,18 +168,42 @@ class _HomePageState extends State<HomePage>
                 tint: _isScrolled
                     ? theme.scaffoldBackgroundColor.withValues(alpha: 0.82)
                     : Colors.transparent,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: SisapaTheme.blue,
-                  unselectedLabelColor: theme.hintColor,
-                  indicatorColor: SisapaTheme.blue,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  dividerColor: Colors.transparent,
-                  dividerHeight: 0,
-                  tabs: [
-                    Tab(text: t.translate('home_recent')),
-                    Tab(text: t.translate('home_recommended')),
-                  ],
+                child: SizedBox(
+                  height: _tabBarHeight,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 48),
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: SisapaTheme.blue,
+                          unselectedLabelColor: theme.hintColor,
+                          indicatorColor: SisapaTheme.blue,
+                          indicatorSize: TabBarIndicatorSize.label,
+                          dividerColor: Colors.transparent,
+                          dividerHeight: 0,
+                          tabs: [
+                            Tab(text: t.translate('home_recent')),
+                            Tab(text: t.translate('home_recommended')),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 4,
+                        top: 0,
+                        bottom: 0,
+                        child: IconButton(
+                          tooltip: 'Feed controls',
+                          icon: const Icon(Icons.tune_rounded),
+                          color: _feedPreferences == FeedPreferences.defaults
+                              ? theme.hintColor
+                              : SisapaTheme.blue,
+                          onPressed: _showFeedControls,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -158,11 +217,15 @@ class _HomePageState extends State<HomePage>
             scrollController: widget.scrollController,
             feedType: 'recent',
             refreshOffset: 60,
+            feedPreferences: _feedPreferences,
+            feedPreferencesVersion: _feedPreferencesVersion,
           ),
           _PostFeedList(
             scrollController: widget.recommendedScrollController,
             feedType: 'recommended',
             refreshOffset: 60,
+            feedPreferences: _feedPreferences,
+            feedPreferencesVersion: _feedPreferencesVersion,
           ),
         ],
       ),
@@ -174,11 +237,15 @@ class _PostFeedList extends StatefulWidget {
   final ScrollController scrollController;
   final String feedType;
   final double refreshOffset;
+  final FeedPreferences feedPreferences;
+  final int feedPreferencesVersion;
 
   const _PostFeedList({
     required this.scrollController,
     required this.feedType,
     required this.refreshOffset,
+    required this.feedPreferences,
+    required this.feedPreferencesVersion,
   });
 
   @override
@@ -202,6 +269,14 @@ class _PostFeedListState extends State<_PostFeedList>
     _loadData();
   }
 
+  @override
+  void didUpdateWidget(covariant _PostFeedList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.feedPreferencesVersion != widget.feedPreferencesVersion) {
+      _loadData();
+    }
+  }
+
   Future<void> _loadData() async {
     if (!mounted) return;
     setState(() {
@@ -213,8 +288,13 @@ class _PostFeedListState extends State<_PostFeedList>
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final posts = widget.feedType == 'recommended'
-            ? await _api.getPersonalizedRecommendations()
-            : await _api.getPosts(limit: 50);
+            ? await _api.getPersonalizedRecommendations(
+                feedPreferences: widget.feedPreferences,
+              )
+            : await _api.getPosts(
+                limit: 50,
+                feedPreferences: widget.feedPreferences,
+              );
         if (mounted) {
           setState(() {
             _posts = posts;

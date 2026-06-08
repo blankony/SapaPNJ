@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
+import 'feed_preferences_service.dart';
+
 /// Centralized HTTP client for the SapaPNJ REST API.
 /// Replaces all direct Firebase Firestore calls.
 class ApiService {
@@ -14,6 +16,7 @@ class ApiService {
   static final Set<String> myRepostedPostIds = {};
   static bool repostsLoaded = false;
   static String? _cachedUserUid;
+  static const int _maxCommunityFallbackCommunities = 12;
 
   Future<void> loadMyReposts() async {
     final myUid = FirebaseAuth.instance.currentUser?.uid;
@@ -66,6 +69,11 @@ class ApiService {
   String? _postAuthorUid(Map<String, dynamic> post) {
     final uid = post['user_uid'] ?? post['userId'] ?? post['user_id'];
     return uid?.toString();
+  }
+
+  String? _postCommunityId(Map<String, dynamic> post) {
+    final id = post['community_id'] ?? post['communityId'];
+    return id?.toString();
   }
 
   bool _hasText(dynamic value) =>
@@ -217,6 +225,96 @@ class ApiService {
     return true;
   }
 
+  Future<Set<String>> _followedCommunityIds() async {
+    final communities = await getMyCommunities();
+    return communities
+        .map((community) => community['id']?.toString())
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet();
+  }
+
+  Future<Set<String>> _fallbackCommunityIdsForScope(
+    CommunityFeedScope scope,
+  ) async {
+    switch (scope) {
+      case CommunityFeedScope.off:
+        return const {};
+      case CommunityFeedScope.followed:
+        return _followedCommunityIds();
+      case CommunityFeedScope.all:
+        final communities = await getCommunities();
+        return communities
+            .map((community) => community['id']?.toString())
+            .whereType<String>()
+            .where((id) => id.isNotEmpty)
+            .take(_maxCommunityFallbackCommunities)
+            .toSet();
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _filterFeedPosts(
+    List<Map<String, dynamic>> posts, {
+    required FeedPreferences preferences,
+    required bool recommended,
+  }) async {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final communityScope = recommended
+        ? preferences.recommendedCommunityScope
+        : preferences.recentCommunityScope;
+    final showReposts = recommended
+        ? preferences.showRepostsInRecommended
+        : preferences.showRepostsInRecent;
+    final shouldLoadFollowedCommunities =
+        communityScope == CommunityFeedScope.followed ||
+        (recommended && preferences.prioritizeFollowedCommunities);
+    final followedCommunityIds = shouldLoadFollowedCommunities
+        ? await _followedCommunityIds()
+        : <String>{};
+    final followingIds =
+        !recommended && preferences.recentFollowingOnly && currentUid != null
+        ? (await getFollowing(currentUid)).toSet()
+        : <String>{};
+
+    final filtered = posts.where((post) {
+      if (!showReposts && _isRepostPost(post)) return false;
+
+      final communityId = _postCommunityId(post);
+      if (communityId != null && communityId.isNotEmpty) {
+        if (communityScope == CommunityFeedScope.off) return false;
+        if (communityScope == CommunityFeedScope.followed &&
+            !followedCommunityIds.contains(communityId)) {
+          return false;
+        }
+        return true;
+      }
+
+      if (!recommended && preferences.recentFollowingOnly) {
+        final authorUid = _postAuthorUid(post);
+        return authorUid == currentUid || followingIds.contains(authorUid);
+      }
+
+      return true;
+    }).toList();
+
+    if (recommended &&
+        preferences.prioritizeFollowedCommunities &&
+        followedCommunityIds.isNotEmpty) {
+      filtered.sort((a, b) {
+        final aFollowed = followedCommunityIds.contains(_postCommunityId(a))
+            ? 1
+            : 0;
+        final bFollowed = followedCommunityIds.contains(_postCommunityId(b))
+            ? 1
+            : 0;
+        if (aFollowed != bFollowed) return bFollowed.compareTo(aFollowed);
+        return _postCreatedAt(b).compareTo(_postCreatedAt(a));
+      });
+    }
+
+    return filtered;
+  }
+
   void _addMergedPost(
     Map<String, Map<String, dynamic>> merged,
     Map<String, dynamic> post,
@@ -231,9 +329,11 @@ class ApiService {
   Future<List<Map<String, dynamic>>> _mergeCommunityFallbackPosts(
     List<Map<String, dynamic>> basePosts, {
     required int limit,
+    required CommunityFeedScope communityScope,
     String? userUid,
     String? query,
     bool includeCurrentUserReposts = false,
+    bool sortByCreatedAt = true,
   }) async {
     final merged = <String, Map<String, dynamic>>{};
     for (final post in basePosts) {
@@ -243,12 +343,10 @@ class ApiService {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
 
     try {
-      final communities = await getMyCommunities();
-      final communityPostFutures = communities
-          .map((community) => community['id']?.toString())
-          .whereType<String>()
-          .where((id) => id.isNotEmpty)
-          .map((id) => getPosts(communityId: id, limit: 20));
+      final communityIds = await _fallbackCommunityIdsForScope(communityScope);
+      final communityPostFutures = communityIds.map(
+        (id) => getPosts(communityId: id, limit: 20),
+      );
 
       final communityPostResults = await Future.wait(communityPostFutures);
       for (final posts in communityPostResults) {
@@ -278,8 +376,10 @@ class ApiService {
       }
     }
 
-    final posts = merged.values.toList()
-      ..sort((a, b) => _postCreatedAt(b).compareTo(_postCreatedAt(a)));
+    final posts = merged.values.toList();
+    if (sortByCreatedAt) {
+      posts.sort((a, b) => _postCreatedAt(b).compareTo(_postCreatedAt(a)));
+    }
     return posts.take(limit).toList();
   }
 
@@ -537,6 +637,7 @@ class ApiService {
     String? communityId,
     String? userUid,
     String? query,
+    FeedPreferences? feedPreferences,
   }) async {
     Future? loadRepostsFuture;
     if (!repostsLoaded) {
@@ -558,13 +659,29 @@ class ApiService {
     final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
 
     if (communityId == null && cursor == null) {
-      return _mergeCommunityFallbackPosts(
+      final communityScope =
+          feedPreferences?.recentCommunityScope ?? CommunityFeedScope.followed;
+      final includeReposts = feedPreferences?.showRepostsInRecent ?? true;
+      final mergedPosts = await _mergeCommunityFallbackPosts(
         posts,
         limit: limit,
+        communityScope: communityScope,
         userUid: userUid,
         query: query,
-        includeCurrentUserReposts: userUid == null && query == null,
+        includeCurrentUserReposts:
+            includeReposts && userUid == null && query == null,
       );
+
+      if (feedPreferences != null) {
+        final filtered = await _filterFeedPosts(
+          mergedPosts,
+          preferences: feedPreferences,
+          recommended: false,
+        );
+        return filtered.take(limit).toList();
+      }
+
+      return mergedPosts;
     }
 
     return posts;
@@ -653,11 +770,29 @@ class ApiService {
     return _hydrateExplorePostAuthors(posts);
   }
 
-  Future<List<Map<String, dynamic>>> getPersonalizedRecommendations() async {
+  Future<List<Map<String, dynamic>>> getPersonalizedRecommendations({
+    FeedPreferences? feedPreferences,
+  }) async {
     final resp = await http.get(Uri.parse('$_baseUrl/api/explore/recommended'), headers: await _headers());
     if (resp.statusCode != 200) throw _error(resp);
     final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
-    return _hydrateExplorePostAuthors(posts);
+    final hydrated = await _hydrateExplorePostAuthors(posts);
+
+    if (feedPreferences == null) return hydrated;
+
+    final mergedPosts = await _mergeCommunityFallbackPosts(
+      hydrated,
+      limit: 50,
+      communityScope: feedPreferences.recommendedCommunityScope,
+      includeCurrentUserReposts: false,
+      sortByCreatedAt: false,
+    );
+    final filtered = await _filterFeedPosts(
+      mergedPosts,
+      preferences: feedPreferences,
+      recommended: true,
+    );
+    return filtered.take(50).toList();
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedCommunities() async {
