@@ -74,4 +74,4 @@
 - [ ] Hide text input outline on the blog post reply section
 - [ ] Add a smooth and bouncy pull down to refresh animation just like in the communities tab pull down refresh, for other page.
 - [ ] Major Refactor of the lib directories for better maintainability, for example creating a common single dart file for functions so we dont need to define the same functions over and over again in other darts, and splitting the massive file to seperate files and dir for better organization.
-- [ ] Trend Posts generator for trending testing?
+- [ ] Trend Posts SQL generator for trending testing?
