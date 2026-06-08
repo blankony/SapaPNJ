@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 enum FrostedSurfaceTone { surface, strong, control, brand }
 
@@ -19,17 +18,17 @@ class FrostedGlassTokens {
 
     switch (tone) {
       case FrostedSurfaceTone.strong:
-        return (isDark ? const Color(0xFF15202B) : Colors.white).withOpacity(
-          isDark ? 0.86 : 0.82,
+        return (isDark ? const Color(0xFF15202B) : Colors.white).withValues(
+          alpha: isDark ? 0.86 : 0.82,
         );
       case FrostedSurfaceTone.control:
         return (isDark ? const Color(0xFF192734) : const Color(0xFFE1E8ED))
-            .withOpacity(isDark ? 0.74 : 0.68);
+            .withValues(alpha: isDark ? 0.74 : 0.68);
       case FrostedSurfaceTone.brand:
-        return theme.colorScheme.primary.withOpacity(isDark ? 0.78 : 0.82);
+        return theme.colorScheme.primary.withValues(alpha: isDark ? 0.78 : 0.82);
       case FrostedSurfaceTone.surface:
-        return (isDark ? const Color(0xFF15202B) : Colors.white).withOpacity(
-          isDark ? 0.78 : 0.74,
+        return (isDark ? const Color(0xFF15202B) : Colors.white).withValues(
+          alpha: isDark ? 0.78 : 0.74,
         );
     }
   }
@@ -40,7 +39,7 @@ class FrostedGlassTokens {
     double width = 0.5,
   }) {
     return BorderSide(
-      color: Theme.of(context).dividerColor.withOpacity(opacity),
+      color: Theme.of(context).dividerColor.withValues(alpha: opacity),
       width: width,
     );
   }
@@ -49,7 +48,7 @@ class FrostedGlassTokens {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return [
       BoxShadow(
-        color: Colors.black.withOpacity(isDark ? 0.24 : 0.12),
+        color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.12),
         blurRadius: 18,
         offset: const Offset(0, 8),
       ),
@@ -173,37 +172,33 @@ class FrostedSurface extends StatelessWidget {
 class FrostedAppBar extends AppBar {
   FrostedAppBar({
     super.key,
-    Widget? leading,
-    bool automaticallyImplyLeading = true,
-    Widget? title,
-    List<Widget>? actions,
+    super.leading,
+    super.automaticallyImplyLeading,
+    super.title,
+    super.actions,
     Widget? flexibleSpace,
-    PreferredSizeWidget? bottom,
+    super.bottom,
     Color? backgroundColor,
     double? elevation,
     double? scrolledUnderElevation,
-    Color? foregroundColor,
-    IconThemeData? iconTheme,
-    IconThemeData? actionsIconTheme,
-    bool primary = true,
-    bool? centerTitle,
-    bool excludeHeaderSemantics = false,
-    double? titleSpacing,
-    double toolbarOpacity = 1.0,
-    double bottomOpacity = 1.0,
-    double? toolbarHeight,
-    double? leadingWidth,
-    TextStyle? toolbarTextStyle,
-    TextStyle? titleTextStyle,
-    SystemUiOverlayStyle? systemOverlayStyle,
+    super.foregroundColor,
+    super.iconTheme,
+    super.actionsIconTheme,
+    super.primary,
+    super.centerTitle,
+    super.excludeHeaderSemantics,
+    super.titleSpacing,
+    super.toolbarOpacity,
+    super.bottomOpacity,
+    super.toolbarHeight,
+    super.leadingWidth,
+    super.toolbarTextStyle,
+    super.titleTextStyle,
+    super.systemOverlayStyle,
     FrostedSurfaceTone tone = FrostedSurfaceTone.surface,
     double blur = FrostedGlassTokens.blurSigma,
     Color? tint,
   }) : super(
-         leading: leading,
-         automaticallyImplyLeading: automaticallyImplyLeading,
-         title: title,
-         actions: actions,
          flexibleSpace: Stack(
            fit: StackFit.expand,
            children: [
@@ -215,35 +210,20 @@ class FrostedAppBar extends AppBar {
                    (backgroundColor == null ||
                            backgroundColor == Colors.transparent
                        ? null
-                       : backgroundColor.withOpacity(
-                           backgroundColor.opacity < 1
-                               ? backgroundColor.opacity
+                       : backgroundColor.withValues(
+                           alpha: backgroundColor.a < 1
+                               ? backgroundColor.a
                                : 0.78,
                          )),
              ),
-             if (flexibleSpace != null) flexibleSpace,
+             ?flexibleSpace,
            ],
          ),
-         bottom: bottom,
          elevation: elevation ?? 0,
          scrolledUnderElevation: scrolledUnderElevation ?? 0,
          backgroundColor: Colors.transparent,
-         foregroundColor: foregroundColor,
          shadowColor: Colors.transparent,
          surfaceTintColor: Colors.transparent,
-         iconTheme: iconTheme,
-         actionsIconTheme: actionsIconTheme,
-         primary: primary,
-         centerTitle: centerTitle,
-         excludeHeaderSemantics: excludeHeaderSemantics,
-         titleSpacing: titleSpacing,
-         toolbarOpacity: toolbarOpacity,
-         bottomOpacity: bottomOpacity,
-         toolbarHeight: toolbarHeight,
-         leadingWidth: leadingWidth,
-         toolbarTextStyle: toolbarTextStyle,
-         titleTextStyle: titleTextStyle,
-         systemOverlayStyle: systemOverlayStyle,
        );
 }
 
@@ -286,9 +266,9 @@ class FrostedAlertDialog extends StatelessWidget {
     final radius = BorderRadius.circular(28);
     final baseTint = backgroundColor == null
         ? FrostedGlassTokens.tintFor(context, tone: FrostedSurfaceTone.strong)
-        : backgroundColor!.withOpacity(
-            backgroundColor!.opacity < 1
-                ? backgroundColor!.opacity
+        : backgroundColor!.withValues(
+            alpha: backgroundColor!.a < 1
+                ? backgroundColor!.a
                 : Theme.of(context).brightness == Brightness.dark
                 ? 0.86
                 : 0.82,
@@ -404,9 +384,9 @@ class FrostedSimpleDialog extends StatelessWidget {
     final radius = BorderRadius.circular(28);
     final tint = backgroundColor == null
         ? FrostedGlassTokens.tintFor(context, tone: FrostedSurfaceTone.strong)
-        : backgroundColor!.withOpacity(
-            backgroundColor!.opacity < 1
-                ? backgroundColor!.opacity
+        : backgroundColor!.withValues(
+            alpha: backgroundColor!.a < 1
+                ? backgroundColor!.a
                 : Theme.of(context).brightness == Brightness.dark
                 ? 0.86
                 : 0.82,

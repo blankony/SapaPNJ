@@ -137,8 +137,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     if ((_commentController.text.trim().isEmpty &&
             _selectedMediaFile == null) ||
         _currentUser == null ||
-        _isSending)
+        _isSending) {
       return;
+    }
     setState(() {
       _isSending = true;
     });
@@ -278,7 +279,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _commentsFuture,
       builder: (context, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
@@ -286,12 +287,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               style: TextStyle(color: Colors.red),
             ),
           );
-        if (snapshot.connectionState == ConnectionState.waiting)
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator()),
           );
-        if (!snapshot.hasData || snapshot.data!.isEmpty)
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Padding(
             padding: const EdgeInsets.all(32.0),
             child: Center(
@@ -301,6 +304,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             ),
           );
+        }
 
         final docs = snapshot.data!;
         return ListView.builder(
@@ -388,7 +392,7 @@ class _CommentComposer extends StatelessWidget {
           border: Border(top: BorderSide(color: theme.dividerColor)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: Offset(0, -2),
             ),
@@ -404,7 +408,7 @@ class _CommentComposer extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   margin: EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: SisapaTheme.blue.withOpacity(0.1),
+                    color: SisapaTheme.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -496,7 +500,7 @@ class _CommentComposer extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: theme.brightness == Brightness.dark
-                          ? SisapaTheme.darkGrey.withOpacity(0.2)
+                          ? SisapaTheme.darkGrey.withValues(alpha: 0.2)
                           : SisapaTheme.extraLightGrey,
                       borderRadius: BorderRadius.circular(24),
                     ),

@@ -16,7 +16,6 @@ class CommonErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Center(
       child: Padding(
@@ -27,7 +26,7 @@ class CommonErrorWidget extends StatelessWidget {
             Icon(
               isConnectionError ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
               size: 64,
-              color: theme.hintColor.withOpacity(0.5),
+              color: theme.hintColor.withValues(alpha: 0.5),
             ),
             SizedBox(height: 16),
             Text(

@@ -129,7 +129,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                     filled: true,
                     fillColor: theme.cardColor,
                   ),
-                  value: _selectedDepartment,
+                  initialValue: _selectedDepartment,
                   items: PnjData.departments.keys.map((String dept) {
                     return DropdownMenuItem(value: dept, child: Text(dept));
                   }).toList(),
@@ -150,7 +150,7 @@ class _SetupDepartmentScreenState extends State<SetupDepartmentScreen> with Sing
                     filled: true,
                     fillColor: theme.cardColor,
                   ),
-                  value: _selectedProdi,
+                  initialValue: _selectedProdi,
                   items: _selectedDepartment == null
                     ? []
                     : PnjData.departments[_selectedDepartment]!.map((Map<String, String> prodi) {

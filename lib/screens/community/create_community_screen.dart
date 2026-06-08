@@ -99,7 +99,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('comm_create_error_generic'),
@@ -107,6 +107,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
           () {},
           color: Colors.red,
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -199,9 +200,9 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: SisapaTheme.blue.withOpacity(0.05),
+                  color: SisapaTheme.blue.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: SisapaTheme.blue.withOpacity(0.3)),
+                  border: Border.all(color: SisapaTheme.blue.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

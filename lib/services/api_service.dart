@@ -645,10 +645,10 @@ class ApiService {
     }
     final params = <String, String>{
       'limit': limit.toString(),
-      if (cursor != null) 'cursor': cursor,
-      if (communityId != null) 'community_id': communityId,
-      if (userUid != null) 'user_uid': userUid,
-      if (query != null) 'q': query,
+      'cursor': ?cursor,
+      'community_id': ?communityId,
+      'user_uid': ?userUid,
+      'q': ?query,
     };
     final uri = Uri.parse('$_baseUrl/api/posts').replace(queryParameters: params);
     final resp = await http.get(uri, headers: await _headers());
@@ -963,8 +963,8 @@ class ApiService {
   /// Browse/search communities.
   Future<List<Map<String, dynamic>>> getCommunities({String? query, String? category}) async {
     final params = <String, String>{
-      if (query != null) 'q': query,
-      if (category != null) 'category': category,
+      'q': ?query,
+      'category': ?category,
     };
     final uri = Uri.parse('$_baseUrl/api/communities').replace(queryParameters: params.isEmpty ? null : params);
     final resp = await http.get(uri, headers: await _headers());

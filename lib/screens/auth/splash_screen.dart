@@ -64,8 +64,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           // Navigate to Language Selection
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const LanguageSelectionScreen(),
-              transitionsBuilder: (_, animation, __, child) {
+              pageBuilder: (_, _, _) => const LanguageSelectionScreen(),
+              transitionsBuilder: (_, animation, _, child) {
                 return FadeTransition(opacity: animation, child: child);
               },
             ),
@@ -74,8 +74,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           // Navigate to AuthGate (Welcome/Home)
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const AuthGate(),
-              transitionsBuilder: (_, animation, __, child) {
+              pageBuilder: (_, _, _) => const AuthGate(),
+              transitionsBuilder: (_, animation, _, child) {
                 return FadeTransition(opacity: animation, child: child);
               },
               transitionDuration: const Duration(milliseconds: 800),
@@ -116,10 +116,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: SisapaTheme.blue.withOpacity(0.1),
+                      color: SisapaTheme.blue.withValues(alpha: 0.1),
                       boxShadow: [
                         BoxShadow(
-                          color: SisapaTheme.blue.withOpacity(0.2),
+                          color: SisapaTheme.blue.withValues(alpha: 0.2),
                           blurRadius: 20,
                           spreadRadius: 5,
                         )

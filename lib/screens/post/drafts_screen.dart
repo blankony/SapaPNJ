@@ -211,8 +211,8 @@ class _DraftsScreenState extends State<DraftsScreen> {
     return FrostedSurface(
       margin: const EdgeInsets.all(4.0),
       borderRadius: BorderRadius.circular(12),
-      tint: Theme.of(context).cardColor.withOpacity(
-        Theme.of(context).brightness == Brightness.dark ? 0.78 : 0.74,
+      tint: Theme.of(context).cardColor.withValues(
+        alpha: Theme.of(context).brightness == Brightness.dark ? 0.78 : 0.74,
       ),
       blur: FrostedGlassTokens.blurSigma,
       border: Border.all(
@@ -341,7 +341,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
           fit: BoxFit.cover,
           memCacheWidth: 400,
           placeholder: (context, url) =>
-              Container(color: theme.dividerColor.withOpacity(0.1)),
+              Container(color: theme.dividerColor.withValues(alpha: 0.1)),
           errorWidget: (context, url, error) =>
               Icon(Icons.broken_image, color: theme.hintColor),
         );

@@ -70,8 +70,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       // Navigasi ke AuthGate
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const AuthGate(),
-          transitionsBuilder: (_, animation, __, child) {
+          pageBuilder: (_, _, _) => const AuthGate(),
+          transitionsBuilder: (_, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: const Duration(milliseconds: 600),
@@ -103,7 +103,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       spreadRadius: 5,
                     )
@@ -132,7 +132,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? SisapaTheme.blue.withOpacity(0.1)
+                                  ? SisapaTheme.blue.withValues(alpha: 0.1)
                                   : theme.scaffoldBackgroundColor,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
@@ -163,7 +163,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -177,7 +177,6 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -193,10 +192,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: SisapaTheme.blue.withOpacity(0.1),
+                    color: SisapaTheme.blue.withValues(alpha: 0.1),
                     boxShadow: [
                       BoxShadow(
-                        color: SisapaTheme.blue.withOpacity(0.15),
+                        color: SisapaTheme.blue.withValues(alpha: 0.15),
                         blurRadius: 30,
                         spreadRadius: 10,
                       )
@@ -244,7 +243,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       border: Border.all(color: theme.dividerColor),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -304,7 +303,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       elevation: 10,
-                      shadowColor: SisapaTheme.blue.withOpacity(0.4),
+                      shadowColor: SisapaTheme.blue.withValues(alpha: 0.4),
                     ),
                     child: Text(
                       _continueButtonText, // "Continue" or "Lanjutkan"

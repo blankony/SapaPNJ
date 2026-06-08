@@ -156,8 +156,8 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
                 child: FrostedSurface(
                   margin: const EdgeInsets.only(bottom: 12),
                   borderRadius: BorderRadius.circular(16),
-                  tint: theme.cardColor.withOpacity(
-                    theme.brightness == Brightness.dark ? 0.78 : 0.74,
+                  tint: theme.cardColor.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.78 : 0.74,
                   ),
                   blur: FrostedGlassTokens.blurSigma,
                   border: Border.all(
@@ -172,7 +172,7 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
                       ),
                       leading: CircleAvatar(
                         radius: 28,
-                        backgroundColor: badgeColor.withOpacity(0.1),
+                        backgroundColor: badgeColor.withValues(alpha: 0.1),
                         backgroundImage: imageUrl != null
                             ? CachedNetworkImageProvider(
                                 imageUrl,

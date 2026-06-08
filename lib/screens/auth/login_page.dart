@@ -265,8 +265,9 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _validateEmail(String? value) {
     final t = AppLocalizations.of(context)!; //
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return t.translate('val_email_empty');
+    }
     String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     RegExp regex = RegExp(pattern);
     if (!regex.hasMatch(value)) return t.translate('val_email_invalid');
@@ -275,8 +276,9 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _validatePassword(String? value) {
     final t = AppLocalizations.of(context)!;
-    if (value == null || value.isEmpty)
+    if (value == null || value.isEmpty) {
       return t.translate('val_password_empty');
+    }
     return null;
   }
 
@@ -445,8 +447,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _signIn,
-                          child: Text(t.translate('auth_login')), //
+                          onPressed: _signIn, //
                           style: ElevatedButton.styleFrom(
                             backgroundColor: SisapaTheme.blue,
                             foregroundColor: Colors.white,
@@ -456,6 +457,7 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
+                          child: Text(t.translate('auth_login')),
                         ),
                       ),
                       SizedBox(height: 16),
@@ -480,7 +482,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            t.translate('auth_no_account') + " ",
+                            "${t.translate('auth_no_account')} ",
                             style: TextStyle(color: theme.hintColor),
                           ), //
                           GestureDetector(
@@ -509,7 +511,7 @@ class _LoginPageState extends State<LoginPage> {
 
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],

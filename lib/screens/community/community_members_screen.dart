@@ -143,7 +143,7 @@ class _CommunityMembersScreenState extends State<CommunityMembersScreen>
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: SisapaTheme.blue.withOpacity(isDark ? 0.05 : 0.03),
+                color: SisapaTheme.blue.withValues(alpha: isDark ? 0.05 : 0.03),
               ),
             ),
           ),
@@ -211,7 +211,7 @@ class _StaffList extends StatelessWidget {
     return ListView.separated(
       padding: EdgeInsets.all(16),
       itemCount: staffList.length,
-      separatorBuilder: (_, __) => Divider(height: 1),
+      separatorBuilder: (_, _) => Divider(height: 1),
       itemBuilder: (context, index) {
         final member = staffList[index];
         final String userId = member['uid'] ?? '';

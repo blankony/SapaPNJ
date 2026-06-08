@@ -67,8 +67,8 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
     return Drawer(
       backgroundColor: Colors.transparent,
       child: FrostedSurface(
-        tint: theme.scaffoldBackgroundColor.withOpacity(
-          theme.brightness == Brightness.dark ? 0.86 : 0.82,
+        tint: theme.scaffoldBackgroundColor.withValues(
+          alpha: theme.brightness == Brightness.dark ? 0.86 : 0.82,
         ),
         blur: FrostedGlassTokens.strongBlurSigma,
         border: Border(left: FrostedGlassTokens.subtleBorderSide(context)),
@@ -140,7 +140,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
                           Icon(
                             Icons.history_toggle_off,
                             size: 64,
-                            color: theme.hintColor.withOpacity(0.3),
+                            color: theme.hintColor.withValues(alpha: 0.3),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -155,7 +155,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
                       itemCount: _sessions.length,
                       separatorBuilder: (context, index) => Divider(
                         height: 1,
-                        color: theme.dividerColor.withOpacity(0.3),
+                        color: theme.dividerColor.withValues(alpha: 0.3),
                       ),
                       itemBuilder: (context, index) {
                         final session = _sessions[index];

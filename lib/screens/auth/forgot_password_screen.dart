@@ -79,7 +79,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _sendResetEmail,
-                child: Text('Submit'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: SisapaTheme.blue,
                   foregroundColor: Colors.white,
@@ -88,6 +87,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
+                child: Text('Submit'),
               ),
             ),
           ],

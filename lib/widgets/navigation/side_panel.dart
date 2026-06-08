@@ -186,12 +186,12 @@ class _SidePanelState extends State<SidePanel> {
       shape: const RoundedRectangleBorder(borderRadius: drawerRadius),
       child: FrostedSurface(
         borderRadius: drawerRadius,
-        tint: theme.scaffoldBackgroundColor.withOpacity(isDark ? 0.86 : 0.82),
+        tint: theme.scaffoldBackgroundColor.withValues(alpha: isDark ? 0.86 : 0.82),
         blur: FrostedGlassTokens.strongBlurSigma,
         border: Border(right: FrostedGlassTokens.subtleBorderSide(context)),
         child: FutureBuilder<Map<String, dynamic>?>(
           future: _currentUserId != null
-              ? ApiService().getUser(_currentUserId!)
+              ? ApiService().getUser(_currentUserId)
               : Future.value(null),
           builder: (context, snapshot) {
             String name = t.translate('general_user');
@@ -272,11 +272,11 @@ class _SidePanelState extends State<SidePanel> {
                           imageUrl: bannerImageUrl,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
-                            color: theme.primaryColor.withOpacity(0.2),
+                            color: theme.primaryColor.withValues(alpha: 0.2),
                           ),
                         )
                       else
-                        Container(color: theme.primaryColor.withOpacity(0.1)),
+                        Container(color: theme.primaryColor.withValues(alpha: 0.1)),
 
                       Container(
                         decoration: BoxDecoration(
@@ -284,9 +284,9 @@ class _SidePanelState extends State<SidePanel> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black.withOpacity(0.0),
-                              Colors.black.withOpacity(0.6),
-                              Colors.black.withOpacity(0.9),
+                              Colors.black.withValues(alpha: 0.0),
+                              Colors.black.withValues(alpha: 0.6),
+                              Colors.black.withValues(alpha: 0.9),
                             ],
                             stops: const [0.0, 0.6, 1.0],
                           ),
@@ -607,8 +607,8 @@ class _SidePanelState extends State<SidePanel> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              backgroundColor: Colors.redAccent.withOpacity(
-                                0.1,
+                              backgroundColor: Colors.redAccent.withValues(
+                                alpha: 0.1,
                               ),
                             ),
                           ),

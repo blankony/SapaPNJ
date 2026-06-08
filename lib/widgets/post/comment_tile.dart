@@ -89,13 +89,14 @@ class _CommentTileState extends State<CommentTile> {
         widget.commentId,
       );
       if (success) {
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             "Reply deleted",
             Icons.delete_outline,
             () {},
           );
+        }
       } else {
         throw Exception("Delete failed");
       }
@@ -136,8 +137,9 @@ class _CommentTileState extends State<CommentTile> {
     if (commentUserId == FirebaseAuth.instance.currentUser?.uid) return;
 
     if (widget.currentProfileUserId != null &&
-        commentUserId == widget.currentProfileUserId)
+        commentUserId == widget.currentProfileUserId) {
       return;
+    }
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -154,7 +156,7 @@ class _CommentTileState extends State<CommentTile> {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
-        pageBuilder: (_, __, ___) =>
+        pageBuilder: (_, _, _) =>
             ImageViewerScreen(imageUrl: url, mediaType: type, heroTag: heroTag),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
@@ -175,8 +177,9 @@ class _CommentTileState extends State<CommentTile> {
       return FutureBuilder<Map<String, dynamic>?>(
         future: ApiService().getPost(widget.postId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data == null)
+          if (!snapshot.hasData || snapshot.data == null) {
             return SizedBox.shrink();
+          }
           final parentData = snapshot.data!;
 
           return Column(
@@ -412,7 +415,7 @@ class _CommentTileState extends State<CommentTile> {
                                 decoration: BoxDecoration(
                                   color: Colors.black,
                                   border: Border.all(
-                                    color: theme.dividerColor.withOpacity(0.3),
+                                    color: theme.dividerColor.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: mediaType == 'video'

@@ -87,7 +87,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
           email.endsWith('.pnj.ac.id') ||
           email.endsWith('@gmail.com'))) {
         await googleSignIn.signOut();
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             'Must use a valid PNJ email',
@@ -95,6 +95,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
             () {},
             color: Colors.red,
           );
+        }
         return;
       }
 
@@ -107,7 +108,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
       final User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await user.linkWithCredential(credential);
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             'Google account linked successfully',
@@ -115,10 +116,11 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
             () {},
             color: Colors.green,
           );
+        }
         _refreshUser();
       }
     } on FirebaseAuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           'Failed to link: ${e.message}',
@@ -126,8 +128,9 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
           () {},
           color: Colors.red,
         );
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           'Error: $e',
@@ -135,6 +138,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
           () {},
           color: Colors.red,
         );
+      }
     }
   }
 
@@ -363,8 +367,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isEmailVerified
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.orange.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -417,8 +421,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: isGoogleBound
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.red.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: FaIcon(
@@ -434,8 +438,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                   trailing: isGoogleBound
                       ? Icon(Icons.check_circle, color: Colors.green)
                       : TextButton(
-                          child: Text('Bind Now'),
                           onPressed: _bindGoogleAccount,
+                          child: Text('Bind Now'),
                         ),
                 );
               })(),
@@ -493,7 +497,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     leading: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(icon, color: color, size: 20),
@@ -523,7 +527,7 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.1),
+                        color: Colors.deepPurple.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.admin_panel_settings, color: Colors.deepPurple, size: 20),
@@ -655,8 +659,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                       vertical: 32,
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    tint: theme.cardColor.withOpacity(
-                      theme.brightness == Brightness.dark ? 0.86 : 0.82,
+                    tint: theme.cardColor.withValues(
+                      alpha: theme.brightness == Brightness.dark ? 0.86 : 0.82,
                     ),
                     blur: FrostedGlassTokens.strongBlurSigma,
                     boxShadow: FrostedGlassTokens.materialDepth(context),

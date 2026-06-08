@@ -145,9 +145,9 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: bannerColor.withOpacity(0.1),
+                  color: bannerColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: bannerColor.withOpacity(0.5)),
+                  border: Border.all(color: bannerColor.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [

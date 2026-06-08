@@ -19,8 +19,6 @@ class SisapaTheme {
       onSecondary: white,
       error: Colors.redAccent,
       onError: white,
-      background: Color(0xFF15202B),
-      onBackground: white,
       surface: Color(0xFF192734),
       onSurface: white,
     ),
@@ -33,7 +31,7 @@ class SisapaTheme {
     dividerColor: Color(0xFF38444D),
 
     appBarTheme: AppBarTheme(
-      color: Color(0xFF15202B),
+      backgroundColor: Color(0xFF15202B),
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
       titleTextStyle: TextStyle(
@@ -92,8 +90,6 @@ class SisapaTheme {
       onSecondary: white,
       error: Colors.redAccent,
       onError: white,
-      background: white,
-      onBackground: black,
       surface: white,
       onSurface: black,
     ),
@@ -106,7 +102,7 @@ class SisapaTheme {
     dividerColor: extraLightGrey,
 
     appBarTheme: AppBarTheme(
-      color: SisapaTheme.white,
+      backgroundColor: SisapaTheme.white,
       elevation: 0,
       iconTheme: IconThemeData(color: blue),
       titleTextStyle: TextStyle(

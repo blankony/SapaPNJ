@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'screens/auth/splash_screen.dart';
 import 'services/app_localizations.dart';

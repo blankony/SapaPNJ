@@ -52,7 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _loadCurrentData() async {
     if (_user == null) return;
     try {
-      final data = await ApiService().getUser(_user!.uid);
+      final data = await ApiService().getUser(_user.uid);
       if (data != null && mounted) {
         setState(() {
           _nameController.text = data['name'] ?? '';
@@ -365,7 +365,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'bio': _bioController.text.trim(),
         'avatar_icon_id': finalIconId,
         'avatar_hex': finalIconId != -1
-            ? '0x${_selectedColor.value.toRadixString(16).toUpperCase()}'
+            ? '0x${_selectedColor.toARGB32().toRadixString(16).toUpperCase()}'
             : null,
         'profile_image_url': finalImageUrl,
         'banner_image_url': finalBannerUrl,
@@ -379,7 +379,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         userUpdateData['department_code'] = _selectedProdi!['code'];
       }
 
-      await ApiService().updateUser(_user!.uid, userUpdateData);
+      await ApiService().updateUser(_user.uid, userUpdateData);
 
       if (context.mounted) {
         OverlayService().showTopNotification(
@@ -547,7 +547,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   children: [
                                     Icon(
                                       Icons.add_a_photo_outlined,
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(alpha: 0.8),
                                       size: 32,
                                     ),
                                     Text(
@@ -656,7 +656,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: 10,
-                          separatorBuilder: (_, __) => SizedBox(width: 16),
+                          separatorBuilder: (_, _) => SizedBox(width: 16),
                           itemBuilder: (context, index) {
                             final isSelected = _selectedIconId == index;
                             return GestureDetector(
@@ -670,7 +670,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: isSelected
-                                      ? theme.primaryColor.withOpacity(0.1)
+                                      ? theme.primaryColor.withValues(alpha: 0.1)
                                       : theme.cardColor,
                                   border: isSelected
                                       ? Border.all(
@@ -697,11 +697,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: AvatarHelper.presetColors.length,
-                          separatorBuilder: (_, __) => SizedBox(width: 12),
+                          separatorBuilder: (_, _) => SizedBox(width: 12),
                           itemBuilder: (context, index) {
                             final color = AvatarHelper.presetColors[index];
                             final isSelected =
-                                _selectedColor.value == color.value;
+                                _selectedColor.toARGB32() == color.toARGB32();
                             return GestureDetector(
                               onTap: () {
                                 FocusScope.of(context).unfocus();
@@ -823,7 +823,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         filled: true,
                         fillColor: theme.cardColor,
                       ),
-                      value: _selectedDepartment,
+                      initialValue: _selectedDepartment,
                       isExpanded: true,
                       items: PnjData.departments.keys.map((String dept) {
                         return DropdownMenuItem(
@@ -853,7 +853,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         filled: true,
                         fillColor: theme.cardColor,
                       ),
-                      value: _selectedProdi,
+                      initialValue: _selectedProdi,
                       isExpanded: true,
                       items: _selectedDepartment == null
                           ? []

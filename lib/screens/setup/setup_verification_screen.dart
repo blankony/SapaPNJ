@@ -106,7 +106,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                   padding: EdgeInsets.all(30),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: SisapaTheme.blue.withOpacity(0.1),
+                    color: SisapaTheme.blue.withValues(alpha: 0.1),
                   ),
                   child: Icon(Icons.verified_user_outlined, size: 80, color: SisapaTheme.blue),
                 ),
@@ -147,7 +147,7 @@ class _SetupVerificationScreenState extends State<SetupVerificationScreen> with 
                 Container(
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.green),
                   ),

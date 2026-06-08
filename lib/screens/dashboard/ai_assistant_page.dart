@@ -560,8 +560,9 @@ Return a concise summary only.
           _historyContextRevision++;
         });
         _scrollToBottom();
-        if (user != null)
+        if (user != null) {
           await _saveMessageToFirestore(user.uid, aiText, false);
+        }
         unawaited(_compactChatHistoryIfNeeded());
       }
     } catch (e) {
@@ -618,9 +619,9 @@ Return a concise summary only.
   }
 
   void _handleHorizontalSwipe(DragEndDetails details) {
-    if (details.primaryVelocity! > 0)
+    if (details.primaryVelocity! > 0) {
       Scaffold.of(context).openDrawer();
-    else if (details.primaryVelocity! < 0)
+    } else if (details.primaryVelocity! < 0)
       Scaffold.of(context).openEndDrawer();
   }
 
@@ -632,8 +633,9 @@ Return a concise summary only.
     // LOCALIZATION
     var t = AppLocalizations.of(context)!;
 
-    if (_isLoadingHistory)
+    if (_isLoadingHistory) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     if (_hasConnectionError && _messages.isEmpty) {
       return Scaffold(
         body: CommonErrorWidget(
@@ -686,7 +688,7 @@ Return a concise summary only.
                 color: theme.cardColor,
                 boxShadow: [
                   BoxShadow(
-                    color: SisapaTheme.blue.withOpacity(0.25),
+                    color: SisapaTheme.blue.withValues(alpha: 0.25),
                     blurRadius: 30,
                     spreadRadius: 2,
                   ),
@@ -739,11 +741,11 @@ Return a concise summary only.
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         borderRadius: BorderRadius.circular(16),
-        tint: theme.cardColor.withOpacity(
-          theme.brightness == Brightness.dark ? 0.78 : 0.74,
+        tint: theme.cardColor.withValues(
+          alpha: theme.brightness == Brightness.dark ? 0.78 : 0.74,
         ),
         blur: FrostedGlassTokens.blurSigma,
-        border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
         boxShadow: FrostedGlassTokens.materialDepth(context),
         child: Row(
           children: [
@@ -790,7 +792,7 @@ Return a concise summary only.
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+            backgroundColor: SisapaTheme.blue.withValues(alpha: 0.1),
             child: Image.asset(
               'images/app_icon.png',
               height: 16,
@@ -810,7 +812,7 @@ Return a concise summary only.
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 5,
                   offset: Offset(0, 2),
                 ),
@@ -842,7 +844,7 @@ Return a concise summary only.
         12,
         MediaQuery.of(context).padding.bottom + 12,
       ),
-      tint: theme.scaffoldBackgroundColor.withOpacity(isDark ? 0.86 : 0.82),
+      tint: theme.scaffoldBackgroundColor.withValues(alpha: isDark ? 0.86 : 0.82),
       blur: FrostedGlassTokens.strongBlurSigma,
       border: Border(
         top: FrostedGlassTokens.subtleBorderSide(context, opacity: 0.24),
@@ -854,7 +856,7 @@ Return a concise summary only.
             child: FrostedSurface(
               borderRadius: BorderRadius.circular(30),
               tint: (isDark ? SisapaTheme.darkGrey : SisapaTheme.extraLightGrey)
-                  .withOpacity(isDark ? 0.36 : 0.68),
+                  .withValues(alpha: isDark ? 0.36 : 0.68),
               blur: FrostedGlassTokens.controlBlurSigma,
               child: TextField(
                 controller: _textController,
@@ -906,8 +908,8 @@ Return a concise summary only.
                         padding: EdgeInsets.all(12),
                         shape: BoxShape.circle,
                         tint: (_isRecording ? Colors.red : theme.cardColor)
-                            .withOpacity(
-                              _isRecording ? 0.84 : (isDark ? 0.78 : 0.74),
+                            .withValues(
+                              alpha: _isRecording ? 0.84 : (isDark ? 0.78 : 0.74),
                             ),
                         blur: FrostedGlassTokens.controlBlurSigma,
                         border: Border.all(
@@ -932,7 +934,7 @@ Return a concise summary only.
                       padding: EdgeInsets.all(12),
                       shape: BoxShape.circle,
                       tint: (_isTyping ? theme.disabledColor : SisapaTheme.blue)
-                          .withOpacity(_isTyping ? 0.7 : 0.82),
+                          .withValues(alpha: _isTyping ? 0.7 : 0.82),
                       blur: FrostedGlassTokens.controlBlurSigma,
                       boxShadow: _isTyping
                           ? null

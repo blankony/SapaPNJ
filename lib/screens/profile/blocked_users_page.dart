@@ -46,8 +46,9 @@ class BlockedUsersPage extends StatelessWidget {
               return FutureBuilder<Map<String, dynamic>?>(
                 future: ApiService().getUser(userId),
                 builder: (context, userSnapshot) {
-                  if (!userSnapshot.hasData || userSnapshot.data == null)
+                  if (!userSnapshot.hasData || userSnapshot.data == null) {
                     return SizedBox.shrink();
+                  }
 
                   final data = userSnapshot.data!;
                   final name = data['name'] ?? 'Unknown User';

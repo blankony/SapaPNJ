@@ -55,15 +55,15 @@ class AboutPage extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          SisapaTheme.blue.withOpacity(0.1),
-                          SisapaTheme.blue.withOpacity(0.05),
+                          SisapaTheme.blue.withValues(alpha: 0.1),
+                          SisapaTheme.blue.withValues(alpha: 0.05),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: SisapaTheme.blue.withOpacity(0.2),
+                          color: SisapaTheme.blue.withValues(alpha: 0.2),
                           blurRadius: 20,
                           spreadRadius: 2,
                         ),
@@ -98,7 +98,7 @@ class AboutPage extends StatelessWidget {
                       color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: SisapaTheme.blue.withOpacity(0.3),
+                        color: SisapaTheme.blue.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -128,11 +128,11 @@ class AboutPage extends StatelessWidget {
                           style: theme.textTheme.bodyMedium?.copyWith(
                             height: 1.5,
                             color: theme.textTheme.bodyMedium?.color
-                                ?.withOpacity(0.85),
+                                ?.withValues(alpha: 0.85),
                           ),
                         ),
                         SizedBox(height: 16),
-                        Divider(color: theme.dividerColor.withOpacity(0.5)),
+                        Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
                         SizedBox(height: 16),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +264,7 @@ class AboutPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: SisapaTheme.blue.withOpacity(0.3), width: 1),
+        border: Border.all(color: SisapaTheme.blue.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -287,7 +287,7 @@ class AboutPage extends StatelessWidget {
                     return Icon(
                       Icons.person,
                       size: 38,
-                      color: theme.hintColor.withOpacity(0.3),
+                      color: theme.hintColor.withValues(alpha: 0.3),
                     );
                   },
                 ),
@@ -316,7 +316,7 @@ class AboutPage extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: SisapaTheme.blue.withOpacity(0.1),
+              color: SisapaTheme.blue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(

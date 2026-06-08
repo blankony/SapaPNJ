@@ -171,10 +171,11 @@ class _RegisterPageState extends State<RegisterPage> {
         _errorMessage = '${t.translate('general_error')}: $e';
       });
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
+      }
     }
   }
 
@@ -313,26 +314,30 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String? _validateName(String? value) {
     var t = AppLocalizations.of(context)!;
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return t.translate('val_name_empty');
+    }
     return null;
   }
 
   String? _validateIDNumber(String? value) {
     var t = AppLocalizations.of(context)!;
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return t.translate('val_nim_empty');
+    }
 
     // Allow 10 digits (NIM) or 18 digits (NIP)
-    if (value.length != 10 && value.length != 18)
+    if (value.length != 10 && value.length != 18) {
       return t.translate('val_nim_length');
+    }
     return null;
   }
 
   String? _validateEmail(String? value) {
     var t = AppLocalizations.of(context)!;
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return t.translate('val_email_empty');
+    }
 
     String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     RegExp regex = RegExp(pattern);
@@ -371,8 +376,9 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validateConfirmPassword(String? value) {
     var t = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) return t.translate('val_confirm_empty');
-    if (value != _passwordController.text)
+    if (value != _passwordController.text) {
       return t.translate('val_pass_mismatch');
+    }
     return null;
   }
 
@@ -604,9 +610,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               onChanged: (bool? value) {
                                 setState(() {
                                   _isAgreed = value ?? false;
-                                  if (_isAgreed)
+                                  if (_isAgreed) {
                                     _errorMessage =
                                         ''; // Clear error if checked
+                                  }
                                 });
                               },
                             ),
@@ -670,17 +677,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _signUp,
-                          child: _isLoading
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(t.translate('auth_signup')), // "Sign up"
+                          onPressed: _isLoading ? null : _signUp, // "Sign up"
                           style: ElevatedButton.styleFrom(
                             backgroundColor: SisapaTheme.blue,
                             foregroundColor: Colors.white,
@@ -690,6 +687,16 @@ class _RegisterPageState extends State<RegisterPage> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(t.translate('auth_signup')),
                         ),
                       ),
 
@@ -717,7 +724,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            t.translate('auth_have_account') + " ",
+                            "${t.translate('auth_have_account')} ",
                             style: TextStyle(color: theme.hintColor),
                           ), // "Have an account? "
                           GestureDetector(

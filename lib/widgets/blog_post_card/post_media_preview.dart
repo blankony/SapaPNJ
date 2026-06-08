@@ -79,16 +79,14 @@ class _PostMediaPreviewState extends State<PostMediaPreview>
         return;
       }
 
-      final File? thumbnail = await VideoCompress.getFileThumbnail(
+      final File thumbnail = await VideoCompress.getFileThumbnail(
         videoUrl,
         quality: 60,
         position: 1000,
       );
 
-      if (thumbnail != null) {
-        await thumbnail.copy(fullPath);
-        if (mounted) setState(() => _cachedThumbnailPath = fullPath);
-      }
+      await thumbnail.copy(fullPath);
+      if (mounted) setState(() => _cachedThumbnailPath = fullPath);
     } catch (e) {
       debugPrint("Thumbnail generation failed: $e");
     }
@@ -129,7 +127,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        pageBuilder: (_, __, ___) => ImageViewerScreen(
+        pageBuilder: (_, _, _) => ImageViewerScreen(
           imageUrl: url,
           mediaType: widget.mediaType,
           postData: widget.postData,
@@ -219,7 +217,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview>
                               fit: BoxFit.cover,
                               memCacheWidth: 600,
                               placeholder: (context, url) => Container(
-                                color: theme.dividerColor.withOpacity(0.1),
+                                color: theme.dividerColor.withValues(alpha: 0.1),
                               ),
                               errorWidget: (context, url, error) =>
                                   const Icon(Icons.error),
@@ -243,7 +241,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview>
                           fit: BoxFit.cover,
                           memCacheWidth: 600,
                           placeholder: (context, url) => Container(
-                            color: theme.dividerColor.withOpacity(0.1),
+                            color: theme.dividerColor.withValues(alpha: 0.1),
                           ),
                           errorWidget: (context, url, error) =>
                               const Icon(Icons.error),
@@ -261,7 +259,7 @@ class _PostMediaPreviewState extends State<PostMediaPreview>
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(

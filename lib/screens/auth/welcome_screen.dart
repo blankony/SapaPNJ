@@ -79,9 +79,9 @@ class WelcomeScreen extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: SisapaTheme.blue.withOpacity(0.3)),
+                                  border: Border.all(color: SisapaTheme.blue.withValues(alpha: 0.3)),
                                   borderRadius: BorderRadius.circular(12),
-                                  color: theme.cardColor.withOpacity(0.5),
+                                  color: theme.cardColor.withValues(alpha: 0.5),
                                 ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -151,7 +151,6 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).push(_createSlideUpRoute(RegisterPage()));
                       },
-                      child: Text(t.translate('welcome_create_account')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
@@ -162,6 +161,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+                      child: Text(t.translate('welcome_create_account')),
                     ),
                   ),
 

@@ -135,7 +135,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
         'name': _nameController.text.trim(),
         'description': _descController.text.trim(),
       });
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           "Info Updated",
@@ -143,9 +143,10 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
           () {},
           color: Colors.green,
         );
+      }
       _loadData();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           "Update Failed",
@@ -153,6 +154,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
           () {},
           color: Colors.red,
         );
+      }
     } finally {
       if (mounted) setState(() => _isSavingInfo = false);
     }
@@ -230,7 +232,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           "Error: $e",
@@ -238,6 +240,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
           () {},
           color: Colors.red,
         );
+      }
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }
@@ -638,8 +641,9 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
           email.contains(_searchQuery);
     }).toList();
 
-    if (filteredMembers.isEmpty)
+    if (filteredMembers.isEmpty) {
       return Center(child: Text("No members found."));
+    }
 
     return ListView.builder(
       itemCount: filteredMembers.length,
@@ -690,9 +694,9 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
             margin: EdgeInsets.only(top: 4),
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: displayColor.withOpacity(0.1),
+              color: displayColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: displayColor.withOpacity(0.5)),
+              border: Border.all(color: displayColor.withValues(alpha: 0.5)),
             ),
             child: Text(
               displayRole,

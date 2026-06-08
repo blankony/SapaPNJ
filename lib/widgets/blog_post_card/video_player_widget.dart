@@ -60,12 +60,12 @@ class VideoPlayerWidget extends StatelessWidget {
           // Layer 3: Overlay & Play Button (Hanya jika NOT playing)
           // Inilah SATU-SATUNYA tempat ikon play dirender.
           if (!isPlaying) ...[
-            Container(color: Colors.black.withOpacity(0.2)),
+            Container(color: Colors.black.withValues(alpha: 0.2)),
             Center(
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),

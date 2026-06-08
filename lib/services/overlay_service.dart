@@ -89,7 +89,7 @@ class OverlayService {
                   Container(
                     width: 1,
                     height: 20,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
                   IconButton(
                     icon: const Icon(
@@ -195,7 +195,7 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget>
                   ),
                   borderRadius: BorderRadius.circular(12),
                   tint: (isDarkMode ? SisapaTheme.darkGrey : Colors.white)
-                      .withOpacity(isDarkMode ? 0.84 : 0.82),
+                      .withValues(alpha: isDarkMode ? 0.84 : 0.82),
                   blur: FrostedGlassTokens.blurSigma,
                   border: Border.all(
                     color: FrostedGlassTokens.subtleBorderSide(context).color,

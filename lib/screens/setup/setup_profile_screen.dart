@@ -278,7 +278,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
                     decoration: BoxDecoration(
                       color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+                      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [

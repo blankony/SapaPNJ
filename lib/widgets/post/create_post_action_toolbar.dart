@@ -24,7 +24,7 @@ class CreatePostActionToolbar extends StatelessWidget {
         color: Theme.of(context).cardColor,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.5),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
           ),
         ),
       ),

@@ -62,18 +62,20 @@ class _FollowListScreenState extends State<FollowListScreen>
           });
         }
       } else {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _isLoading = false;
           });
+        }
       }
     } catch (e) {
       debugPrint("Error fetching lists: $e");
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
         });
+      }
     }
   }
 
@@ -113,17 +115,18 @@ class _FollowListScreenState extends State<FollowListScreen>
 
       await ApiService().removeFollower(followerId);
 
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('follow_removed_msg'),
           Icons.person_remove,
           () {},
         );
+      }
     } catch (e) {
       // Revert if failed
       _fetchLists();
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('follow_remove_fail'),
@@ -131,6 +134,7 @@ class _FollowListScreenState extends State<FollowListScreen>
           () {},
           color: Colors.red,
         );
+      }
     }
   }
 
@@ -235,7 +239,7 @@ class _UserList extends StatelessWidget {
             Icon(
               Icons.people_outline,
               size: 64,
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.withValues(alpha: 0.5),
             ),
             SizedBox(height: 16),
             Text(emptyMessage, style: TextStyle(color: Colors.grey)),

@@ -126,7 +126,7 @@ class _NotificationSheetState extends State<NotificationSheet> {
                         Icon(
                           Icons.notifications_none,
                           size: 64,
-                          color: theme.hintColor.withOpacity(0.3),
+                          color: theme.hintColor.withValues(alpha: 0.3),
                         ),
                         SizedBox(height: 16),
                         Text(
@@ -267,7 +267,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
     return Container(
       color: widget.isRead
           ? Colors.transparent
-          : theme.primaryColor.withOpacity(0.05),
+          : theme.primaryColor.withValues(alpha: 0.05),
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         children: [
@@ -318,7 +318,7 @@ class _FollowRequestTileState extends State<_FollowRequestTile> {
                   onPressed: () => _handleRequest(false),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                    side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
                   ),
                   child: Text(t.translate('notif_req_decline')),
                 ),
@@ -421,11 +421,11 @@ class _NotificationTile extends StatelessWidget {
     }
 
     return Container(
-      color: isRead ? Colors.transparent : theme.primaryColor.withOpacity(0.05),
+      color: isRead ? Colors.transparent : theme.primaryColor.withValues(alpha: 0.05),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color),
         ),
         title: Text(
@@ -507,7 +507,7 @@ class _NotificationTile extends StatelessWidget {
       child: Container(
         color: isRead
             ? Colors.transparent
-            : theme.primaryColor.withOpacity(0.05),
+            : theme.primaryColor.withValues(alpha: 0.05),
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

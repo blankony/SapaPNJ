@@ -131,7 +131,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _changePassword,
-                      child: Text('Update Password'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
@@ -140,6 +139,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
+                      child: Text('Update Password'),
                     ),
                   ),
                 ],
@@ -148,7 +148,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],

@@ -297,10 +297,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         debugPrint("Error checking community permissions: $e");
       }
     } else if (!_isEditing && widget.draftData == null) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _visibility = _isAccountPrivate ? 'followers' : 'public';
         });
+      }
     }
   }
 
@@ -489,8 +490,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (text.trim().isEmpty) return;
       final suggestion = await _predictionService.getLocalPrediction(text);
-      if (mounted && suggestion != null && suggestion.isNotEmpty)
+      if (mounted && suggestion != null && suggestion.isNotEmpty) {
         setState(() => _predictedText = suggestion);
+      }
     });
   }
 
@@ -649,8 +651,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     setState(() {
       _selectedMediaFiles.removeAt(index);
       _checkCanPost();
-      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty)
+      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty) {
         _mediaType = null;
+      }
     });
   }
 
@@ -659,8 +662,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _existingMediaUrls.removeAt(index);
       if (_existingPublicIds.length > index) _existingPublicIds.removeAt(index);
       _checkCanPost();
-      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty)
+      if (_selectedMediaFiles.isEmpty && _existingMediaUrls.isEmpty) {
         _mediaType = null;
+      }
     });
   }
 
@@ -883,7 +887,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 deleteOrigin: false,
               );
               if (info != null && info.file != null) fileToUp = info.file!;
-            } catch (e) {}
+            } catch (e) {
+              // Ignore compression error and use original
+              debugPrint('Video compression failed: $e');
+            }
           }
           final response = await _cloudinaryService.uploadFileWithDetails(
             fileToUp,
@@ -891,8 +898,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           );
           if (response.secureUrl != null) {
             finalUrls.add(response.secureUrl!);
-            if (response.publicId != null)
+            if (response.publicId != null) {
               finalPublicIds.add(response.publicId!);
+            }
           }
         }
       }
@@ -911,7 +919,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
 
       await _draftService.saveDraft(draft);
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('post_draft_saved'),
@@ -919,8 +927,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           () {},
           color: Colors.green,
         );
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('post_draft_failed'),
@@ -928,6 +937,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           () {},
           color: Colors.red,
         );
+      }
     } finally {
       if (mounted) setState(() => _isSavingDraft = false);
     }
@@ -1125,7 +1135,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               selected: _postAsCommunity,
                               onSelected: (val) =>
                                   setState(() => _postAsCommunity = true),
-                              selectedColor: SisapaTheme.blue.withOpacity(0.2),
+                              selectedColor: SisapaTheme.blue.withValues(alpha: 0.2),
                               labelStyle: TextStyle(
                                 color: _postAsCommunity
                                     ? SisapaTheme.blue
@@ -1250,7 +1260,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                     margin: const EdgeInsets.only(top: 8),
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: SisapaTheme.blue.withOpacity(0.1),
+                                      color: SisapaTheme.blue.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(

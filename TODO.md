@@ -84,4 +84,4 @@
 
 ## Future task
 - [ ] Delete all Hardcoded language strings to langauge dynamic strings so we can easly add more language option
-- [ ] Trend Posts SQL generator for trending testing?
+- [ ] Posts SQL generator factory for trending, recommendation and easy testing instead of manually populating the database?

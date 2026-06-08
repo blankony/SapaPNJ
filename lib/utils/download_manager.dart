@@ -211,7 +211,7 @@ class _DownloadStatusOverlayState extends State<_DownloadStatusOverlay> {
                             ),
                             Container(
                               width: 4, height: 24,
-                              decoration: BoxDecoration(color: Colors.grey.withOpacity(0.5), borderRadius: BorderRadius.circular(2)),
+                              decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(2)),
                             )
                           ],
                         ),

@@ -223,8 +223,9 @@ class _BlogPostCardState extends State<BlogPostCard>
   }
 
   Future<void> _initializeVideo() async {
-    if (_isVideoInitialized || _videoController != null || _isVideoLoading)
+    if (_isVideoInitialized || _videoController != null || _isVideoLoading) {
       return;
+    }
 
     final data = effectivePostData;
     final videoUrl = primaryPostMediaUrl(data);
@@ -493,7 +494,7 @@ class _BlogPostCardState extends State<BlogPostCard>
       icon = Icons.public;
     }
 
-    if (mounted)
+    if (mounted) {
       OverlayService().showTopNotification(
         context,
         msg,
@@ -501,6 +502,7 @@ class _BlogPostCardState extends State<BlogPostCard>
         () {},
         color: color,
       );
+    }
 
     try {
       await ApiService().updatePost(effectivePostId, {'visibility': newVis});
@@ -526,10 +528,11 @@ class _BlogPostCardState extends State<BlogPostCard>
     final name = effectivePostData['userName'] ?? 'User';
 
     Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isSharing = false;
         });
+      }
       Share.share('Check out this post by $name: "$text"');
     });
   }
@@ -575,15 +578,16 @@ class _BlogPostCardState extends State<BlogPostCard>
         }
 
         await ApiService().deletePost(widget.postId);
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('post_deleted'),
             Icons.delete_outline,
             () {},
           );
+        }
       } catch (e) {
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('post_delete_fail'),
@@ -591,6 +595,7 @@ class _BlogPostCardState extends State<BlogPostCard>
             () {},
             color: Colors.red,
           );
+        }
       }
     }
   }
@@ -609,32 +614,35 @@ class _BlogPostCardState extends State<BlogPostCard>
     try {
       if (!newPinState) {
         await ApiService().updateUser(user.uid, {'pinned_post_id': null});
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('profile_unpin_success'),
             Icons.push_pin_outlined,
             () {},
           );
+        }
       } else {
         await ApiService().updateUser(user.uid, {
           'pinned_post_id': effectivePostId,
         });
-        if (mounted)
+        if (mounted) {
           OverlayService().showTopNotification(
             context,
             t.translate('profile_pin_success'),
             Icons.push_pin,
             () {},
           );
+        }
       }
     } catch (e) {
       setState(() {
         _localIsPinned = !newPinState;
       });
-      if (widget.onPinToggle != null)
+      if (widget.onPinToggle != null) {
         widget.onPinToggle!(effectivePostId, !newPinState);
-      if (mounted)
+      }
+      if (mounted) {
         OverlayService().showTopNotification(
           context,
           t.translate('pin_fail'),
@@ -642,6 +650,7 @@ class _BlogPostCardState extends State<BlogPostCard>
           () {},
           color: Colors.red,
         );
+      }
     }
   }
 
@@ -702,8 +711,9 @@ class _BlogPostCardState extends State<BlogPostCard>
       }
     }
     if (widget.currentProfileUserId != null &&
-        postUserId == widget.currentProfileUserId)
+        postUserId == widget.currentProfileUserId) {
       return;
+    }
 
     Navigator.of(context).push(
       _createSlideLeftRoute(
@@ -875,8 +885,8 @@ class _BlogPostCardState extends State<BlogPostCard>
         border: Border(
           bottom: BorderSide(color: theme.dividerColor, width: 0.5),
         ),
-        tint: theme.cardColor.withOpacity(
-          theme.brightness == Brightness.dark ? 0.78 : 0.74,
+        tint: theme.cardColor.withValues(
+          alpha: theme.brightness == Brightness.dark ? 0.78 : 0.74,
         ),
         blur: FrostedGlassTokens.blurSigma,
         child: Stack(

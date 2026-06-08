@@ -30,8 +30,9 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null)
+    if (user == null) {
       return const Scaffold(body: Center(child: Text("Please log in")));
+    }
 
     return Scaffold(
       appBar: FrostedAppBar(
@@ -71,7 +72,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
                         Icon(
                           Icons.bookmark_border,
                           size: 64,
-                          color: Theme.of(context).hintColor.withOpacity(0.5),
+                          color: Theme.of(context).hintColor.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(

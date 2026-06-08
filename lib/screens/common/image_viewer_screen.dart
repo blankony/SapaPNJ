@@ -521,7 +521,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                        colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
                       ),
                     ),
                     child: SafeArea(
@@ -688,7 +688,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> with TickerProvid
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
-                          colors: [Colors.black.withOpacity(0.9), Colors.transparent],
+                          colors: [Colors.black.withValues(alpha: 0.9), Colors.transparent],
                         ),
                       ),
                       child: SafeArea(

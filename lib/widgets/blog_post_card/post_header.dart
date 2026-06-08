@@ -88,7 +88,7 @@ class PostHeader extends StatelessWidget {
         onTap: onNavigateToSource,
         child: CircleAvatar(
           radius: 24,
-          backgroundColor: SisapaTheme.blue.withOpacity(0.1),
+          backgroundColor: SisapaTheme.blue.withValues(alpha: 0.1),
           backgroundImage: displayImg != null && displayImg.isNotEmpty
               ? CachedNetworkImageProvider(
                   displayImg,
