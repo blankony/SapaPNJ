@@ -5,7 +5,7 @@ import '../../services/app_cache_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/api_service.dart';
-import 'package:intl/intl.dart';
+
 import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,14 +18,15 @@ import 'settings_page.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
 import '../../services/moderation_service.dart';
-import '../ktm_verification_screen.dart';
+
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
+
 import 'profile/department_badge.dart';
 import 'profile/profile_avatar_image.dart';
 import 'profile/profile_content_tabs.dart';
 import 'profile/profile_empty_states.dart';
-import 'profile/profile_stat_link.dart';
 import 'profile/profile_tab_header_delegate.dart';
+import 'profile/profile_info_body.dart';
 
 final GcsService _cloudinaryService = GcsService();
 final ApiService _apiService = ApiService();
@@ -729,18 +730,7 @@ class _ProfilePageState extends State<ProfilePage>
     super.dispose();
   }
 
-  String _formatJoinedDate(dynamic rawDate) {
-    var t = AppLocalizations.of(context)!;
-    if (rawDate == null) return t.translate('profile_joined_unknown');
 
-    DateTime? dateTime;
-    if (rawDate is String) {
-      dateTime = DateTime.tryParse(rawDate);
-    }
-
-    if (dateTime == null) return t.translate('profile_joined_unknown');
-    return '${t.translate('profile_joined')} ${DateFormat('MMMM yyyy').format(dateTime)}';
-  }
 
   Future<void> _handleRefresh() async {
     try {
@@ -879,7 +869,17 @@ class _ProfilePageState extends State<ProfilePage>
             ),
 
             SliverToBoxAdapter(
-              child: _buildProfileInfoBody(context, data, isMyProfile),
+              child: ProfileInfoBody(
+                userData: _userData,
+                isMyProfile: isMyProfile,
+                isBioExpanded: _isBioExpanded,
+                isBlocked: _isBlocked,
+                userId: _userId,
+                currentUser: _user,
+                onToggleBio: () {
+                  setState(() => _isBioExpanded = !_isBioExpanded);
+                },
+              ),
             ),
 
             if (!_isBlocked && canViewProfile)
@@ -1172,244 +1172,5 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  Widget _buildProfileInfoBody(
-    BuildContext context,
-    Map<String, dynamic> data,
-    bool isMyProfile,
-  ) {
-    final theme = Theme.of(context);
-    var t = AppLocalizations.of(context)!;
 
-    final String name = data['name'] ?? 'Name';
-    final String handle = "@${(data['email'] ?? '').split('@')[0]}";
-    final String displayBio = _isBioExpanded
-        ? (data['bio'] ?? '')
-        : ((data['bio'] ?? '').length > 100
-              ? (data['bio'] ?? '').substring(0, 100) + '...'
-              : (data['bio'] ?? ''));
-
-    final String verificationStatus =
-        data['verification_status'] ?? data['verificationStatus'] ?? 'none';
-    final bool isVerified = verificationStatus == 'verified';
-    final bool isPending = verificationStatus == 'pending';
-
-    bool showEmailVerifyBtn = false;
-    bool showKtmVerifyBtn = false;
-
-    if (isMyProfile) {
-      if (_user != null && !_user.emailVerified) {
-        showEmailVerifyBtn = true;
-      } else if (!isVerified && !isPending) {
-        showKtmVerifyBtn = true;
-      }
-    }
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  name,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isVerified) ...[
-                SizedBox(width: 4),
-                Icon(Icons.verified, size: 22, color: SisapaTheme.blue),
-              ] else if (data['is_private'] == true ||
-                  data['is_private'] == 1 ||
-                  data['isPrivate'] == true ||
-                  data['isPrivate'] == 1) ...[
-                SizedBox(width: 6),
-                Icon(
-                  Icons.lock,
-                  size: 22,
-                  color: theme.textTheme.titleLarge?.color,
-                ),
-              ],
-            ],
-          ),
-          Text(handle, style: theme.textTheme.titleSmall),
-
-          // --- VERIFICATION BUTTONS ---
-          if (showEmailVerifyBtn)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: InkWell(
-                onTap: () async {
-                  try {
-                    await _user!.sendEmailVerification();
-                    if (!context.mounted) return;
-                    OverlayService().showTopNotification(
-                      context,
-                      t.translate('profile_verify_sent'),
-                      Icons.mark_email_read,
-                      () {},
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    OverlayService().showTopNotification(
-                      context,
-                      t.translate('profile_verify_wait'),
-                      Icons.timer,
-                      () {},
-                      color: Colors.orange,
-                    );
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.warning, size: 16, color: Colors.red),
-                      SizedBox(width: 6),
-                      Text(
-                        t.translate('profile_verify_email'),
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          else if (isPending)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.orange),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.hourglass_top, size: 16, color: Colors.orange),
-                    SizedBox(width: 6),
-                    Text(
-                      t.translate('profile_verify_pending'),
-                      style: TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (showKtmVerifyBtn)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: InkWell(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        KtmVerificationScreen(userDbData: _userData),
-                  ),
-                ),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: SisapaTheme.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: SisapaTheme.blue),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.verified_outlined,
-                        size: 16,
-                        color: SisapaTheme.blue,
-                      ),
-                      SizedBox(width: 6),
-                      Text(
-                        t.translate('profile_verify_get'),
-                        style: TextStyle(
-                          color: SisapaTheme.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-          SizedBox(height: 8),
-          if (!_isBlocked) ...[
-            Text(
-              displayBio.isEmpty ? t.translate('profile_no_bio') : displayBio,
-              style: theme.textTheme.bodyLarge,
-            ),
-            if ((data['bio'] ?? '').length > 100)
-              GestureDetector(
-                onTap: () => setState(() => _isBioExpanded = !_isBioExpanded),
-                child: Text(
-                  _isBioExpanded
-                      ? t.translate('general_show_less')
-                      : t.translate('general_show_more'),
-                  style: TextStyle(
-                    color: SisapaTheme.blue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 14, color: theme.hintColor),
-                SizedBox(width: 4),
-                Text(
-                  _formatJoinedDate(data['created_at'] ?? data['createdAt']),
-                  style: theme.textTheme.titleSmall,
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                ProfileStatLink(
-                  userId: _userId,
-                  count: (data['following'] ?? []).length,
-                  label: t.translate('profile_following'),
-                  tabIndex: 1,
-                ),
-                SizedBox(width: 16),
-                ProfileStatLink(
-                  userId: _userId,
-                  count: (data['followers'] ?? []).length,
-                  label: t.translate('profile_followers'),
-                  tabIndex: 2,
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-          ],
-        ],
-      ),
-    );
-  }
 }
