@@ -1,7 +1,6 @@
 {
   "app_name": "Sapa PNJ",
   "slogan": "SAPA PNJ",
-  
   "general_cancel": "Batal",
   "general_save": "Simpan",
   "general_delete": "Hapus",
@@ -13,10 +12,8 @@
   "general_loading": "Memuat...",
   "general_error": "Terjadi kesalahan",
   "general_success": "Berhasil",
-
   "welcome_join_message": "Bergabung dengan komunitas hari ini.",
   "welcome_create_account": "Buat akun",
-
   "auth_login": "Masuk",
   "auth_signup": "Daftar",
   "auth_email": "Email",
@@ -26,17 +23,14 @@
   "auth_have_account": "Sudah punya akun?",
   "auth_create_one": "Buat akun",
   "auth_welcome": "Selamat datang kembali!",
-  
   "nav_home": "Beranda",
   "nav_community": "Komunitas",
   "nav_ai": "Asisten AI",
   "nav_search": "Cari",
   "nav_profile": "Profil",
-
   "home_recent": "Terbaru",
   "home_recommended": "Rekomendasi",
   "home_no_posts": "Tidak ada postingan",
-
   "post_create_title": "Buat Postingan",
   "post_edit_title": "Ubah Postingan",
   "post_hint": "Apa yang sedang terjadi?",
@@ -44,7 +38,6 @@
   "post_reply_hint": "Tulis balasan anda",
   "post_delete_confirm": "Hapus postingan ini?",
   "post_pinned": "Disematkan",
-
   "community_your_channels": "Channel Anda",
   "community_broadcast": "Feed Siaran",
   "community_create": "Buat Channel",
@@ -52,12 +45,10 @@
   "community_members": "Anggota",
   "community_follow": "Ikuti",
   "community_following": "Mengikuti",
-
   "ai_hint": "Tanya Spirit AI...",
   "ai_thinking": "Sedang berpikir...",
   "ai_history": "Riwayat Chat",
   "ai_new_chat": "Chat Baru",
-
   "profile_posts": "Postingan",
   "profile_reposts": "Repost",
   "profile_replies": "Balasan",
@@ -65,21 +56,16 @@
   "profile_followers": "Pengikut",
   "profile_following": "Mengikuti",
   "profile_joined": "Bergabung",
-
   "settings_title": "Pengaturan",
-  
   "settings_account": "Pusat Akun",
   "settings_account_desc": "Kata Sandi, Keamanan, dan Hapus Akun",
   "settings_blocked": "Akun Diblokir",
   "settings_about": "Tentang Kami",
-  
   "settings_theme": "Tema",
   "settings_theme_light": "Ganti ke Terang",
   "settings_theme_dark": "Ganti ke Gelap",
-  
   "settings_language": "Ganti Bahasa",
   "settings_haptic": "Getaran Haptic",
-  
   "settings_header_notif": "Notifikasi",
   "settings_notif_allow": "Izinkan Notifikasi",
   "settings_notif_allow_desc": "Sakelar utama untuk semua notifikasi",
@@ -89,12 +75,9 @@
   "settings_notif_clear_confirm": "Hapus Riwayat?",
   "settings_notif_clear_desc": "Ini akan menghapus semua notifikasi lama secara permanen.",
   "settings_notif_cleared": "Riwayat dihapus",
-
   "settings_logout": "Keluar",
   "settings_logout_confirm": "Apakah anda yakin ingin keluar?",
-  
   "general_yes": "Ya",
-
   "auth_sign_in_title": "Masuk ke akun anda",
   "auth_enter_email": "Masukkan email",
   "auth_enter_password": "Masukkan kata sandi",
@@ -111,7 +94,6 @@
   "auth_email_hint": "Masukkan email PNJ",
   "auth_pass_hint": "Masukkan kata sandi",
   "auth_confirm_pass_hint": "Ulangi kata sandi",
-
   "val_name_empty": "Nama tidak boleh kosong.",
   "val_nim_empty": "ID tidak boleh kosong.",
   "val_nim_length": "ID harus 10 (NIM) atau 18 (NIP) digit.",
@@ -121,7 +103,6 @@
   "val_pass_complexity": "Kata sandi harus mengandung huruf, angka, dan simbol.",
   "val_confirm_empty": "Mohon konfirmasi kata sandi anda.",
   "val_pass_mismatch": "Kata sandi tidak cocok.",
-
   "notif_new": "Notifikasi Baru",
   "notif_like": "Seseorang menyukai postingan anda.",
   "notif_comment": "Seseorang mengomentari postingan anda.",
@@ -134,7 +115,6 @@
   "community_post_to": "Posting ke Komunitas",
   "community_no_joined": "Anda belum bergabung dengan komunitas apapun.",
   "home_error_loading": "Gagal memuat postingan",
-
   "search_hint": "Cari di Sapa PNJ...",
   "search_listening": "Mendengarkan...",
   "search_suggestion_prefix": "Saran: ",
@@ -159,7 +139,6 @@
   "general_show_more": "Tampilkan lebih banyak",
   "general_show_less": "Tampilkan lebih sedikit",
   "general_members": "anggota",
-
   "ai_subtitle": "Asisten Virtual Anda",
   "ai_listening": "Mendengarkan...",
   "ai_copied": "Disalin ke papan klip",
@@ -176,7 +155,6 @@
   "ai_sugg_admin": "Kontak admin",
   "ai_sugg_translate": "Terjemahkan teks ini",
   "ai_sugg_email": "Buat email formal",
-
   "profile_pin_success": "Postingan disematkan",
   "profile_unpin_success": "Sematkan dilepas",
   "profile_uploading": "Mengunggah media...",
@@ -225,7 +203,6 @@
   "profile_no_reposts": "Belum ada repost.",
   "profile_unfollow": "Batal Ikuti",
   "profile_requested": "Diminta",
-
   "verify_required": "Verifikasi Diperlukan",
   "verify_email_msg": "Anda harus memverifikasi email untuk membuat postingan.",
   "verify_resend": "Kirim Ulang",
@@ -263,19 +240,16 @@
   "post_in_comm": "Posting di",
   "post_hint_official": "Ada berita resmi apa?",
   "post_verify_sent": "Email verifikasi dikirim!",
-
   "login_required": "Harap login",
   "community_create_short": "Buat",
   "community_join_prompt": "Gabung komunitas untuk melihat update di sini.",
   "community_no_broadcasts": "Tidak ada siaran terbaru.",
-
   "side_saved": "Disimpan",
   "side_communities": "Komunitas",
   "side_services": "Layanan PNJ",
   "service_website": "Website PNJ",
   "theme_switch_light": "Ganti ke Terang",
   "theme_switch_dark": "Ganti ke Gelap",
-
   "notif_activity_title": "Aktivitas",
   "notif_mark_read": "Tandai semua dibaca",
   "notif_empty": "Belum ada notifikasi",
@@ -297,11 +271,9 @@
   "action_followed": "mengikuti anda",
   "action_accepted": "menerima permintaan mengikuti anda",
   "action_interacted": "berinteraksi dengan anda",
-  
   "post_bookmark_saved": "Disimpan ke bookmark",
   "post_bookmark_removed": "Dihapus dari bookmark",
   "post_bookmark_error": "Gagal menyimpan bookmark",
-  
   "menu_edit": "Ubah Postingan",
   "menu_unhide": "Tampilkan Postingan",
   "menu_hide": "Sembunyikan (Hanya Saya)",
@@ -313,22 +285,18 @@
   "menu_report": "Laporkan Postingan",
   "menu_block": "Blokir Pengguna",
   "menu_report_comm": "Laporkan Komunitas",
-  
   "delete_post_title": "Hapus Postingan",
   "delete_post_confirm": "Apakah anda yakin ingin menghapus postingan ini?",
   "post_deleted": "Postingan dihapus",
   "post_delete_fail": "Gagal menghapus",
   "pin_fail": "Gagal menyematkan",
-  
   "vis_toast_private": "Postingan disembunyikan (Hanya Saya)",
   "vis_toast_followers": "Terlihat oleh Pengikut (Akun Privat)",
   "vis_toast_public": "Postingan sekarang Publik",
   "vis_toast_fail": "Gagal mengubah visibilitas",
-  
   "edit_post_title": "Ubah Postingan",
   "edit_post_hint": "Tulis perubahan...",
   "edit_post_fail": "Gagal mengubah",
-  
   "report_post_title": "Laporkan Postingan",
   "report_comm_title": "Laporkan Komunitas",
   "report_reason_spam": "Spam",
@@ -337,7 +305,6 @@
   "report_reason_misinfo": "Informasi Palsu",
   "report_submitted": "Laporan dikirim.",
   "report_comm_submitted": "Laporan komunitas dikirim.",
-  
   "block_user_title": "Blokir Pengguna?",
   "block_user_confirm": "Mereka tidak akan bisa mengikuti atau melihat postingan anda, dan anda tidak akan melihat postingan mereka.",
   "user_blocked": "Pengguna diblokir",
@@ -358,7 +325,6 @@
   "edit_error_name": "Nama tidak boleh kosong",
   "edit_error_upload": "Gagal mengunggah",
   "edit_success": "Profil berhasil diperbarui!",
-
   "comm_create_title": "Buat Channel Publik",
   "comm_create_subtitle": "Bangun suara baru di Kampus PNJ.",
   "comm_type_label": "Tipe Channel",
@@ -378,7 +344,6 @@
   "comm_create_error_name": "Nama komunitas wajib diisi",
   "comm_create_error_doc": "Dokumen verifikasi wajib diisi",
   "comm_create_error_generic": "Gagal membuat komunitas",
-
   "comm_tab_posts": "Postingan",
   "comm_tab_about": "Tentang",
   "comm_join": "Gabung",
@@ -390,17 +355,14 @@
   "comm_edit_profile": "Edit Komunitas",
   "comm_leave": "Keluar Komunitas",
   "comm_delete": "Hapus Komunitas",
-
   "comm_explore_title": "Jelajahi Channel",
   "comm_followers_count": "Pengikut",
-
   "auth_agree_start": "Saya menyetujui ",
   "auth_agree_terms": "Syarat dan Ketentuan",
   "auth_agree_end": " dan kebijakan privasi.",
   "auth_agree_error": "Anda harus menyetujui Syarat dan Ketentuan untuk mendaftar.",
   "auth_show_password": "Lihat sandi",
   "auth_hide_password": "Sembunyikan sandi",
-
   "about_page_title": "Tentang SAPA PNJ",
   "about_app_section": "Tentang Aplikasi",
   "about_app_desc": "SAPA PNJ adalah platform media sosial untuk komunitas Politeknik Negeri Jakarta. Memfasilitasi komunikasi antara mahasiswa dan dosen untuk berbagi berita kampus, update akademik, dan momen kehidupan sehari-hari.",
@@ -409,13 +371,11 @@
   "about_dev_team": "Tim Pengembang",
   "about_view_source": "Lihat Source Code",
   "about_version": "Versi",
-  
   "settings_select_language": "Pilih Bahasa",
   "service_spirit": "SPIRIT ACADEMIA",
   "service_elearning": "E-Learning",
   "service_academic": "Akademik PNJ",
   "general_user": "Pengguna",
-
   "account_verif_status": "Status Verifikasi",
   "account_verified": "Terverifikasi",
   "account_action_req": "Perlu Tindakan",
@@ -453,13 +413,11 @@
   "account_cleaning": "Membersihkan data profil dan postingan...",
   "account_deleted": "Akun berhasil dihapus.",
   "account_delete_fail": "Gagal menghapus akun",
-
   "setup_dept_title": "Dimana anda belajar?",
   "setup_dept_subtitle": "Pilih jurusan dan prodi untuk terhubung dengan teman.",
   "setup_dept_select_error": "Harap pilih jurusan dan program studi anda.",
   "setup_dept_label": "Jurusan",
   "setup_prodi_label": "Program Studi",
-
   "follow_title": "Koneksi",
   "follow_title_me": "Koneksi Saya",
   "follow_tab_mutuals": "Saling Mengikuti",
@@ -471,7 +429,6 @@
   "follow_remove_fail": "Gagal menghapus pengikut",
   "follow_tab_following": "Mengikuti",
   "follow_tab_followers": "Pengikut",
-  
   "personalize_your_account": "Personalisasi Akun Anda",
   "choose_profile_picture": "Pilih foto profil dan sampul agar orang lain mudah mengenali Anda.",
   "skip": "Lewati",
@@ -480,18 +437,14 @@
   "private_account": "Akun Privat",
   "private_account_desc": "Hanya pengikut yang bisa melihat konten Anda",
   "public_account_desc": "Semua orang bisa melihat konten Anda",
-
   "edit_auto_detect": "Jurusan terdeteksi otomatis: ",
   "edit_pic_selected": "Foto profil dipilih",
   "edit_banner_selected": "Banner dipilih",
   "edit_update_fail": "Gagal memperbarui: ",
-
-  
   "post_restricted_admin": "Posting dibatasi hanya untuk Admin",
   "post_crop_image": "Potong Gambar",
   "general_community": "Komunitas",
   "general_anonymous": "Anonim",
-
   "verify_setup_title": "Verifikasi Akun Anda",
   "verify_setup_desc": "Untuk menjaga keamanan komunitas PNJ, pengguna terverifikasi mendapatkan akses penuh. Akun yang belum verifikasi hanya bisa melihat.",
   "verify_email_sent_toast": "Email verifikasi dikirim!",
@@ -499,5 +452,53 @@
   "verify_email_sent_banner": "Email terkirim! Cek kotak masuk Anda.",
   "verify_send_btn": "Kirim Email Verifikasi",
   "verify_get_started": "Mulai Sekarang",
-  "error_nim_registered": "NIM Sudah Terdaftar."
+  "error_nim_registered": "NIM Sudah Terdaftar.",
+  "complete_your_profile": "Lengkapi Profil Anda",
+  "admin_panel": "Panel Admin",
+  "review_ktm_verifications": "Tinjau Verifikasi KTM",
+  "no_pending_verifications": "Tidak ada verifikasi tertunda",
+  "approve_action": "Setujui",
+  "reject_action": "Tolak",
+  "no_ktm_image": "Tidak ada gambar KTM",
+  "confirm_delete_draft": "Apakah Anda yakin ingin menghapus draf ini?",
+  "draft_deleted": "Draf dihapus",
+  "delete_draft": "Hapus Draf",
+  "draft_posts": "Draf Postingan",
+  "create_new_post": "Buat Postingan Baru",
+  "saved_posts": "Postingan Tersimpan",
+  "no_saved_posts_yet": "Belum ada postingan tersimpan",
+  "post_not_found": "Postingan tidak ditemukan atau telah dihapus.",
+  "trim_video": "Potong Video",
+  "signup_google": "Daftar dengan Google (@pnj.ac.id)",
+  "signin_google": "Masuk dengan Google (@pnj.ac.id)",
+  "link_account": "Tautkan Akun",
+  "account_linking_required": "Diperlukan Tautan Akun",
+  "change_password": "Ganti Kata Sandi",
+  "current_password": "Kata Sandi Saat Ini",
+  "new_password": "Kata Sandi Baru",
+  "confirm_new_password": "Konfirmasi Kata Sandi Baru",
+  "update_password": "Perbarui Kata Sandi",
+  "password_updated_success": "Kata sandi berhasil diperbarui!",
+  "forgot_password": "Lupa Kata Sandi",
+  "blocked_accounts": "Akun Diblokir",
+  "unblock": "Buka Blokir",
+  "get_verified_badge": "Dapatkan Lencana Terverifikasi",
+  "retake_photo": "Ambil Ulang Foto",
+  "submit_verification": "Kirim Verifikasi",
+  "take_photo": "Ambil Foto",
+  "choose_from_gallery": "Pilih dari Galeri",
+  "community_name": "Nama Komunitas",
+  "delete_channel": "Hapus Saluran?",
+  "delete_community": "Hapus Komunitas",
+  "settings_and_roles": "Pengaturan & Peran",
+  "save_changes": "Simpan Perubahan",
+  "allow_members_to_post": "Izinkan Anggota Memposting",
+  "allow_members_to_post_subtitle": "Jika nonaktif, hanya Admin/Editor yang dapat memposting.",
+  "promote_to_admin": "Promosikan ke Admin",
+  "set_as_editor": "Jadikan Editor",
+  "set_as_moderator": "Jadikan Moderator",
+  "demote_to_member": "Turunkan ke Anggota",
+  "no_members_found": "Tidak ada anggota ditemukan.",
+  "no_staff_found": "Tidak ada staf ditemukan",
+  "search_members": "Cari anggota..."
 }

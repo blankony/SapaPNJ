@@ -1,7 +1,6 @@
 {
   "app_name": "Sapa PNJ",
   "slogan": "SAPA PNJ",
-  
   "general_cancel": "Cancel",
   "general_save": "Save",
   "general_delete": "Delete",
@@ -13,10 +12,8 @@
   "general_loading": "Loading...",
   "general_error": "An error occurred",
   "general_success": "Success",
-
   "welcome_join_message": "Join the community today.",
   "welcome_create_account": "Create account",
-
   "auth_login": "Log In",
   "auth_signup": "Sign Up",
   "auth_email": "Email",
@@ -26,17 +23,14 @@
   "auth_have_account": "Have an account?",
   "auth_create_one": "Create one",
   "auth_welcome": "Welcome back!",
-  
   "nav_home": "Home",
   "nav_community": "Community",
   "nav_ai": "AI Assistant",
   "nav_search": "Search",
   "nav_profile": "Profile",
-
   "home_recent": "Recent",
   "home_recommended": "Recommended",
   "home_no_posts": "No posts to show",
-
   "post_create_title": "Create Post",
   "post_edit_title": "Edit Post",
   "post_hint": "What's happening?",
@@ -44,7 +38,6 @@
   "post_reply_hint": "Post your reply",
   "post_delete_confirm": "Delete this post?",
   "post_pinned": "Pinned Post",
-
   "community_your_channels": "Your Channels",
   "community_broadcast": "Broadcast Feed",
   "community_create": "Create Channel",
@@ -52,12 +45,10 @@
   "community_members": "Members",
   "community_follow": "Follow",
   "community_following": "Following",
-
   "ai_hint": "Ask Spirit AI...",
   "ai_thinking": "Thinking...",
   "ai_history": "Chat History",
   "ai_new_chat": "New Chat",
-
   "profile_posts": "Posts",
   "profile_reposts": "Reposts",
   "profile_replies": "Replies",
@@ -65,21 +56,16 @@
   "profile_followers": "Followers",
   "profile_following": "Following",
   "profile_joined": "Joined",
-
   "settings_title": "Settings",
-  
   "settings_account": "Account Center",
   "settings_account_desc": "Password, Security, and Account Deletion",
   "settings_blocked": "Blocked Accounts",
   "settings_about": "About Us",
-  
   "settings_theme": "Theme",
   "settings_theme_light": "Switch to Light",
   "settings_theme_dark": "Switch to Dark",
-  
   "settings_language": "Change Language",
   "settings_haptic": "Haptic Feedback",
-  
   "settings_header_notif": "Notifications",
   "settings_notif_allow": "Allow Notifications",
   "settings_notif_allow_desc": "Master switch for all app notifications",
@@ -89,11 +75,9 @@
   "settings_notif_clear_confirm": "Clear History?",
   "settings_notif_clear_desc": "This will delete all past notifications permanently.",
   "settings_notif_cleared": "History cleared",
-
   "settings_logout": "Log Out",
   "settings_logout_confirm": "Are you sure you want to sign out?",
   "general_yes": "Yes",
-
   "auth_sign_in_title": "Sign in to your account",
   "auth_enter_email": "Enter email",
   "auth_enter_password": "Enter password",
@@ -103,7 +87,6 @@
   "val_email_empty": "Email cannot be empty.",
   "val_email_invalid": "Enter a valid email address.",
   "val_password_empty": "Password cannot be empty.",
-
   "auth_name": "Name",
   "auth_nim": "NIM / NIP",
   "auth_confirm_pass": "Confirm Password",
@@ -111,7 +94,6 @@
   "auth_email_hint": "Enter PNJ email",
   "auth_pass_hint": "Enter password",
   "auth_confirm_pass_hint": "Confirm password",
-  
   "val_name_empty": "Name cannot be empty.",
   "val_nim_empty": "ID Number cannot be empty.",
   "val_nim_length": "ID Number must be 10 (NIM) or 18 (NIP) digits.",
@@ -121,7 +103,6 @@
   "val_pass_complexity": "Password must contain letters, numbers, and symbols.",
   "val_confirm_empty": "Please confirm your password.",
   "val_pass_mismatch": "Passwords do not match.",
-
   "notif_new": "New Notification",
   "notif_like": "Someone liked your post.",
   "notif_comment": "Someone commented on your post.",
@@ -134,7 +115,6 @@
   "community_post_to": "Post to Community",
   "community_no_joined": "You haven't joined any communities yet.",
   "home_error_loading": "Error loading posts",
-
   "search_hint": "Search PNJ...",
   "search_listening": "Listening...",
   "search_suggestion_prefix": "Suggestion: ",
@@ -159,7 +139,6 @@
   "general_show_more": "Show more",
   "general_show_less": "Show less",
   "general_members": "members",
-
   "ai_subtitle": "Your Virtual Assistant",
   "ai_listening": "Listening...",
   "ai_copied": "Copied to clipboard",
@@ -176,7 +155,6 @@
   "ai_sugg_admin": "How to contact admin?",
   "ai_sugg_translate": "Translate this text",
   "ai_sugg_email": "Draft a formal email",
-
   "profile_pin_success": "Post pinned to profile",
   "profile_unpin_success": "Post unpinned",
   "profile_uploading": "Uploading media...",
@@ -225,7 +203,6 @@
   "profile_no_reposts": "No reposts yet.",
   "profile_unfollow": "Unfollow",
   "profile_requested": "Requested",
-
   "verify_required": "Verification Required",
   "verify_email_msg": "You must verify your email address to create posts.",
   "verify_resend": "Resend Email",
@@ -263,19 +240,16 @@
   "post_in_comm": "Posting in",
   "post_hint_official": "What's the official news?",
   "post_verify_sent": "Verification email sent!",
-
   "login_required": "Login required",
   "community_create_short": "Create",
   "community_join_prompt": "Join communities to see updates here.",
   "community_no_broadcasts": "No recent broadcasts.",
-
   "side_saved": "Saved",
   "side_communities": "Communities",
   "side_services": "PNJ Services",
   "service_website": "PNJ Website",
   "theme_switch_light": "Switch to Light",
   "theme_switch_dark": "Switch to Dark",
-
   "notif_activity_title": "Activity",
   "notif_mark_read": "Mark all read",
   "notif_empty": "No notifications yet",
@@ -297,11 +271,9 @@
   "action_followed": "followed you",
   "action_accepted": "accepted your follow request",
   "action_interacted": "interacted with you",
-  
   "post_bookmark_saved": "Saved to bookmarks",
   "post_bookmark_removed": "Removed from bookmarks",
   "post_bookmark_error": "Failed to bookmark",
-  
   "menu_edit": "Edit Post",
   "menu_unhide": "Unhide Post",
   "menu_hide": "Hide Post (Only Me)",
@@ -313,22 +285,18 @@
   "menu_report": "Report Post",
   "menu_block": "Block User",
   "menu_report_comm": "Report Community",
-  
   "delete_post_title": "Delete Post",
   "delete_post_confirm": "Are you sure you want to delete this post?",
   "post_deleted": "Post deleted",
   "post_delete_fail": "Failed to delete",
   "pin_fail": "Failed to pin",
-  
   "vis_toast_private": "Post hidden (Only Me)",
   "vis_toast_followers": "Post visible to Followers (Account is Private)",
   "vis_toast_public": "Post is now Public",
   "vis_toast_fail": "Failed to update visibility",
-  
   "edit_post_title": "Edit Post",
   "edit_post_hint": "Edit your post...",
   "edit_post_fail": "Edit failed",
-  
   "report_post_title": "Report Post",
   "report_comm_title": "Report Community",
   "report_reason_spam": "Spam",
@@ -337,7 +305,6 @@
   "report_reason_misinfo": "Misinformation",
   "report_submitted": "Report submitted.",
   "report_comm_submitted": "Community report submitted.",
-  
   "block_user_title": "Block User?",
   "block_user_confirm": "They will not be able to follow you or view your posts, and you will not see their posts.",
   "user_blocked": "User blocked",
@@ -358,7 +325,6 @@
   "edit_error_name": "Name cannot be empty",
   "edit_error_upload": "Failed to upload",
   "edit_success": "Profile updated successfully!",
-  
   "comm_create_title": "Create Public Channel",
   "comm_create_subtitle": "Establish a new voice on PNJ Campus.",
   "comm_type_label": "Channel Type",
@@ -378,7 +344,6 @@
   "comm_create_error_name": "Community name required",
   "comm_create_error_doc": "Verification document required",
   "comm_create_error_generic": "Error creating community",
-
   "comm_tab_posts": "Posts",
   "comm_tab_about": "About",
   "comm_join": "Join",
@@ -390,10 +355,8 @@
   "comm_edit_profile": "Edit Community",
   "comm_leave": "Leave Community",
   "comm_delete": "Delete Community",
-
   "comm_explore_title": "Explore Channels",
   "comm_followers_count": "Followers",
-  
   "about_page_title": "About SAPA PNJ",
   "about_app_section": "About Application",
   "about_app_desc": "SAPA PNJ is a social media platform for the Jakarta State Polytechnic community. Facilitating communication between students and lecturers to share campus news, academic updates, and daily life moments.",
@@ -402,13 +365,11 @@
   "about_dev_team": "Development Team",
   "about_view_source": "View Source Code",
   "about_version": "Version",
-
   "settings_select_language": "Select Language",
   "service_spirit": "SPIRIT ACADEMIA",
   "service_elearning": "E-Learning",
   "service_academic": "PNJ Academic",
   "general_user": "User",
-  
   "account_verif_status": "Verification Status",
   "account_verified": "Verified",
   "account_action_req": "Action Required",
@@ -446,7 +407,6 @@
   "account_cleaning": "Cleaning up your posts and profile data...",
   "account_deleted": "Account deleted successfully.",
   "account_delete_fail": "Failed to delete account",
-
   "setup_dept_title": "Where do you study?",
   "setup_dept_subtitle": "Select your department and study program to connect with peers.",
   "setup_dept_select_error": "Please select your department and study program.",
@@ -458,7 +418,6 @@
   "auth_agree_error": "You must agree to the Terms and Conditions to register.",
   "auth_show_password": "Show password",
   "auth_hide_password": "Hide password",
-
   "follow_title": "Connections",
   "follow_title_me": "My Connections",
   "follow_tab_mutuals": "Mutuals",
@@ -468,14 +427,11 @@
   "follow_remove_btn": "Remove",
   "follow_removed_msg": "Follower removed",
   "follow_remove_fail": "Failed to remove follower",
-
   "follow_tab_following": "Following",
   "follow_tab_followers": "Followers",
-
   "error_open_pdf": "Cannot open document: ",
   "error_load_pdf": "Failed to load Terms and Conditions.",
   "error_nim_registered": "The NIM/NIP is already registered.",
-
   "personalize_your_account": "Personalize Your Account",
   "choose_profile_picture": "Add a profile picture and banner to let people recognize you.",
   "skip": "Skip",
@@ -484,24 +440,67 @@
   "private_account": "Private Account",
   "private_account_desc": "Only followers can see your content",
   "public_account_desc": "Anyone can see your content",
-
   "edit_auto_detect": "Auto-detected department: ",
   "edit_pic_selected": "Profile picture selected",
   "edit_banner_selected": "Banner selected",
   "edit_update_fail": "Update failed: ",
-
-  
   "post_restricted_admin": "Posting restricted to Admins",
   "post_crop_image": "Crop Image",
   "general_community": "Community",
   "general_anonymous": "Anonymous",
-
   "verify_setup_title": "Verify your account",
   "verify_setup_desc": "To ensure the safety of the PNJ community, verified users get full access to post and interact. Unverified accounts are read-only.",
   "verify_email_sent_toast": "Verification email sent!",
   "verify_already_verified": "Already verified or user not found.",
   "verify_email_sent_banner": "Email sent! Check your inbox.",
   "verify_send_btn": "Send Verification Email",
-  "verify_get_started": "Get Started"
-
+  "verify_get_started": "Get Started",
+  "complete_your_profile": "Complete Your Profile",
+  "admin_panel": "Admin Panel",
+  "review_ktm_verifications": "Review KTM verifications",
+  "no_pending_verifications": "No pending verifications",
+  "approve_action": "Approve",
+  "reject_action": "Reject",
+  "no_ktm_image": "No KTM image",
+  "confirm_delete_draft": "Are you sure you want to delete this draft?",
+  "draft_deleted": "Draft deleted",
+  "delete_draft": "Delete Draft",
+  "draft_posts": "Draft Posts",
+  "create_new_post": "Create New Post",
+  "saved_posts": "Saved Posts",
+  "no_saved_posts_yet": "No saved posts yet",
+  "post_not_found": "Post not found or has been deleted.",
+  "trim_video": "Trim Video",
+  "signup_google": "Sign up with Google (@pnj.ac.id)",
+  "signin_google": "Sign in with Google (@pnj.ac.id)",
+  "link_account": "Link Account",
+  "account_linking_required": "Account Linking Required",
+  "change_password": "Change Password",
+  "current_password": "Current Password",
+  "new_password": "New Password",
+  "confirm_new_password": "Confirm New Password",
+  "update_password": "Update Password",
+  "password_updated_success": "Password updated successfully!",
+  "forgot_password": "Forgot Password",
+  "blocked_accounts": "Blocked Accounts",
+  "unblock": "Unblock",
+  "get_verified_badge": "Get Verified Badge",
+  "retake_photo": "Retake Photo",
+  "submit_verification": "Submit Verification",
+  "take_photo": "Take Photo",
+  "choose_from_gallery": "Choose from Gallery",
+  "community_name": "Community Name",
+  "delete_channel": "Delete Channel?",
+  "delete_community": "Delete Community",
+  "settings_and_roles": "Settings & Roles",
+  "save_changes": "Save Changes",
+  "allow_members_to_post": "Allow Members to Post",
+  "allow_members_to_post_subtitle": "If off, only Admins/Editors can post.",
+  "promote_to_admin": "Promote to Admin",
+  "set_as_editor": "Set as Editor",
+  "set_as_moderator": "Set as Moderator",
+  "demote_to_member": "Demote to Member",
+  "no_members_found": "No members found.",
+  "no_staff_found": "No staff members found",
+  "search_members": "Search members..."
 }

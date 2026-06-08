@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../theme/app_theme.dart';
@@ -107,7 +108,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
 
     return Scaffold(
       appBar: FrostedAppBar(
-        title: Text('Trim Video'),
+        title: Text(AppLocalizations.of(context)!.translate('trim_video')),
         actions: [
           TextButton(
             onPressed: _isInitialized ? _saveTrimmedVideo : null,

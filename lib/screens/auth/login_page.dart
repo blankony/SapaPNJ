@@ -255,7 +255,7 @@ class _LoginPageState extends State<LoginPage> {
                 backgroundColor: SisapaTheme.blue,
                 foregroundColor: Colors.white,
               ),
-              child: Text('Link Account'),
+              child: Text(AppLocalizations.of(context)!.translate('link_account')),
             ),
           ],
         );
@@ -465,7 +465,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           icon: FaIcon(FontAwesomeIcons.google, size: 20),
-                          label: Text("Sign in with Google (@pnj.ac.id)"),
+                          label: Text(AppLocalizations.of(context)!.translate('signin_google')),
                           onPressed: _signInWithGoogle,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: theme.colorScheme.onSurface,

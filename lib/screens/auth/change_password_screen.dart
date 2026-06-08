@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/app_theme.dart';
 
@@ -57,7 +58,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password updated successfully!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.translate('password_updated_success'))),
         );
         Navigator.of(context).pop();
       }
@@ -89,7 +90,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FrostedAppBar(title: Text('Change Password')),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('edit_change_password'))),
       body: Stack(
         children: [
           Form(
@@ -100,20 +101,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 children: [
                   TextField(
                     controller: _currentPasswordController,
-                    decoration: InputDecoration(labelText: 'Current Password'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.translate('current_password')),
                     obscureText: true,
                   ),
                   SizedBox(height: 16),
                   TextField(
                     controller: _newPasswordController,
-                    decoration: InputDecoration(labelText: 'New Password'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.translate('new_password')),
                     obscureText: true,
                   ),
                   SizedBox(height: 16),
                   TextField(
                     controller: _confirmPasswordController,
                     decoration: InputDecoration(
-                      labelText: 'Confirm New Password',
+                      labelText: AppLocalizations.of(context)!.translate('confirm_new_password'),
                     ),
                     obscureText: true,
                   ),
@@ -139,7 +140,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      child: Text('Update Password'),
+                      child: Text(AppLocalizations.of(context)!.translate('update_password')),
                     ),
                   ),
                 ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/api_service.dart';
 import '../../widgets/blog_post_card.dart';
@@ -36,7 +37,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
 
     return Scaffold(
       appBar: FrostedAppBar(
-        title: const Text("Saved Posts"),
+        title: Text(AppLocalizations.of(context)!.translate('saved_posts')),
         centerTitle: true,
       ),
       body: RefreshIndicator(

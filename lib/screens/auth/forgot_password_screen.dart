@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/app_theme.dart';
 
@@ -40,7 +41,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: FrostedAppBar(title: Text('Forgot Password'), centerTitle: true),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('forgot_password')), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
@@ -60,7 +61,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             SizedBox(height: 32),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Enter email'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.translate('auth_enter_email')),
               keyboardType: TextInputType.emailAddress,
             ),
             SizedBox(height: 24),
@@ -87,7 +88,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: Text('Submit'),
+                child: Text(AppLocalizations.of(context)!.translate('general_submit')),
               ),
             ),
           ],

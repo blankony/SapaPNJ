@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../utils/format_utils.dart';
 import '../../theme/app_theme.dart';
@@ -111,7 +112,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
                         Icons.add_comment_rounded,
                         color: Colors.white,
                       ),
-                      label: const Text("New Chat"),
+                      label: Text(AppLocalizations.of(context)!.translate('ai_new_chat')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: SisapaTheme.blue,
                         foregroundColor: Colors.white,
@@ -204,7 +205,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(ctx),
-                                      child: const Text("Cancel"),
+                                      child: Text(AppLocalizations.of(context)!.translate('general_cancel')),
                                     ),
                                     TextButton(
                                       onPressed: () {

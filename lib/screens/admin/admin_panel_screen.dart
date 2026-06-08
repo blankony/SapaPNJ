@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../services/overlay_service.dart';
@@ -62,7 +63,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.translate('general_cancel')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -142,7 +143,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FrostedAppBar(title: const Text('Admin Panel')),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('admin_panel'))),
       body: _buildBody(),
     );
   }
@@ -308,8 +309,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Center(
-                      child: Text('No KTM image', style: TextStyle(color: Colors.grey)),
+                    child: Center(
+                      child: Text(AppLocalizations.of(context)!.translate('no_ktm_image'), style: const TextStyle(color: Colors.grey)),
                     ),
                   ),
 
@@ -322,7 +323,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () => _review(index, false),
                         icon: const Icon(Icons.close, size: 18),
-                        label: const Text('Reject'),
+                        label: Text(AppLocalizations.of(context)!.translate('reject_action')),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.redAccent,
                           side: const BorderSide(color: Colors.redAccent),
@@ -338,7 +339,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       child: FilledButton.icon(
                         onPressed: () => _review(index, true),
                         icon: const Icon(Icons.check, size: 18),
-                        label: const Text('Approve'),
+                        label: Text(AppLocalizations.of(context)!.translate('approve_action')),
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,

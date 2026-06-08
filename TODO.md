@@ -83,5 +83,5 @@
 - [x] **5.5 Code Cleanup & Linting:** Run `flutter analyze`, remove unused imports, dead code, and ensure strict type safety across the board.
 
 ## Future task
-- [ ] Delete all Hardcoded language strings to langauge dynamic strings so we can easly add more language option
+- [x] Delete all Hardcoded language strings to langauge dynamic strings so we can easly add more language option
 - [ ] Posts SQL generator factory for trending, recommendation and easy testing instead of manually populating the database?

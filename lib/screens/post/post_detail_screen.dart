@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -207,7 +208,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: FrostedAppBar(title: Text("Post")),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('post_button'))),
       body: Column(
         children: [
           Expanded(
@@ -246,7 +247,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         return Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
-                            child: Text("Post not found or has been deleted."),
+                            child: Text(AppLocalizations.of(context)!.translate('post_not_found')),
                           ),
                         );
                       }
@@ -508,7 +509,7 @@ class _CommentComposer extends StatelessWidget {
                       controller: controller,
                       onChanged: onChanged,
                       decoration: InputDecoration(
-                        hintText: "Post your reply",
+                        hintText: AppLocalizations.of(context)!.translate('post_reply_hint'),
                         hintStyle: TextStyle(color: theme.hintColor),
                         filled: false,
                         border: InputBorder.none,

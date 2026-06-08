@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import '../../services/app_cache_manager.dart';
 
 import 'package:flutter/material.dart';
@@ -271,7 +272,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
                 SizedBox(height: 16),
                 ListTile(
                   leading: Icon(Icons.camera_alt, color: SisapaTheme.blue),
-                  title: Text("Take Photo"),
+                  title: Text(AppLocalizations.of(context)!.translate('take_photo')),
                   onTap: () {
                     Navigator.pop(context);
                     _pickAndUploadImage(
@@ -282,7 +283,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
                 ),
                 ListTile(
                   leading: Icon(Icons.photo_library, color: SisapaTheme.blue),
-                  title: Text("Choose from Gallery"),
+                  title: Text(AppLocalizations.of(context)!.translate('profile_gallery')),
                   onTap: () {
                     Navigator.pop(context);
                     _pickAndUploadImage(
@@ -350,19 +351,19 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => FrostedAlertDialog(
-        title: Text("Delete Channel?"),
+        title: Text(AppLocalizations.of(context)!.translate('delete_channel')),
         content: Text(
           "Are you sure? This will delete the identity and all data permanently.",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text("Cancel"),
+            child: Text(AppLocalizations.of(context)!.translate('general_cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text("Delete"),
+            child: Text(AppLocalizations.of(context)!.translate('general_delete')),
           ),
         ],
       ),
@@ -403,7 +404,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
 
     if (_isLoading) {
       return Scaffold(
-        appBar: FrostedAppBar(title: Text("Settings & Roles")),
+        appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('settings_and_roles'))),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -413,7 +414,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
     final String bannerUrl = _communityData?['banner_image_url'] ?? '';
 
     return Scaffold(
-      appBar: FrostedAppBar(title: Text("Settings & Roles")),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('settings_and_roles'))),
       body: Column(
         children: [
           SizedBox(
@@ -568,7 +569,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : Text("Save Changes"),
+                              : Text(AppLocalizations.of(context)!.translate('save_changes')),
                         ),
                       ),
 
@@ -576,8 +577,8 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
                     Divider(),
 
                     SwitchListTile(
-                      title: Text("Allow Members to Post"),
-                      subtitle: Text("If off, only Admins/Editors can post."),
+                      title: Text(AppLocalizations.of(context)!.translate('comm_allow_post')),
+                      subtitle: Text(AppLocalizations.of(context)!.translate('allow_members_to_post_subtitle')),
                       value: _allowMemberPosts,
                       onChanged: (widget.isOwner || widget.isAdmin)
                           ? _updatePermission
@@ -609,7 +610,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: "Search members...",
+                          hintText: AppLocalizations.of(context)!.translate('comm_search_members'),
                           prefixIcon: Icon(Icons.search),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -642,7 +643,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
     }).toList();
 
     if (filteredMembers.isEmpty) {
-      return Center(child: Text("No members found."));
+      return Center(child: Text(AppLocalizations.of(context)!.translate('no_members_found')));
     }
 
     return ListView.builder(
@@ -718,19 +719,19 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
                       if (widget.isOwner)
                         PopupMenuItem(
                           value: 'make_admin',
-                          child: Text("Promote to Admin"),
+                          child: Text(AppLocalizations.of(context)!.translate('promote_to_admin')),
                         ),
                       PopupMenuItem(
                         value: 'make_editor',
-                        child: Text("Set as Editor"),
+                        child: Text(AppLocalizations.of(context)!.translate('set_as_editor')),
                       ),
                       PopupMenuItem(
                         value: 'make_mod',
-                        child: Text("Set as Moderator"),
+                        child: Text(AppLocalizations.of(context)!.translate('set_as_moderator')),
                       ),
                       PopupMenuItem(
                         value: 'remove_role',
-                        child: Text("Demote to Member"),
+                        child: Text(AppLocalizations.of(context)!.translate('demote_to_member')),
                       ),
                       PopupMenuDivider(),
                       PopupMenuItem(

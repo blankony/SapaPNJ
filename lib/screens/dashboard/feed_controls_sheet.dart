@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 
 import '../../services/feed_preferences_service.dart';
 import '../../theme/app_theme.dart';
@@ -72,7 +73,7 @@ class _FeedControlsSheetState extends State<FeedControlsSheet> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Close',
+                      tooltip: AppLocalizations.of(context)!.translate('general_close'),
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
@@ -153,7 +154,7 @@ class _FeedControlsSheetState extends State<FeedControlsSheet> {
                     const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(AppLocalizations.of(context)!.translate('general_cancel')),
                     ),
                     const SizedBox(width: 8),
                     FilledButton.icon(

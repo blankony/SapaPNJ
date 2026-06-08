@@ -304,7 +304,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 backgroundColor: SisapaTheme.blue,
                 foregroundColor: Colors.white,
               ),
-              child: Text('Link Account'),
+              child: Text(AppLocalizations.of(context)!.translate('link_account')),
             ),
           ],
         );
@@ -706,7 +706,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           icon: FaIcon(FontAwesomeIcons.google, size: 20),
-                          label: Text("Sign up with Google (@pnj.ac.id)"),
+                          label: Text(AppLocalizations.of(context)!.translate('signup_google')),
                           onPressed: _isLoading ? null : _signUpWithGoogle,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: theme.colorScheme.onSurface,

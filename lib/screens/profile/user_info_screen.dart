@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/api_service.dart';
 import '../../auth_gate.dart';
@@ -147,7 +148,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FrostedAppBar(title: const Text('Complete Your Profile')),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('complete_your_profile'))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

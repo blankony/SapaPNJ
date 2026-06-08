@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/api_service.dart';
@@ -120,7 +121,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
     }
 
     return Scaffold(
-      appBar: FrostedAppBar(title: const Text("Get Verified Badge")),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('profile_verify_get'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -208,7 +209,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                     child: TextButton.icon(
                       onPressed: () => _pickImage(ImageSource.camera),
                       icon: const Icon(Icons.camera_alt),
-                      label: const Text("Retake Photo"),
+                      label: Text(AppLocalizations.of(context)!.translate('retake_photo')),
                     ),
                   ),
                 ),
@@ -236,7 +237,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text("Submit Verification"),
+                      : Text(AppLocalizations.of(context)!.translate('submit_verification')),
                 ),
               ),
             ],

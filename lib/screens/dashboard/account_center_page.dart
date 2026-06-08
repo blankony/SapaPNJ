@@ -532,8 +532,8 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
                       ),
                       child: const Icon(Icons.admin_panel_settings, color: Colors.deepPurple, size: 20),
                     ),
-                    title: const Text('Admin Panel'),
-                    subtitle: const Text('Review KTM verifications'),
+                    title: Text(AppLocalizations.of(context)!.translate('admin_panel')),
+                    subtitle: Text(AppLocalizations.of(context)!.translate('review_ktm_verifications')),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       Navigator.push(

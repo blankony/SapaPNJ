@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -548,7 +549,7 @@ class _HomeDashboardState extends State<HomeDashboard>
         return [
           IconButton(
             icon: const Icon(Icons.history),
-            tooltip: 'Chat History',
+            tooltip: AppLocalizations.of(context)!.translate('ai_history'),
             onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
         ];
@@ -697,31 +698,31 @@ class _HomeDashboardState extends State<HomeDashboard>
         items: <BottomNavyBarItem>[
           BottomNavyBarItem(
             icon: Icon(Icons.home),
-            title: Text('Home'),
+            title: Text(AppLocalizations.of(context)!.translate('nav_home')),
             activeColor: activeIconColor,
             inactiveColor: inactiveIconColor,
           ),
           BottomNavyBarItem(
             icon: Icon(Icons.groups),
-            title: Text('Community'),
+            title: Text(AppLocalizations.of(context)!.translate('general_community')),
             activeColor: activeIconColor,
             inactiveColor: inactiveIconColor,
           ),
           BottomNavyBarItem(
             icon: Icon(Icons.assistant),
-            title: Text('AI Assistant'),
+            title: Text(AppLocalizations.of(context)!.translate('nav_ai')),
             activeColor: activeIconColor,
             inactiveColor: inactiveIconColor,
           ),
           BottomNavyBarItem(
             icon: Icon(Icons.search),
-            title: Text('Search'),
+            title: Text(AppLocalizations.of(context)!.translate('nav_search')),
             activeColor: activeIconColor,
             inactiveColor: inactiveIconColor,
           ),
           BottomNavyBarItem(
             icon: Icon(Icons.person),
-            title: Text('Profile'),
+            title: Text(AppLocalizations.of(context)!.translate('nav_profile')),
             activeColor: activeIconColor,
             inactiveColor: inactiveIconColor,
           ),

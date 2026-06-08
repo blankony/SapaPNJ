@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import '../../services/app_cache_manager.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,7 +14,7 @@ class BlockedUsersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FrostedAppBar(title: Text("Blocked Accounts")),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('settings_blocked'))),
       body: StreamBuilder<List<String>>(
         stream: moderationService.streamBlockedUsers(),
         builder: (context, snapshot) {
@@ -89,7 +90,7 @@ class BlockedUsersPage extends StatelessWidget {
                       onPressed: () async {
                         await moderationService.unblockUser(userId);
                       },
-                      child: Text("Unblock"),
+                      child: Text(AppLocalizations.of(context)!.translate('unblock')),
                     ),
                   );
                 },

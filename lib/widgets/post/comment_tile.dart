@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import '../../services/app_cache_manager.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -72,11 +73,11 @@ class _CommentTileState extends State<CommentTile> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text("Cancel"),
+                child: Text(AppLocalizations.of(context)!.translate('general_cancel')),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text("Delete"),
+                child: Text(AppLocalizations.of(context)!.translate('general_delete')),
               ),
             ],
           ),

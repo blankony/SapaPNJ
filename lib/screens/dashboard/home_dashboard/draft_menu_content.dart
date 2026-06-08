@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../services/draft_service.dart';
@@ -80,7 +81,7 @@ class _DraftMenuContentState extends State<DraftMenuContent> {
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: theme.hintColor)),
+            child: Text(AppLocalizations.of(context)!.translate('general_cancel'), style: TextStyle(color: theme.hintColor)),
           ),
         ],
       ),
@@ -91,7 +92,7 @@ class _DraftMenuContentState extends State<DraftMenuContent> {
     return ElevatedButton.icon(
       onPressed: widget.onNewPost,
       icon: const Icon(Icons.add, color: Colors.white),
-      label: const Text('Create New Post', style: TextStyle(fontSize: 16)),
+      label: Text(AppLocalizations.of(context)!.translate('post_create_new'), style: TextStyle(fontSize: 16)),
       style: ElevatedButton.styleFrom(
         backgroundColor: SisapaTheme.blue,
         foregroundColor: Colors.white,

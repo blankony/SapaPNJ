@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:sapa_pnj/services/app_localizations.dart';
 import '../../services/app_cache_manager.dart';
 
 import 'package:flutter/material.dart';
@@ -59,16 +60,16 @@ class _DraftsScreenState extends State<DraftsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => FrostedAlertDialog(
-        title: const Text('Delete Draft'),
-        content: const Text('Are you sure you want to delete this draft?'),
+        title: Text(AppLocalizations.of(context)!.translate('delete_draft')),
+        content: Text(AppLocalizations.of(context)!.translate('confirm_delete_draft')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.translate('general_cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)!.translate('general_delete'), style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -86,9 +87,9 @@ class _DraftsScreenState extends State<DraftsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Draft deleted'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.translate('draft_deleted')),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -110,7 +111,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FrostedAppBar(title: const Text('Draft Posts'), elevation: 0),
+      appBar: FrostedAppBar(title: Text(AppLocalizations.of(context)!.translate('draft_posts')), elevation: 0),
       body: RefreshIndicator(
         onRefresh: _loadDrafts,
         child: _isLoading

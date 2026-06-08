@@ -219,7 +219,7 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
                       ),
                       trailing: isFollowing
                           ? IconButton(
-                              tooltip: "Unfollow",
+                              tooltip: AppLocalizations.of(context)!.translate('profile_unfollow'),
                               icon: const Icon(
                                 Icons.check_circle,
                                 color: Colors.green,
@@ -232,7 +232,7 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
                               },
                             )
                           : IconButton(
-                              tooltip: "Follow",
+                              tooltip: AppLocalizations.of(context)!.translate('community_follow'),
                               icon: const Icon(
                                 Icons.add_circle,
                                 color: SisapaTheme.blue,
