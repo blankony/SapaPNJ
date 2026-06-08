@@ -73,5 +73,11 @@
 - [x] Opening keyboard on a blog post to reply causes lag
 - [x] Hide text input outline on the blog post reply section
 - [x] Add a smooth and bouncy pull down to refresh animation just like in the communities tab pull down refresh, for other page.
-- [ ] Major Refactor of the lib directories for better maintainability, for example creating a common single dart file for functions we use all the time so we dont need to define the same functions over and over again in other darts file and instead we can reference this single file to get the function, and splitting the massive file containing thousands of lines to seperate files and dir for better organization.
+## Phase 5: Major Refactor & Codebase Optimization
+- [ ] **5.1 Utilities Centralization:** Identify commonly duplicated helper functions (e.g., date formatting, error handling, dialogs) and centralize them into `lib/utils/` or `lib/helpers/`.
+- [ ] **5.2 Massive File Splitting:** Decompose massive files (e.g., `api_service.dart`, `profile_page.dart`, `create_post_screen.dart`, `blog_post_card.dart`, `image_viewer_screen.dart`) into smaller, focused components and services.
+- [ ] **5.3 Widget Modularity:** Extract reusable UI components from screen files into `lib/widgets/`.
+- [ ] **5.4 Directory Reorganization:** Reorganize `lib/screens/` and `lib/widgets/` into domain-driven subdirectories (e.g., `/auth`, `/dashboard`, `/community`, `/post`).
+- [ ] **5.5 Code Cleanup & Linting:** Run `flutter analyze`, remove unused imports, dead code, and ensure strict type safety across the board.
+
 - [ ] Trend Posts SQL generator for trending testing?
