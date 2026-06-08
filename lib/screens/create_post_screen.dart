@@ -17,6 +17,7 @@ import '../theme/app_theme.dart';
 import '../theme/avatar_helper.dart';
 import '../services/prediction_service.dart';
 import '../services/gcs_service.dart';
+import '../widgets/create_post_action_toolbar.dart';
 import '../services/overlay_service.dart';
 import '../services/draft_service.dart';
 import '../services/bad_word_service.dart';
@@ -1270,12 +1271,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
             ),
 
-            _CreatePostActionToolbar(
-              showVisibilityControl: !_isCommunityContext,
-              visibilityButtonContent: _buildVisibilityButtonContent(),
-              onPickImage: () => _showMediaSourceSelection(isVideo: false),
-              onPickVideo: () => _showMediaSourceSelection(isVideo: true),
-              onShowVisibilityPicker: _showVisibilityPicker,
+            Positioned(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 0,
+              right: 0,
+              child: CreatePostActionToolbar(
+                isCommunityContext: _isCommunityContext,
+                visibilityButtonContent: _buildVisibilityButtonContent(),
+                onPickImage: () => _showMediaSourceSelection(isVideo: false),
+                onPickVideo: () => _showMediaSourceSelection(isVideo: true),
+                onShowVisibilityPicker: _showVisibilityPicker,
+              ),
             ),
 
             // --- LOADING BLOCKING SCREEN (WITH ANIMATION) ---
@@ -1336,64 +1342,4 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 }
 
-class _CreatePostActionToolbar extends StatelessWidget {
-  final bool showVisibilityControl;
-  final Widget visibilityButtonContent;
-  final VoidCallback onPickImage;
-  final VoidCallback onPickVideo;
-  final VoidCallback onShowVisibilityPicker;
 
-  const _CreatePostActionToolbar({
-    required this.showVisibilityControl,
-    required this.visibilityButtonContent,
-    required this.onPickImage,
-    required this.onPickVideo,
-    required this.onShowVisibilityPicker,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: keyboardInset,
-      child: Container(
-        color: theme.scaffoldBackgroundColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.image, color: SisapaTheme.blue),
-              onPressed: onPickImage,
-            ),
-            IconButton(
-              icon: const Icon(Icons.videocam, color: SisapaTheme.blue),
-              onPressed: onPickVideo,
-            ),
-            if (showVisibilityControl)
-              InkWell(
-                onTap: onShowVisibilityPicker,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark
-                        ? Colors.white10
-                        : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: visibilityButtonContent,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
