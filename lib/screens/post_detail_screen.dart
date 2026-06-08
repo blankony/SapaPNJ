@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
-import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 import '../widgets/blog_post_card.dart';
@@ -63,9 +62,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _onCommentChanged(String text) {
-    setState(() {
-      _predictedText = null;
-    });
+    if (_predictedText != null) {
+      setState(() {
+        _predictedText = null;
+      });
+    }
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (text.trim().isEmpty) return;
@@ -204,6 +205,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: FrostedAppBar(title: Text("Post")),
       body: Column(
         children: [
@@ -326,165 +328,226 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentInput() {
+    return _CommentComposer(
+      controller: _commentController,
+      predictedText: _predictedText,
+      selectedMediaFile: _selectedMediaFile,
+      mediaType: _mediaType,
+      isSending: _isSending,
+      onChanged: _onCommentChanged,
+      onAcceptPrediction: _acceptPrediction,
+      onPickMedia: () => _pickMedia(ImageSource.gallery),
+      onClearMedia: _clearMedia,
+      onPostComment: _postComment,
+    );
+  }
+}
+
+class _CommentComposer extends StatelessWidget {
+  final TextEditingController controller;
+  final String? predictedText;
+  final File? selectedMediaFile;
+  final String? mediaType;
+  final bool isSending;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onAcceptPrediction;
+  final VoidCallback onPickMedia;
+  final VoidCallback onClearMedia;
+  final VoidCallback onPostComment;
+
+  const _CommentComposer({
+    required this.controller,
+    required this.predictedText,
+    required this.selectedMediaFile,
+    required this.mediaType,
+    required this.isSending,
+    required this.onChanged,
+    required this.onAcceptPrediction,
+    required this.onPickMedia,
+    required this.onClearMedia,
+    required this.onPostComment,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: EdgeInsets.only(
-        left: 12.0,
-        right: 12.0,
-        bottom: MediaQuery.of(context).padding.bottom + 12.0,
-        top: 12.0,
-      ),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_predictedText != null)
-            GestureDetector(
-              onTap: _acceptPrediction,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                margin: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: SisapaTheme.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 14, color: SisapaTheme.blue),
-                    SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        "Suggested: ...$_predictedText",
-                        style: TextStyle(
-                          color: SisapaTheme.blue,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.only(bottom: keyboardInset),
+      child: Container(
+        padding: EdgeInsets.only(
+          left: 12.0,
+          right: 12.0,
+          bottom: safeBottom + 12.0,
+          top: 12.0,
+        ),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          border: Border(top: BorderSide(color: theme.dividerColor)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (predictedText != null)
+              GestureDetector(
+                onTap: onAcceptPrediction,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  margin: EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: SisapaTheme.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: SisapaTheme.blue,
+                      ),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          "Suggested: ...$predictedText",
+                          style: TextStyle(
+                            color: SisapaTheme.blue,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            if (selectedMediaFile != null)
+              Container(
+                margin: EdgeInsets.only(bottom: 10),
+                height: 100,
+                width: 100,
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: mediaType == 'video'
+                          ? Container(
+                              color: Colors.black,
+                              child: Center(
+                                child: Icon(
+                                  Icons.videocam,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : Image.file(
+                              selectedMediaFile!,
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                            ),
+                    ),
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: GestureDetector(
+                        onTap: onClearMedia,
+                        child: CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.black54,
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
 
-          if (_selectedMediaFile != null)
-            Container(
-              margin: EdgeInsets.only(bottom: 10),
-              height: 100,
-              width: 100,
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _mediaType == 'video'
-                        ? Container(
-                            color: Colors.black,
-                            child: Center(
-                              child: Icon(Icons.videocam, color: Colors.white),
-                            ),
-                          )
-                        : Image.file(
-                            _selectedMediaFile!,
-                            fit: BoxFit.cover,
-                            width: 100,
-                            height: 100,
-                          ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: onPickMedia,
+                  icon: Icon(
+                    Icons.add_photo_alternate_outlined,
+                    color: SisapaTheme.blue,
                   ),
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: GestureDetector(
-                      onTap: _clearMedia,
-                      child: CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.black54,
-                        child: Icon(Icons.close, size: 14, color: Colors.white),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: theme.brightness == Brightness.dark
+                          ? SisapaTheme.darkGrey.withOpacity(0.2)
+                          : SisapaTheme.extraLightGrey,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: TextField(
+                      controller: controller,
+                      onChanged: onChanged,
+                      decoration: InputDecoration(
+                        hintText: "Post your reply",
+                        hintStyle: TextStyle(color: theme.hintColor),
+                        filled: false,
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 4),
                       ),
+                      maxLines: 4,
+                      minLines: 1,
                     ),
                   ),
-                ],
-              ),
-            ),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              IconButton(
-                onPressed: () => _pickMedia(ImageSource.gallery),
-                icon: Icon(
-                  Icons.add_photo_alternate_outlined,
-                  color: SisapaTheme.blue,
                 ),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(minWidth: 40, minHeight: 40),
-              ),
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark
-                        ? SisapaTheme.darkGrey.withOpacity(0.2)
-                        : SisapaTheme.extraLightGrey,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: TextField(
-                    controller: _commentController,
-                    onChanged: _onCommentChanged,
-                    decoration: InputDecoration(
-                      hintText: "Post your reply",
-                      hintStyle: TextStyle(color: theme.hintColor),
-                      filled: false,
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 4),
-                    ),
-                    maxLines: 4,
-                    minLines: 1,
-                  ),
-                ),
-              ),
-              SizedBox(width: 8),
-              _isSending
-                  ? Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: SisapaTheme.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: _postComment,
-                        icon: Icon(
-                          Icons.send_rounded,
-                          size: 20,
-                          color: Colors.white,
+                SizedBox(width: 8),
+                isSending
+                    ? Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        padding: EdgeInsets.all(10),
-                        constraints: BoxConstraints(),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: SisapaTheme.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: onPostComment,
+                          icon: Icon(
+                            Icons.send_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                          padding: EdgeInsets.all(10),
+                          constraints: BoxConstraints(),
+                        ),
                       ),
-                    ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -70,7 +70,7 @@
 - [x] Profile page bug, when at we are top of the profile page the topbar/appbar is showing when it should be hidden, and then when we scroll the top bar became hidden instead, it is essentially flipped.
 - [x] Community posts doesnt show up in the home feed or any other feed than the communities tab, even reposted community posts doesnt get shown at all aswell.
 - [x] Verification method for KTM, Official Comunities, etc
-- [ ] Opening keyboard on a blog post to reply causes lag
+- [x] Opening keyboard on a blog post to reply causes lag
 - [ ] Hide text input outline on the blog post reply section
 - [ ] Add a smooth and bouncy pull down to refresh animation just like in the communities tab pull down refresh, for other page.
 - [ ] Major Refactor of the lib directories for better maintainability, for example creating a common single dart file for functions we use all the time so we dont need to define the same functions over and over again in other darts file and instead we can reference this single file to get the function, and splitting the massive file containing thousands of lines to seperate files and dir for better organization.
