@@ -6,29 +6,29 @@ import '../../services/api_service.dart';
 import '../../services/app_cache_manager.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../widgets/side_panel.dart';
-import '../../widgets/ai_history_drawer.dart';
+import '../../widgets/navigation/side_panel.dart';
+import '../../widgets/ai/ai_history_drawer.dart';
 import 'home_page.dart';
 import 'ai_assistant_page.dart';
 import 'search_page.dart';
 import 'profile_tab_page.dart';
-import '../create_post_screen.dart';
+import '../post/create_post_screen.dart';
 import '../community/community_list_tab.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/notification_sheet.dart';
+import '../../widgets/notification/notification_sheet.dart';
 import '../../services/overlay_service.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/ai_event_bus.dart';
 
 import '../../services/draft_service.dart';
-import '../post_detail_screen.dart';
-import '../../widgets/app_bar_avatar.dart';
-import '../../widgets/custom_animated_bottom_bar.dart';
+import '../post/post_detail_screen.dart';
+import '../../widgets/navigation/app_bar_avatar.dart';
+import '../../widgets/navigation/custom_animated_bottom_bar.dart';
 import 'home_dashboard/dashboard_slide_route.dart';
 import 'home_dashboard/draft_menu_content.dart';
 import 'home_dashboard/keep_alive_page.dart';
-import '../../widgets/notification_button.dart';
+import '../../widgets/notification/notification_button.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});

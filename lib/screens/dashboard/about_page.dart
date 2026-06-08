@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../services/app_localizations.dart';
-import '../../widgets/decorative_background.dart';
+import '../../widgets/common/decorative_background.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});

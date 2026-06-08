@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../follow_list_screen.dart';
+import '../../profile/follow_list_screen.dart';
 
 class ProfileStatLink extends StatelessWidget {
   final String userId;

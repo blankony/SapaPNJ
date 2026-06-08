@@ -4,7 +4,7 @@ import '../../../theme/app_theme.dart';
 import '../../../services/app_localizations.dart';
 import '../../../services/overlay_service.dart';
 import '../../../utils/format_utils.dart';
-import '../../ktm_verification_screen.dart';
+import '../../profile/ktm_verification_screen.dart';
 import 'profile_stat_link.dart';
 
 class ProfileInfoBody extends StatelessWidget {

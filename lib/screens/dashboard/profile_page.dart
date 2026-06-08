@@ -12,8 +12,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 import '../../theme/app_theme.dart';
-import '../edit_profile_screen.dart';
-import '../image_viewer_screen.dart';
+import '../profile/edit_profile_screen.dart';
+import '../common/image_viewer_screen.dart';
 import 'settings_page.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
@@ -21,7 +21,7 @@ import '../../services/moderation_service.dart';
 
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
-import '../../widgets/department_badge.dart';
+import '../../widgets/profile/department_badge.dart';
 import 'profile/profile_avatar_image.dart';
 import 'profile/profile_content_tabs.dart';
 import 'profile/profile_empty_states.dart';

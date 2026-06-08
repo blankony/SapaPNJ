@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import '../../screens/image_viewer_screen.dart';
+import '../../screens/common/image_viewer_screen.dart';
 import 'video_player_widget.dart';
 
 class PostMediaPreview extends StatefulWidget {

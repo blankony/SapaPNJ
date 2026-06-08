@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'decision_gate.dart';
-import 'screens/welcome_screen.dart'; // Impor WelcomeScreen BARU
+import 'screens/auth/welcome_screen.dart'; // Impor WelcomeScreen BARU
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});

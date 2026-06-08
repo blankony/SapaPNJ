@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/blog_post_card.dart';
-import '../../widgets/common_error_widget.dart';
+import '../../widgets/common/common_error_widget.dart';
 import '../../theme/app_theme.dart';
 
 import '../../services/app_localizations.dart';

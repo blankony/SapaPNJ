@@ -6,7 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
 
-import '../screens/post_detail_screen.dart';
+import '../screens/post/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../screens/community/community_detail_screen.dart';
 import '../services/overlay_service.dart';

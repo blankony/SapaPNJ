@@ -4,12 +4,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
-import '../edit_profile_screen.dart';
-import '../change_password_screen.dart';
+import '../profile/edit_profile_screen.dart';
+import '../auth/change_password_screen.dart';
 import '../../auth_gate.dart';
 import '../../services/overlay_service.dart';
-import '../ktm_verification_screen.dart';
-import '../admin_panel_screen.dart';
+import '../profile/ktm_verification_screen.dart';
+import '../admin/admin_panel_screen.dart';
 import '../../services/app_localizations.dart';
 
 class AccountCenterPage extends StatefulWidget {

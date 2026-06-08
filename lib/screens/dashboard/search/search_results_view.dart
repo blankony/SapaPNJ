@@ -5,9 +5,9 @@ import '../../../services/app_cache_manager.dart';
 import '../../../services/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/blog_post_card.dart';
-import '../../../widgets/common_error_widget.dart';
+import '../../../widgets/common/common_error_widget.dart';
 import '../../community/community_detail_screen.dart';
-import '../../../widgets/user_search_tile.dart';
+import '../../../widgets/search/user_search_tile.dart';
 
 class SearchResultsView extends StatelessWidget {
   final TabController tabController;

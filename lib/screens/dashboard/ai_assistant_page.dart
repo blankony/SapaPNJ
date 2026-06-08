@@ -10,11 +10,11 @@ import 'package:share_plus/share_plus.dart';
 import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../services/ai_event_bus.dart';
-import '../../widgets/common_error_widget.dart';
+import '../../widgets/common/common_error_widget.dart';
 import '../../services/overlay_service.dart';
 import '../../services/voice_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
-import '../../widgets/decorative_background.dart';
+import '../../widgets/common/decorative_background.dart';
 import 'ai_assistant/chat_bubble.dart';
 import 'ai_assistant/chat_message.dart';
 import 'ai_assistant/tts_manager.dart';

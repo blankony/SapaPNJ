@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import '../../../services/app_localizations.dart';
 import '../../../widgets/blog_post_card.dart';
-import '../../../widgets/comment_tile.dart';
-import '../../../widgets/common_error_widget.dart';
+import '../../../widgets/post/comment_tile.dart';
+import '../../../widgets/common/common_error_widget.dart';
 
 final ApiService _apiService = ApiService();
 

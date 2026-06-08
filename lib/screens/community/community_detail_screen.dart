@@ -10,10 +10,10 @@ import '../../widgets/blog_post_card.dart';
 import '../../theme/app_theme.dart';
 import 'community_settings_screen.dart';
 import 'community_members_screen.dart';
-import '../create_post_screen.dart';
+import '../post/create_post_screen.dart';
 import '../../services/overlay_service.dart';
 import '../../services/gcs_service.dart';
-import '../image_viewer_screen.dart';
+import '../common/image_viewer_screen.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 import '../../services/api_service.dart';
 

@@ -6,11 +6,11 @@ import '../../main.dart';
 import '../../theme/app_theme.dart';
 import 'about_page.dart';
 import 'account_center_page.dart';
-import '../blocked_users_page.dart';
+import '../profile/blocked_users_page.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart';
-import '../../widgets/settings_tile.dart';
+import '../../widgets/settings/settings_tile.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
