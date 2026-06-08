@@ -7,7 +7,7 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/blog_post_card.dart';
 import '../../../widgets/common_error_widget.dart';
 import '../../community/community_detail_screen.dart';
-import 'user_search_tile.dart';
+import '../../../widgets/user_search_tile.dart';
 
 class SearchResultsView extends StatelessWidget {
   final TabController tabController;

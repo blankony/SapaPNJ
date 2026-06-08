@@ -23,12 +23,12 @@ import '../../services/ai_event_bus.dart';
 
 import '../../services/draft_service.dart';
 import '../post_detail_screen.dart';
-import 'home_dashboard/app_bar_avatar.dart';
-import 'home_dashboard/custom_animated_bottom_bar.dart';
+import '../../widgets/app_bar_avatar.dart';
+import '../../widgets/custom_animated_bottom_bar.dart';
 import 'home_dashboard/dashboard_slide_route.dart';
 import 'home_dashboard/draft_menu_content.dart';
 import 'home_dashboard/keep_alive_page.dart';
-import 'home_dashboard/notification_button.dart';
+import '../../widgets/notification_button.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});

@@ -10,6 +10,7 @@ import '../blocked_users_page.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart';
+import '../../widgets/settings_tile.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -149,23 +150,20 @@ class SettingsPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          _buildSettingsTile(
-            context: context,
+          SettingsTile(
             icon: Icons.account_circle_outlined,
             title: t.translate('settings_account'), // "Account Center"
             subtitle: t.translate('settings_account_desc'),
             onTap: () => _goToAccountCenter(context),
           ),
 
-          _buildSettingsTile(
-            context: context,
+          SettingsTile(
             icon: Icons.block,
             title: t.translate('settings_blocked'), // "Blocked Accounts"
             onTap: () => _goToBlockedUsers(context),
           ),
 
-          _buildSettingsTile(
-            context: context,
+          SettingsTile(
             icon: Icons.info_outline,
             title: t.translate('settings_about'), // "About Us"
             onTap: () => _goToAboutPage(context),
@@ -174,8 +172,7 @@ class SettingsPage extends StatelessWidget {
           _OptimizedThemeTile(),
 
           // --- LANGUAGE TILE ---
-          _buildSettingsTile(
-            context: context,
+          SettingsTile(
             icon: Icons.translate, // CHANGED TO TRANSLATE ICON
             title: t.translate('settings_language'), // "Change Language"
             subtitle: languageNotifier.value.languageCode == 'en'
@@ -309,8 +306,7 @@ class SettingsPage extends StatelessWidget {
           ),
           Divider(),
 
-          _buildSettingsTile(
-            context: context,
+          SettingsTile(
             icon: Icons.logout,
             title: t.translate('settings_logout'), // "Log Out"
             onTap: () => _signOut(context),
@@ -320,24 +316,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsTile({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    final titleColor = color ?? Theme.of(context).textTheme.bodyLarge?.color;
-    final iconColor = color ?? Theme.of(context).primaryColor;
-
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(title, style: TextStyle(color: titleColor)),
-      subtitle: subtitle != null ? Text(subtitle) : null,
-      onTap: onTap,
-    );
-  }
 }
 
 class _OptimizedThemeTile extends StatefulWidget {

@@ -21,7 +21,7 @@ import '../../services/moderation_service.dart';
 
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
-import 'profile/department_badge.dart';
+import '../../widgets/department_badge.dart';
 import 'profile/profile_avatar_image.dart';
 import 'profile/profile_content_tabs.dart';
 import 'profile/profile_empty_states.dart';

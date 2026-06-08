@@ -22,7 +22,7 @@ import '../services/overlay_service.dart';
 import '../services/draft_service.dart';
 import '../services/bad_word_service.dart';
 import 'create_post/background_uploader.dart';
-import 'create_post/media_preview_item.dart';
+import '../widgets/media_preview_item.dart';
 import 'video_trimmer_screen.dart';
 import '../services/app_localizations.dart';
 
