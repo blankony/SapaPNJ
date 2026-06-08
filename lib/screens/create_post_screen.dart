@@ -1201,6 +1201,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                       ? t.translate('post_hint_official')
                                       : t.translate('post_hint'),
                                   border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
                                 ),
                               ),
 

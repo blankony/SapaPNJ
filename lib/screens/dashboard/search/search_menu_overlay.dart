@@ -118,6 +118,10 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final t = AppLocalizations.of(context)!;
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(30),
+      borderSide: BorderSide.none,
+    );
 
     return Container(
       width: screenWidth,
@@ -154,10 +158,9 @@ class _SearchField extends StatelessWidget {
                 ),
               ],
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide.none,
-            ),
+            border: inputBorder,
+            enabledBorder: inputBorder,
+            focusedBorder: inputBorder,
             filled: true,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
