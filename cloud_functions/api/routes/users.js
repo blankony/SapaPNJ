@@ -358,12 +358,14 @@ router.get('/:uid/bookmarks', async (req, res) => {
   const [rows] = await pool.execute(
     `SELECT p.*, u.name as user_name, u.email as user_email,
             u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
+            c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified,
             (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
             EXISTS(SELECT 1 FROM post_likes WHERE post_id = p.id AND user_uid = ?) as is_liked,
             EXISTS(SELECT 1 FROM bookmarks WHERE post_id = p.id AND user_uid = ?) as is_bookmarked
      FROM bookmarks b
      JOIN posts p ON b.post_id = p.id
      JOIN users u ON p.user_uid = u.uid
+     LEFT JOIN communities c ON p.community_id = c.id
      WHERE b.user_uid = ?
      ORDER BY b.created_at DESC`,
     [req.params.uid, req.params.uid, req.params.uid]

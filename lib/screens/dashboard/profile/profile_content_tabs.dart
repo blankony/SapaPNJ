@@ -91,8 +91,17 @@ class ProfilePostsTab extends StatelessWidget {
   }
 
   bool _canShowPost(Map<String, dynamic> data) {
+    final isRepost =
+        data['is_repost'] == true ||
+        data['is_repost'] == 1 ||
+        data['original_post_id'] != null ||
+        data['originalPostId'] != null;
+    if (isRepost) return false;
+
     final isCommunityIdentityPost =
-        data['is_community_post'] ?? data['isCommunityPost'] ?? false;
+        data['is_community_identity'] == true ||
+        data['is_community_identity'] == 1 ||
+        data['isCommunityPost'] == true;
     if (isCommunityIdentityPost) return false;
 
     final visibility = data['visibility'] ?? 'public';

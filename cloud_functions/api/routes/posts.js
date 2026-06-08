@@ -40,6 +40,43 @@ async function enrichPosts(posts, myUid, pool) {
   return posts;
 }
 
+const effectivePostIsVisible = `
+  (
+    COALESCE(op.visibility, p.visibility) = 'public'
+    OR (
+      COALESCE(op.visibility, p.visibility) = 'followers'
+      AND (
+        COALESCE(op.user_uid, p.user_uid) = ?
+        OR EXISTS (
+          SELECT 1 FROM follows
+          WHERE follower_uid = ? AND following_uid = COALESCE(op.user_uid, p.user_uid)
+        )
+      )
+    )
+    OR (
+      COALESCE(op.visibility, p.visibility) = 'private'
+      AND COALESCE(op.user_uid, p.user_uid) = ?
+    )
+  )`;
+
+const directPostIsVisible = `
+  (
+    p.visibility = 'public'
+    OR (
+      p.visibility = 'followers'
+      AND (
+        p.user_uid = ?
+        OR EXISTS (
+          SELECT 1 FROM follows
+          WHERE follower_uid = ? AND following_uid = p.user_uid
+        )
+      )
+    )
+    OR (p.visibility = 'private' AND p.user_uid = ?)
+  )`;
+
+const hasValidRepostTarget = '(p.is_repost = FALSE OR op.id IS NOT NULL)';
+
 // GET /api/posts — Home feed with pagination and visibility filtering
 router.get('/', async (req, res) => {
   const myUid = req.uid;
@@ -51,21 +88,24 @@ router.get('/', async (req, res) => {
     let query, params;
 
     if (q) {
-      // Search public posts matching q (or my own posts)
+      // Search visible direct posts and reposts matching q.
       query = `
         SELECT p.*, u.name as user_name, u.email as user_email,
                u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
                c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified
         FROM posts p
         JOIN users u ON p.user_uid = u.uid
+        LEFT JOIN posts op ON p.original_post_id = op.id
         LEFT JOIN communities c ON p.community_id = c.id
-        WHERE (p.visibility = 'public' OR p.user_uid = ?)
-          AND p.is_repost = FALSE
-          AND p.text LIKE ?
+        WHERE ${hasValidRepostTarget}
+          AND ${effectivePostIsVisible}
+          AND COALESCE(op.text, p.text, '') LIKE ?
         ${cursor ? 'AND p.created_at < ?' : ''}
         ORDER BY p.created_at DESC
         LIMIT ?`;
-      params = cursor ? [myUid, `%${q}%`, cursor, pageLimit] : [myUid, `%${q}%`, pageLimit];
+      params = cursor
+        ? [myUid, myUid, myUid, `%${q}%`, cursor, pageLimit]
+        : [myUid, myUid, myUid, `%${q}%`, pageLimit];
     } else if (community_id) {
       // Community feed
       query = `
@@ -81,7 +121,7 @@ router.get('/', async (req, res) => {
         LIMIT ?`;
       params = cursor ? [community_id, cursor, pageLimit] : [community_id, pageLimit];
     } else if (user_uid) {
-      // User's own posts
+      // User profile posts, including direct community posts.
       query = `
         SELECT p.*, u.name as user_name, u.email as user_email,
                u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
@@ -89,28 +129,26 @@ router.get('/', async (req, res) => {
         FROM posts p
         JOIN users u ON p.user_uid = u.uid
         LEFT JOIN communities c ON p.community_id = c.id
-        WHERE p.user_uid = ? AND p.community_id IS NULL AND p.is_repost = FALSE
+        WHERE p.user_uid = ? AND p.is_repost = FALSE
+          AND ${directPostIsVisible}
         ${cursor ? 'AND p.created_at < ?' : ''}
         ORDER BY p.created_at DESC
         LIMIT ?`;
-      params = cursor ? [user_uid, cursor, pageLimit] : [user_uid, pageLimit];
+      params = cursor
+        ? [user_uid, myUid, myUid, myUid, cursor, pageLimit]
+        : [user_uid, myUid, myUid, myUid, pageLimit];
     } else {
-      // Home feed — public posts + followers-only from people I follow
+      // Home feed — visible direct posts, community posts, and reposts.
       query = `
         SELECT p.*, u.name as user_name, u.email as user_email,
                u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
                c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified
         FROM posts p
         JOIN users u ON p.user_uid = u.uid
+        LEFT JOIN posts op ON p.original_post_id = op.id
         LEFT JOIN communities c ON p.community_id = c.id
-        WHERE p.community_id IS NULL AND p.is_repost = FALSE
-          AND (
-            p.visibility = 'public'
-            OR (p.visibility = 'followers' AND (p.user_uid = ? OR EXISTS(
-              SELECT 1 FROM follows WHERE follower_uid = ? AND following_uid = p.user_uid
-            )))
-            OR (p.visibility = 'private' AND p.user_uid = ?)
-          )
+        WHERE ${hasValidRepostTarget}
+          AND ${effectivePostIsVisible}
         ${cursor ? 'AND p.created_at < ?' : ''}
         ORDER BY p.created_at DESC
         LIMIT ?`;
@@ -142,12 +180,17 @@ router.get('/reposts', async (req, res) => {
            c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified
     FROM posts p
     JOIN users u ON p.user_uid = u.uid
+    LEFT JOIN posts op ON p.original_post_id = op.id
     LEFT JOIN communities c ON p.community_id = c.id
     WHERE p.user_uid = ? AND p.is_repost = TRUE
+      AND op.id IS NOT NULL
+      AND ${effectivePostIsVisible}
     ${cursor ? 'AND p.created_at < ?' : ''}
     ORDER BY p.created_at DESC
     LIMIT ?`;
-  const params = cursor ? [user_uid, cursor, pageLimit] : [user_uid, pageLimit];
+  const params = cursor
+    ? [user_uid, req.uid, req.uid, req.uid, cursor, pageLimit]
+    : [user_uid, req.uid, req.uid, req.uid, pageLimit];
 
   const [posts] = await pool.query(query, params);
   await enrichPosts(posts, req.uid, pool);
@@ -165,8 +208,8 @@ router.get('/:id', async (req, res) => {
        FROM posts p
        JOIN users u ON p.user_uid = u.uid
        LEFT JOIN communities c ON p.community_id = c.id
-       WHERE p.id = ?`,
-      [req.params.id]
+       WHERE p.id = ? AND ${directPostIsVisible}`,
+      [req.params.id, req.uid, req.uid, req.uid]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Post not found' });
 

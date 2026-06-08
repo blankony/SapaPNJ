@@ -39,6 +39,30 @@ async function enrichPosts(posts, myUid, pool) {
   return posts;
 }
 
+const effectivePostIsVisible = `
+  (
+    COALESCE(op.visibility, p.visibility) = 'public'
+    OR (
+      COALESCE(op.visibility, p.visibility) = 'followers'
+      AND (
+        COALESCE(op.user_uid, p.user_uid) = ?
+        OR EXISTS (
+          SELECT 1 FROM follows
+          WHERE follower_uid = ? AND following_uid = COALESCE(op.user_uid, p.user_uid)
+        )
+      )
+    )
+    OR (
+      COALESCE(op.visibility, p.visibility) = 'private'
+      AND COALESCE(op.user_uid, p.user_uid) = ?
+    )
+  )`;
+
+const effectiveAuthorUid = 'COALESCE(op.user_uid, p.user_uid)';
+const effectivePostText = "COALESCE(op.text, p.text, '')";
+const effectiveMediaUrls = 'COALESCE(op.media_urls, p.media_urls)';
+const hasValidRepostTarget = '(p.is_repost = FALSE OR op.id IS NOT NULL)';
+
 // GET /api/explore/trending
 router.get('/trending', async (req, res) => {
   const pool = await getPool();
@@ -120,18 +144,20 @@ router.get('/discover', async (req, res) => {
              u.avatar_icon_id, u.avatar_hex, u.profile_image_url,
              u.department_code,
              c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified,
-             (p.like_count * 2.0) + (p.comment_count * 3.0) +
+             (COALESCE(op.like_count, p.like_count) * 2.0) + (COALESCE(op.comment_count, p.comment_count) * 3.0) +
              IF(TIMESTAMPDIFF(HOUR, p.created_at, NOW()) < 24, 20, 100.0 / (TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 5)) +
-             IF(p.media_urls IS NOT NULL, 15.0, 0) AS score
+             IF(${effectiveMediaUrls} IS NOT NULL, 15.0, 0) AS score
       FROM posts p
       JOIN users u ON p.user_uid = u.uid
+      LEFT JOIN posts op ON p.original_post_id = op.id
       LEFT JOIN communities c ON p.community_id = c.id
-      WHERE p.user_uid != ? 
-        AND p.is_repost = FALSE
-        AND p.user_uid NOT IN (SELECT following_uid FROM follows WHERE follower_uid = ?)
+      WHERE ${effectiveAuthorUid} != ?
+        AND ${hasValidRepostTarget}
+        AND ${effectivePostIsVisible}
+        AND ${effectiveAuthorUid} NOT IN (SELECT following_uid FROM follows WHERE follower_uid = ?)
       ORDER BY score DESC LIMIT 50;
     `;
-    const [rows] = await pool.execute(query, [req.uid, req.uid]);
+    const [rows] = await pool.execute(query, [req.uid, req.uid, req.uid, req.uid, req.uid]);
     await enrichPosts(rows, req.uid, pool);
     res.json(rows);
   } catch (err) {
@@ -167,16 +193,19 @@ router.get('/recommended', async (req, res) => {
              u.department_code,
              c.name as community_name, c.image_url as community_image_url, c.is_verified as community_verified,
              IF(f.following_uid IS NOT NULL, 50.0, 0.0) +
-             IF(LOWER(p.text) REGEXP ?, 30.0, 0.0) +
+             IF(LOWER(${effectivePostText}) REGEXP ?, 30.0, 0.0) +
              (80.0 / (TIMESTAMPDIFF(HOUR, p.created_at, NOW()) + 1)) AS score
       FROM posts p
       JOIN users u ON p.user_uid = u.uid
+      LEFT JOIN posts op ON p.original_post_id = op.id
       LEFT JOIN communities c ON p.community_id = c.id
-      LEFT JOIN follows f ON f.following_uid = p.user_uid AND f.follower_uid = ?
-      WHERE p.user_uid != ? AND p.is_repost = FALSE
+      LEFT JOIN follows f ON f.following_uid = ${effectiveAuthorUid} AND f.follower_uid = ?
+      WHERE ${effectiveAuthorUid} != ?
+        AND ${hasValidRepostTarget}
+        AND ${effectivePostIsVisible}
       ORDER BY score DESC LIMIT 50;
     `;
-    const [rows] = await pool.execute(query, [interestRegex, req.uid, req.uid]);
+    const [rows] = await pool.execute(query, [interestRegex, req.uid, req.uid, req.uid, req.uid, req.uid]);
     await enrichPosts(rows, req.uid, pool);
     res.json(rows);
   } catch (err) {
