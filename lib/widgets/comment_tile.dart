@@ -6,7 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../screens/image_viewer_screen.dart';
-import 'package:timeago/timeago.dart' as timeago;
+import '../utils/format_utils.dart';
 import '../theme/avatar_helper.dart';
 import '../theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -163,15 +163,7 @@ class _CommentTileState extends State<CommentTile> {
     );
   }
 
-  String _formatTimestamp(dynamic timestamp) {
-    if (timestamp == null) return "just now";
-    try {
-      final parsedDate = DateTime.parse(timestamp.toString());
-      return timeago.format(parsedDate, locale: 'en_short');
-    } catch (_) {
-      return "just now";
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -397,7 +389,7 @@ class _CommentTileState extends State<CommentTile> {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            _formatTimestamp(timestamp),
+                            FormatUtils.formatTimestamp(timestamp, fallback: "just now"),
                             style: theme.textTheme.titleSmall,
                           ),
                           if (widget.isOwner) _buildOptionsButton(),

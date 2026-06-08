@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:timeago/timeago.dart' as timeago;
+import '../../utils/format_utils.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 
@@ -58,15 +58,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
     }
   }
 
-  String _formatTimestamp(dynamic timestamp) {
-    if (timestamp == null) return "";
-    try {
-      final parsedDate = DateTime.parse(timestamp.toString());
-      return timeago.format(parsedDate, locale: 'en_short');
-    } catch (_) {
-      return "";
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +177,7 @@ class _AiHistoryDrawerState extends State<AiHistoryDrawer> {
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                           subtitle: Text(
-                            _formatTimestamp(timestamp),
+                            FormatUtils.formatTimestamp(timestamp, fallback: ""),
                             style: TextStyle(
                               fontSize: 12,
                               color: theme.hintColor,

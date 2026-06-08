@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:timeago/timeago.dart' as timeago;
+import '../../../utils/format_utils.dart';
 
 import 'post_data_helpers.dart';
 
@@ -13,15 +13,7 @@ class PostRepostHeader extends StatelessWidget {
     required this.onOpenReposter,
   });
 
-  String _formatTimestamp(dynamic createdAt) {
-    if (createdAt == null) return 'just now';
-    try {
-      final parsedDate = DateTime.parse(createdAt.toString());
-      return timeago.format(parsedDate, locale: 'en_short');
-    } catch (_) {
-      return 'just now';
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +43,7 @@ class PostRepostHeader extends StatelessWidget {
                   children: [
                     TextSpan(text: '$displayName '),
                     TextSpan(
-                      text: 'reposted · ${_formatTimestamp(createdAt)}',
+                      text: 'reposted · ${FormatUtils.formatTimestamp(createdAt)}',
                       style: const TextStyle(fontWeight: FontWeight.normal),
                     ),
                   ],

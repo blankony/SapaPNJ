@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/app_cache_manager.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:timeago/timeago.dart' as timeago;
+import '../../../utils/format_utils.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/avatar_helper.dart';
 import '../../services/app_localizations.dart';
@@ -26,15 +26,9 @@ class PostHeader extends StatelessWidget {
   });
 
   String _formatTimestamp(dynamic timestamp) {
-    if (timestamp == null) return "just now";
     if (postData['isUploading'] == true) return "Uploading...";
     if (postData['uploadFailed'] == true) return "Failed";
-    try {
-      final parsedDate = DateTime.parse(timestamp.toString());
-      return timeago.format(parsedDate, locale: 'en_short');
-    } catch (_) {
-      return "just now";
-    }
+    return FormatUtils.formatTimestamp(timestamp, fallback: "just now");
   }
 
   @override
