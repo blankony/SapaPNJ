@@ -170,11 +170,9 @@ class _HomePageState extends State<HomePage>
                     : Colors.transparent,
                 child: SizedBox(
                   height: _tabBarHeight,
-                  child: Stack(
-                    alignment: Alignment.center,
+                  child: Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 48),
+                      Expanded(
                         child: TabBar(
                           controller: _tabController,
                           labelColor: SisapaTheme.blue,
@@ -189,10 +187,8 @@ class _HomePageState extends State<HomePage>
                           ],
                         ),
                       ),
-                      Positioned(
-                        right: 4,
-                        top: 0,
-                        bottom: 0,
+                      SizedBox(
+                        width: 48,
                         child: IconButton(
                           tooltip: 'Feed controls',
                           icon: const Icon(Icons.tune_rounded),
