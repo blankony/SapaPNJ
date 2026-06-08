@@ -179,6 +179,110 @@ class ApiService {
     return posts;
   }
 
+  bool _isRepostPost(Map<String, dynamic> post) {
+    return post['type'] == 'repost' ||
+        post['is_repost'] == true ||
+        post['is_repost'] == 1 ||
+        post['original_post_id'] != null ||
+        post['originalPostId'] != null;
+  }
+
+  DateTime _postCreatedAt(Map<String, dynamic> post) {
+    final raw = post['created_at'] ?? post['timestamp'];
+    if (raw is int) return DateTime.fromMillisecondsSinceEpoch(raw);
+    if (raw is double) return DateTime.fromMillisecondsSinceEpoch(raw.toInt());
+    return DateTime.tryParse(raw?.toString() ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  bool _fallbackPostMatches(
+    Map<String, dynamic> post, {
+    required String? currentUid,
+    String? userUid,
+    String? query,
+  }) {
+    if (_isRepostPost(post)) return false;
+
+    final authorUid = _postAuthorUid(post);
+    if (userUid != null && authorUid != userUid) return false;
+
+    final searchText = query?.trim().toLowerCase();
+    if (searchText != null && searchText.isNotEmpty) {
+      final postText = (post['text'] ?? '').toString().toLowerCase();
+      if (!postText.contains(searchText)) return false;
+    }
+
+    final visibility = post['visibility']?.toString() ?? 'public';
+    if (visibility == 'private') return authorUid == currentUid;
+    return true;
+  }
+
+  void _addMergedPost(
+    Map<String, Map<String, dynamic>> merged,
+    Map<String, dynamic> post,
+  ) {
+    final id = post['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    final normalized = Map<String, dynamic>.from(post);
+    _normalizePostAuthorAliases(normalized);
+    merged[id] = {...?merged[id], ...normalized};
+  }
+
+  Future<List<Map<String, dynamic>>> _mergeCommunityFallbackPosts(
+    List<Map<String, dynamic>> basePosts, {
+    required int limit,
+    String? userUid,
+    String? query,
+    bool includeCurrentUserReposts = false,
+  }) async {
+    final merged = <String, Map<String, dynamic>>{};
+    for (final post in basePosts) {
+      _addMergedPost(merged, post);
+    }
+
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+
+    try {
+      final communities = await getMyCommunities();
+      final communityPostFutures = communities
+          .map((community) => community['id']?.toString())
+          .whereType<String>()
+          .where((id) => id.isNotEmpty)
+          .map((id) => getPosts(communityId: id, limit: 20));
+
+      final communityPostResults = await Future.wait(communityPostFutures);
+      for (final posts in communityPostResults) {
+        for (final post in posts) {
+          if (_fallbackPostMatches(
+            post,
+            currentUid: currentUid,
+            userUid: userUid,
+            query: query,
+          )) {
+            _addMergedPost(merged, post);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Community feed fallback failed: $e');
+    }
+
+    if (includeCurrentUserReposts && currentUid != null) {
+      try {
+        final reposts = await getReposts(currentUid);
+        for (final repost in reposts) {
+          _addMergedPost(merged, repost);
+        }
+      } catch (e) {
+        debugPrint('Repost feed fallback failed: $e');
+      }
+    }
+
+    final posts = merged.values.toList()
+      ..sort((a, b) => _postCreatedAt(b).compareTo(_postCreatedAt(a)));
+    return posts.take(limit).toList();
+  }
+
   // ─────────────────────────────────────────────
   // USERS
   // ─────────────────────────────────────────────
@@ -451,7 +555,19 @@ class ApiService {
       await loadRepostsFuture;
     }
     if (resp.statusCode != 200) return [];
-    return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+    final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
+
+    if (communityId == null && cursor == null) {
+      return _mergeCommunityFallbackPosts(
+        posts,
+        limit: limit,
+        userUid: userUid,
+        query: query,
+        includeCurrentUserReposts: userUid == null && query == null,
+      );
+    }
+
+    return posts;
   }
 
   /// Get reposts by a user.
