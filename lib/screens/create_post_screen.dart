@@ -53,7 +53,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final BadWordService _badWordService = BadWordService();
 
   List<String> _customBadWords = [];
-  bool _isLoadingBadWords = true;
 
   bool _canPost = false;
   bool _isProcessing = false;
@@ -119,12 +118,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (mounted) {
         setState(() {
           _customBadWords = words;
-          _isLoadingBadWords = false;
         });
       }
     } catch (e) {
       debugPrint("Failed to load bad words: $e");
-      if (mounted) setState(() => _isLoadingBadWords = false);
     }
   }
 
@@ -1010,7 +1007,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Widget build(BuildContext context) {
     if (_isRestricted) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
     var t = AppLocalizations.of(context)!;
 
     final String? currentAvatarUrl = _postAsCommunity
@@ -1087,7 +1084,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   top: 16,
                   left: 16,
                   right: 16,
-                  bottom: bottomInset + 80,
+                  bottom: safeBottom + 88,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1271,49 +1268,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
             ),
 
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: bottomInset,
-              child: Container(
-                color: theme.scaffoldBackgroundColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.image, color: SisapaTheme.blue),
-                      onPressed: () =>
-                          _showMediaSourceSelection(isVideo: false),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.videocam, color: SisapaTheme.blue),
-                      onPressed: () => _showMediaSourceSelection(isVideo: true),
-                    ),
-
-                    if (!_isCommunityContext)
-                      InkWell(
-                        onTap: _showVisibilityPicker,
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.brightness == Brightness.dark
-                                ? Colors.white10
-                                : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: _buildVisibilityButtonContent(),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+            _CreatePostActionToolbar(
+              showVisibilityControl: !_isCommunityContext,
+              visibilityButtonContent: _buildVisibilityButtonContent(),
+              onPickImage: () => _showMediaSourceSelection(isVideo: false),
+              onPickVideo: () => _showMediaSourceSelection(isVideo: true),
+              onShowVisibilityPicker: _showVisibilityPicker,
             ),
 
             // --- LOADING BLOCKING SCREEN (WITH ANIMATION) ---
@@ -1365,6 +1325,68 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             ),
                     ),
                   ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CreatePostActionToolbar extends StatelessWidget {
+  final bool showVisibilityControl;
+  final Widget visibilityButtonContent;
+  final VoidCallback onPickImage;
+  final VoidCallback onPickVideo;
+  final VoidCallback onShowVisibilityPicker;
+
+  const _CreatePostActionToolbar({
+    required this.showVisibilityControl,
+    required this.visibilityButtonContent,
+    required this.onPickImage,
+    required this.onPickVideo,
+    required this.onShowVisibilityPicker,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: keyboardInset,
+      child: Container(
+        color: theme.scaffoldBackgroundColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.image, color: SisapaTheme.blue),
+              onPressed: onPickImage,
+            ),
+            IconButton(
+              icon: const Icon(Icons.videocam, color: SisapaTheme.blue),
+              onPressed: onPickVideo,
+            ),
+            if (showVisibilityControl)
+              InkWell(
+                onTap: onShowVisibilityPicker,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white10
+                        : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: visibilityButtonContent,
                 ),
               ),
           ],

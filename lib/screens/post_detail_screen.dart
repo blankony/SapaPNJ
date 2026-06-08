@@ -374,9 +374,7 @@ class _CommentComposer extends StatelessWidget {
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
 
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 120),
-      curve: Curves.easeOutCubic,
+    return Padding(
       padding: EdgeInsets.only(bottom: keyboardInset),
       child: Container(
         padding: EdgeInsets.only(
