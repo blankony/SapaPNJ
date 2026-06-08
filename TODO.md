@@ -84,4 +84,9 @@
 
 ## Future task
 - [x] Delete all Hardcoded language strings to langauge dynamic strings so we can easly add more language option
+- [ ] Ensure the UI Does not overflow in all languages option.
+- [ ] Change the sidebar language option to a drop down
+- [ ] Check for any hardcoded english in the UI. Some UI still contains hardcoded strings such as Be the first to reply and the Feed Controls menu and the newly added Admin Panel
 - [ ] Posts SQL generator factory for trending, recommendation and easy testing instead of manually populating the database?
+
+- Check other bugs.
