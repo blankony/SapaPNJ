@@ -16,6 +16,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   final List<Map<String, String>> _supportedLanguages = [
     {'code': 'en', 'name': 'English', 'label': 'Continue'},
     {'code': 'id', 'name': 'Bahasa Indonesia', 'label': 'Lanjutkan'},
+    {'code': 'ja', 'name': '日本語 (Japanese)', 'label': '続く'},
+    {'code': 'ko', 'name': '한국어 (Korean)', 'label': '계속하다'},
+    {'code': 'zh_CN', 'name': '简体中文 (Simplified Chinese)', 'label': '继续'},
+    {'code': 'zh_TW', 'name': '繁體中文 (Traditional Chinese)', 'label': '繼續'},
   ];
 
   String _selectedLanguageCode = 'en';
@@ -24,8 +28,15 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   void initState() {
     super.initState();
     // Set bahasa awal sesuai notifier global
-    if (languageNotifier.value.languageCode == 'id') {
-      _selectedLanguageCode = 'id';
+    String code = languageNotifier.value.languageCode;
+    if (code == 'zh') {
+      if (languageNotifier.value.scriptCode == 'Hant' || languageNotifier.value.countryCode == 'TW' || languageNotifier.value.countryCode == 'HK') {
+        _selectedLanguageCode = 'zh_TW';
+      } else {
+        _selectedLanguageCode = 'zh_CN';
+      }
+    } else if (['en', 'id', 'ja', 'ko'].contains(code)) {
+      _selectedLanguageCode = code;
     } else {
       _selectedLanguageCode = 'en';
     }
@@ -53,7 +64,16 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   void _updateLanguage(String code) {
     setState(() {
       _selectedLanguageCode = code;
-      languageNotifier.value = Locale(code); // Update global app language immediately
+      if (code.contains('_')) {
+        final parts = code.split('_');
+        if (parts[1] == 'CN') {
+          languageNotifier.value = Locale.fromSubtags(languageCode: parts[0], scriptCode: 'Hans', countryCode: parts[1]);
+        } else {
+          languageNotifier.value = Locale.fromSubtags(languageCode: parts[0], scriptCode: 'Hant', countryCode: parts[1]);
+        }
+      } else {
+        languageNotifier.value = Locale(code); // Update global app language immediately
+      }
     });
     Navigator.of(context).pop(); // Tutup dialog
   }

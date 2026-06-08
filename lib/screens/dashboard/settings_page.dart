@@ -51,7 +51,16 @@ class SettingsPage extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', code);
 
-    languageNotifier.value = Locale(code);
+    if (code.contains('_')) {
+      final parts = code.split('_');
+      if (parts[1] == 'CN') {
+        languageNotifier.value = Locale.fromSubtags(languageCode: parts[0], scriptCode: 'Hans', countryCode: parts[1]);
+      } else {
+        languageNotifier.value = Locale.fromSubtags(languageCode: parts[0], scriptCode: 'Hant', countryCode: parts[1]);
+      }
+    } else {
+      languageNotifier.value = Locale(code);
+    }
 
     Navigator.pop(context);
   }
@@ -79,23 +88,35 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 16),
-                ListTile(
-                  leading: Text("🇺🇸", style: TextStyle(fontSize: 24)),
-                  title: Text("English"),
-                  trailing: languageNotifier.value.languageCode == 'en'
-                      ? Icon(Icons.check, color: SisapaTheme.blue)
-                      : null,
-                  onTap: () => _changeLanguage(context, 'en'),
-                ),
-                ListTile(
-                  leading: Text("🇮🇩", style: TextStyle(fontSize: 24)),
-                  title: Text("Bahasa Indonesia"),
-                  trailing: languageNotifier.value.languageCode == 'id'
-                      ? Icon(Icons.check, color: SisapaTheme.blue)
-                      : null,
-                  onTap: () => _changeLanguage(context, 'id'),
-                ),
-                SizedBox(height: 12),
+                ...[
+                  {'code': 'en', 'name': 'English', 'flag': '🇺🇸'},
+                  {'code': 'id', 'name': 'Bahasa Indonesia', 'flag': '🇮🇩'},
+                  {'code': 'ja', 'name': '日本語 (Japanese)', 'flag': '🇯🇵'},
+                  {'code': 'ko', 'name': '한국어 (Korean)', 'flag': '🇰🇷'},
+                  {'code': 'zh_CN', 'name': '简体中文 (Simplified Chinese)', 'flag': '🇨🇳'},
+                  {'code': 'zh_TW', 'name': '繁體中文 (Traditional Chinese)', 'flag': '🇹🇼'},
+                ].map((lang) {
+                  bool isSelected = false;
+                  String currentCode = languageNotifier.value.languageCode;
+                  if (currentCode == 'zh') {
+                    if (languageNotifier.value.scriptCode == 'Hant' || languageNotifier.value.countryCode == 'TW' || languageNotifier.value.countryCode == 'HK') {
+                      isSelected = lang['code'] == 'zh_TW';
+                    } else {
+                      isSelected = lang['code'] == 'zh_CN';
+                    }
+                  } else {
+                    isSelected = currentCode == lang['code'];
+                  }
+                  
+                  return ListTile(
+                    leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
+                    title: Text(lang['name']!),
+                    trailing: isSelected
+                        ? Icon(Icons.check, color: SisapaTheme.blue)
+                        : null,
+                    onTap: () => _changeLanguage(context, lang['code']!),
+                  );
+                }),
               ],
             ),
           ),

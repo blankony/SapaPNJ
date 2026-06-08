@@ -17,7 +17,15 @@ class AppLocalizations {
 
   Future<bool> load() async {
     // Load file JSON dari assets
-    String jsonString = await rootBundle.loadString('assets/lang/${locale.languageCode}.json');
+    String fileName = locale.languageCode;
+    if (fileName == 'zh') {
+      if (locale.scriptCode == 'Hant' || locale.countryCode == 'TW' || locale.countryCode == 'HK') {
+        fileName = 'zh_TW';
+      } else {
+        fileName = 'zh_CN';
+      }
+    }
+    String jsonString = await rootBundle.loadString('assets/lang/$fileName.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
 
     _localizedStrings = jsonMap.map((key, value) {
@@ -43,7 +51,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
 
   @override
   bool isSupported(Locale locale) {
-    return ['en', 'id'].contains(locale.languageCode);
+    return ['en', 'id', 'ja', 'ko', 'zh'].contains(locale.languageCode);
   }
 
   @override
