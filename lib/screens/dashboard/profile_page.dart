@@ -794,20 +794,26 @@ class _ProfilePageState extends State<ProfilePage>
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         headerSliverBuilder: (context, innerBoxIsScrolled) {
+          final bool showCollapsedChrome = _isScrolled || innerBoxIsScrolled;
+
           return [
             SliverAppBar(
               pinned: true,
               elevation: 0,
               scrolledUnderElevation: 0,
+              surfaceTintColor: Colors.transparent,
+              shadowColor: Colors.transparent,
               expandedHeight: 218.0,
               backgroundColor: Colors.transparent,
               iconTheme: IconThemeData(
-                color: isDarkMode ? SisapaTheme.white : SisapaTheme.blue,
+                color: showCollapsedChrome
+                    ? (isDarkMode ? SisapaTheme.white : SisapaTheme.black)
+                    : SisapaTheme.white,
               ),
               automaticallyImplyLeading: widget.includeScaffold,
 
               title: AnimatedOpacity(
-                opacity: _isScrolled ? 1.0 : 0.0,
+                opacity: showCollapsedChrome ? 1.0 : 0.0,
                 duration: Duration(milliseconds: 200),
                 child: Row(
                   children: [
@@ -838,14 +844,37 @@ class _ProfilePageState extends State<ProfilePage>
               ),
               centerTitle: false,
               actions: [_buildActionMenu(context, data, isMyProfile)],
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildHeaderFlexibleSpace(
-                  context,
-                  data,
-                  isMyProfile,
-                  isPrivateAccount,
-                  amIFollowing,
-                ),
+              flexibleSpace: Stack(
+                fit: StackFit.expand,
+                children: [
+                  FlexibleSpaceBar(
+                    background: _buildHeaderFlexibleSpace(
+                      context,
+                      data,
+                      isMyProfile,
+                      isPrivateAccount,
+                      amIFollowing,
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: pinnedHeaderHeight,
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        opacity: showCollapsedChrome ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: FrostedLayer(
+                          tint: theme.scaffoldBackgroundColor.withValues(
+                            alpha: isDarkMode ? 0.78 : 0.74,
+                          ),
+                          blur: FrostedGlassTokens.blurSigma,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -1019,18 +1048,6 @@ class _ProfilePageState extends State<ProfilePage>
                             )
                           : null),
               ),
-            ),
-          ),
-        ),
-
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: MediaQuery.of(context).padding.top + kToolbarHeight,
-          child: FrostedLayer(
-            tint: theme.scaffoldBackgroundColor.withValues(
-              alpha: theme.brightness == Brightness.dark ? 0.78 : 0.74,
             ),
           ),
         ),
@@ -1306,7 +1323,10 @@ class _ProfilePageState extends State<ProfilePage>
               child: InkWell(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => KtmVerificationScreen(userDbData: _userData)),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        KtmVerificationScreen(userDbData: _userData),
+                  ),
                 ),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
