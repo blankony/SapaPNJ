@@ -60,7 +60,7 @@ class SearchExplorePage extends StatelessWidget {
       child: SingleChildScrollView(
         physics: isListening
             ? const NeverScrollableScrollPhysics()
-            : const AlwaysScrollableScrollPhysics(),
+            : const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         padding: const EdgeInsets.only(bottom: 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -118,7 +118,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
             : _drafts.isEmpty
             ? _buildEmptyState()
             : ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                 padding: const EdgeInsets.all(16),
                 itemCount: _drafts.length,
                 separatorBuilder: (context, index) =>
@@ -145,7 +145,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
 
   Widget _buildEmptyState() {
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.25),
         const Center(

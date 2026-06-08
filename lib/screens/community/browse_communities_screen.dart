@@ -129,8 +129,8 @@ class _BrowseCommunitiesScreenState extends State<BrowseCommunitiesScreen> {
           onRefresh: _loadCommunities,
           child: ListView.builder(
             key: const PageStorageKey('browse_communities_list'),
-            padding: const EdgeInsets.all(16),
-            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 8, bottom: 20),
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
             itemCount: sortedCommunities.length,
             itemBuilder: (context, index) {
               final data = sortedCommunities[index];

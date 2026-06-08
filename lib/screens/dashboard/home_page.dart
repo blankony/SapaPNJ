@@ -355,6 +355,7 @@ class _PostFeedListState extends State<_PostFeedList>
       onRefresh: _refresh,
       edgeOffset: widget.refreshOffset,
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         key: PageStorageKey('${widget.feedType}_$_refreshKey'),
         controller: widget.scrollController,
         padding: EdgeInsets.only(top: 10, bottom: 100),

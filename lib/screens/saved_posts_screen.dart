@@ -61,7 +61,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
 
             if (posts.isEmpty) {
               return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                 children: [
                   SizedBox(height: MediaQuery.of(context).size.height * 0.3),
                   Center(
@@ -86,7 +86,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
             }
 
             return ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
               itemCount: posts.length,
               itemBuilder: (context, index) {
                 final postData = posts[index];

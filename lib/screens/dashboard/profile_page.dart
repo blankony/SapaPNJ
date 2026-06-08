@@ -792,7 +792,7 @@ class _ProfilePageState extends State<ProfilePage>
       notificationPredicate: (notification) => true,
       child: NestedScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           final bool showCollapsedChrome = _isScrolled || innerBoxIsScrolled;
 

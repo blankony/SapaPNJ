@@ -191,6 +191,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       onRefresh: _load,
       color: SisapaTheme.blue,
       child: AnimatedList(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         key: _listKey,
         padding: const EdgeInsets.all(12),
         initialItemCount: _items.length,
