@@ -38,14 +38,18 @@ Install the API dependencies once before running backend scripts locally:
 npm install
 ```
 
+If `npm install` warns about Node `v26`, switch to Node `22` for this API project. The Cloud Functions runtime and some transitive packages currently target Node 22 or lower.
+
 The script uses the same DB connection module as the API, so these variables must point to the database you want to test:
 
 ```bash
-INSTANCE_CONNECTION_NAME=...
-DB_USER=...
-DB_PASS=...
-DB_NAME=...
+export INSTANCE_CONNECTION_NAME="sapapnj-gcp:asia-southeast2:sapapnj-db"
+export DB_USER="sapapnj-api"
+export DB_PASS="your-db-password"
+export DB_NAME="sapapnj"
 ```
+
+The instance connection name format is `PROJECT:REGION:INSTANCE`. The setup guide stores the deployment example in [GCP_SETUP_INSTRUCTIONS_phase2.txt](gcp_setup/GCP_SETUP_INSTRUCTIONS_phase2.txt).
 
 Use a dev or staging database. The script refuses to run unless `ALLOW_DEV_SEED=1` is set.
 
@@ -126,6 +130,8 @@ ALLOW_DEV_SEED=1 SEED_VIEWER_UID=your-user-uid npm run seed:explore
 
 - If the script says `Refusing to seed`, add `ALLOW_DEV_SEED=1`.
 - If the script says `Missing API npm dependencies`, run `npm install` in `cloud_functions/api`.
+- If the script says `Missing Cloud SQL environment variables`, export `INSTANCE_CONNECTION_NAME`, `DB_USER`, `DB_PASS`, and `DB_NAME`.
+- If the connector says `Missing instance connection name`, `INSTANCE_CONNECTION_NAME` is empty or not exported in the shell running the command.
 - If `SEED_VIEWER_UID` does not exist, log in once or create the SQL user first.
 - If the endpoint response differs from the script preview, confirm the auth token UID matches `SEED_VIEWER_UID`.
 - If Cloud SQL connection fails locally, confirm your application-default credentials can access the configured instance.

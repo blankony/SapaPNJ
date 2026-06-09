@@ -209,6 +209,36 @@ function assertSeedEnabled() {
   );
 }
 
+function assertDatabaseEnv() {
+  const requiredEnv = [
+    'INSTANCE_CONNECTION_NAME',
+    'DB_USER',
+    'DB_PASS',
+    'DB_NAME',
+  ];
+  const missingEnv = requiredEnv.filter((key) => !process.env[key]?.trim());
+
+  if (missingEnv.length === 0) return;
+
+  throw new Error(
+    [
+      'Missing Cloud SQL environment variables for the explore seed fixture:',
+      '',
+      ...missingEnv.map((key) => `  - ${key}`),
+      '',
+      'Export them before running the script. Example:',
+      '',
+      '  export INSTANCE_CONNECTION_NAME="sapapnj-gcp:asia-southeast2:sapapnj-db"',
+      '  export DB_USER="sapapnj-api"',
+      '  export DB_PASS="your-db-password"',
+      '  export DB_NAME="sapapnj"',
+      '  ALLOW_DEV_SEED=1 npm run seed:explore',
+      '',
+      'The instance connection name format is PROJECT:REGION:INSTANCE.',
+    ].join('\n')
+  );
+}
+
 function getDatabasePoolFactory() {
   try {
     return require('../db').getPool;
@@ -593,6 +623,7 @@ async function printVerificationPreview(pool) {
 
 async function main() {
   assertSeedEnabled();
+  assertDatabaseEnv();
 
   const getPool = getDatabasePoolFactory();
   const cleanupOnly = process.argv.includes('--cleanup');
