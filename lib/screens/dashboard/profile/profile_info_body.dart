@@ -4,8 +4,8 @@ import '../../../theme/app_theme.dart';
 import '../../../services/app_localizations.dart';
 import '../../../services/overlay_service.dart';
 import '../../../utils/format_utils.dart';
-import '../../profile/ktm_verification_screen.dart';
 import 'profile_stat_link.dart';
+import '../../../widgets/profile/verified_badge_button.dart';
 
 class ProfileInfoBody extends StatelessWidget {
   final Map<String, dynamic> userData;
@@ -15,6 +15,7 @@ class ProfileInfoBody extends StatelessWidget {
   final String userId;
   final User? currentUser;
   final VoidCallback onToggleBio;
+  final VoidCallback onGetVerified;
 
   const ProfileInfoBody({
     super.key,
@@ -25,6 +26,7 @@ class ProfileInfoBody extends StatelessWidget {
     required this.userId,
     required this.currentUser,
     required this.onToggleBio,
+    required this.onGetVerified,
   });
 
   @override
@@ -37,11 +39,13 @@ class ProfileInfoBody extends StatelessWidget {
     final String displayBio = isBioExpanded
         ? (userData['bio'] ?? '')
         : ((userData['bio'] ?? '').length > 100
-            ? (userData['bio'] ?? '').substring(0, 100) + '...'
-            : (userData['bio'] ?? ''));
+              ? (userData['bio'] ?? '').substring(0, 100) + '...'
+              : (userData['bio'] ?? ''));
 
     final String verificationStatus =
-        userData['verification_status'] ?? userData['verificationStatus'] ?? 'none';
+        userData['verification_status'] ??
+        userData['verificationStatus'] ??
+        'none';
     final bool isVerified = verificationStatus == 'verified';
     final bool isPending = verificationStatus == 'pending';
 
@@ -74,8 +78,10 @@ class ProfileInfoBody extends StatelessWidget {
                 ),
               ),
               if (isVerified) ...[
-                const SizedBox(width: 4),
-                const Icon(Icons.verified, size: 22, color: SisapaTheme.blue),
+                const SizedBox(width: 2),
+                VerifiedBadgeButton(
+                  onGetVerified: isMyProfile ? null : onGetVerified,
+                ),
               ] else if (userData['is_private'] == true ||
                   userData['is_private'] == 1 ||
                   userData['isPrivate'] == true ||
@@ -118,7 +124,10 @@ class ProfileInfoBody extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -146,7 +155,10 @@ class ProfileInfoBody extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -155,7 +167,11 @@ class ProfileInfoBody extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.hourglass_top, size: 16, color: Colors.orange),
+                    const Icon(
+                      Icons.hourglass_top,
+                      size: 16,
+                      color: Colors.orange,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       t.translate('profile_verify_pending'),
@@ -173,14 +189,12 @@ class ProfileInfoBody extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: InkWell(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => KtmVerificationScreen(userDbData: userData),
-                  ),
-                ),
+                onTap: onGetVerified,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: SisapaTheme.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),

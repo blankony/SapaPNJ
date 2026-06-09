@@ -58,6 +58,9 @@ class _MyAppState extends State<MyApp> {
       languageNotifier.value = Locale(savedLang);
     }
 
+    final bool isHaptic = prefs.getBool('is_haptic_enabled') ?? true;
+    hapticNotifier.value = isHaptic;
+
     if (mounted) {
       setState(() {
         _isConfigLoaded = true;

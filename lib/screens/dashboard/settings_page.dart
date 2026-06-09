@@ -214,8 +214,10 @@ class SettingsPage extends StatelessWidget {
                   t.translate('settings_haptic'),
                 ), // "Haptic Feedback"
                 value: isHapticOn,
-                onChanged: (value) {
+                onChanged: (value) async {
                   hapticNotifier.value = value;
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('is_haptic_enabled', value);
                 },
               );
             },

@@ -326,7 +326,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
     _likeController.forward().then((_) => _likeController.reverse());
-    if (hapticNotifier.value) HapticFeedback.lightImpact();
+    if (hapticNotifier.value) HapticFeedback.mediumImpact();
 
     setState(() {
       _isLiked = !_isLiked;
@@ -351,7 +351,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     if (currentUser == null) return;
 
     _repostController.forward().then((_) => _repostController.reverse());
-    if (hapticNotifier.value) HapticFeedback.lightImpact();
+    if (hapticNotifier.value) HapticFeedback.mediumImpact();
 
     final targetId = effectivePostId;
     final wrapperUserId = postAuthorId(widget.postData);
@@ -419,7 +419,7 @@ class _BlogPostCardState extends State<BlogPostCard>
   void _handleBookmarkToggle(bool isCurrentlyBookmarked) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    if (hapticNotifier.value) HapticFeedback.lightImpact();
+    if (hapticNotifier.value) HapticFeedback.mediumImpact();
     var t = AppLocalizations.of(context)!;
 
     setState(() {
@@ -705,7 +705,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     if (effectiveIsOwner) {
       final scaffold = Scaffold.maybeOf(context);
       if (scaffold != null && scaffold.hasDrawer) {
-        if (hapticNotifier.value) HapticFeedback.lightImpact();
+        if (hapticNotifier.value) HapticFeedback.mediumImpact();
         scaffold.openDrawer();
         return;
       }

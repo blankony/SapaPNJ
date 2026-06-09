@@ -13,6 +13,7 @@ import 'package:image_cropper/image_cropper.dart';
 
 import '../../theme/app_theme.dart';
 import '../profile/edit_profile_screen.dart';
+import '../profile/ktm_verification_screen.dart';
 import '../common/image_viewer_screen.dart';
 import 'settings_page.dart';
 import '../../services/overlay_service.dart';
@@ -22,6 +23,7 @@ import '../../services/moderation_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
 
 import '../../widgets/profile/department_badge.dart';
+import '../../widgets/profile/verified_badge_button.dart';
 import 'profile/profile_avatar_image.dart';
 import 'profile/profile_content_tabs.dart';
 import 'profile/profile_empty_states.dart';
@@ -592,6 +594,99 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
+  Future<void> _openCurrentUserVerification() async {
+    var t = AppLocalizations.of(context)!;
+    final currentUser = _user;
+    if (currentUser == null) {
+      OverlayService().showTopNotification(
+        context,
+        t.translate('profile_not_logged_in'),
+        Icons.person_off,
+        () {},
+        color: Colors.orange,
+      );
+      return;
+    }
+
+    try {
+      await currentUser.reload();
+    } catch (_) {}
+
+    if (!currentUser.emailVerified) {
+      if (!mounted) return;
+      OverlayService().showTopNotification(
+        context,
+        t.translate('profile_verify_email'),
+        Icons.mark_email_unread,
+        () {},
+        color: Colors.orange,
+      );
+      return;
+    }
+
+    try {
+      final Map<String, dynamic> currentUserData;
+      if (currentUser.uid == _userId) {
+        currentUserData = Map<String, dynamic>.from(_userData);
+      } else {
+        final data = await _apiService.getUser(
+          currentUser.uid,
+          forceRefresh: true,
+        );
+        if (data == null) throw Exception('Current user profile not found');
+        currentUserData = data;
+      }
+
+      final status =
+          currentUserData['verification_status'] ??
+          currentUserData['verificationStatus'] ??
+          'none';
+
+      if (!mounted) return;
+
+      if (status == 'verified') {
+        OverlayService().showTopNotification(
+          context,
+          t.translate('account_ktm_verified'),
+          Icons.verified,
+          () {},
+        );
+        return;
+      }
+
+      if (status == 'pending') {
+        OverlayService().showTopNotification(
+          context,
+          t.translate('profile_verify_pending'),
+          Icons.hourglass_top,
+          () {},
+          color: Colors.orange,
+        );
+        return;
+      }
+
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => KtmVerificationScreen(userDbData: currentUserData),
+        ),
+      );
+
+      if (result == true && mounted && currentUser.uid == _userId) {
+        await _loadUserData(forceRefresh: true);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      OverlayService().showTopNotification(
+        context,
+        t.translate('profile_action_fail'),
+        Icons.error_outline,
+        () {},
+        color: Colors.red,
+      );
+    }
+  }
+
   Future<void> _toggleBlock() async {
     var t = AppLocalizations.of(context)!;
     if (_isBlocked) {
@@ -730,8 +825,6 @@ class _ProfilePageState extends State<ProfilePage>
     super.dispose();
   }
 
-
-
   Future<void> _handleRefresh() async {
     try {
       await _user?.reload();
@@ -782,7 +875,9 @@ class _ProfilePageState extends State<ProfilePage>
       notificationPredicate: (notification) => true,
       child: NestedScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           final bool showCollapsedChrome = _isScrolled || innerBoxIsScrolled;
 
@@ -807,18 +902,27 @@ class _ProfilePageState extends State<ProfilePage>
                 duration: Duration(milliseconds: 200),
                 child: Row(
                   children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        color: isDarkMode
-                            ? SisapaTheme.white
-                            : SisapaTheme.black,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          color: isDarkMode
+                              ? SisapaTheme.white
+                              : SisapaTheme.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (isVerified) ...[
-                      SizedBox(width: 4),
-                      Icon(Icons.verified, size: 16, color: SisapaTheme.blue),
+                      SizedBox(width: 2),
+                      VerifiedBadgeButton(
+                        iconSize: 16,
+                        tapTargetSize: 28,
+                        onGetVerified: isMyProfile
+                            ? null
+                            : _openCurrentUserVerification,
+                      ),
                     ] else if (isPrivateAccount) ...[
                       SizedBox(width: 4),
                       Icon(
@@ -879,6 +983,7 @@ class _ProfilePageState extends State<ProfilePage>
                 onToggleBio: () {
                   setState(() => _isBioExpanded = !_isBioExpanded);
                 },
+                onGetVerified: _openCurrentUserVerification,
               ),
             ),
 
@@ -1171,6 +1276,4 @@ class _ProfilePageState extends State<ProfilePage>
       child: Text(t.translate('community_follow')),
     );
   }
-
-
 }

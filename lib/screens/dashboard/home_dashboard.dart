@@ -582,7 +582,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       ),
       leading: GestureDetector(
         onTap: () {
-          if (hapticNotifier.value) HapticFeedback.lightImpact();
+          if (hapticNotifier.value) HapticFeedback.mediumImpact();
           _scaffoldKey.currentState!.openDrawer();
         },
         child: Padding(
