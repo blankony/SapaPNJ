@@ -1,6 +1,8 @@
 ![SAPA PNJ Header](images/sapa_pnj_logo.png)
 
-![SAPA PNJ Poster](images/SAPA_POSTER.jpg)
+<p align="center">
+  <img src="images/SAPA_POSTER.jpg" alt="SAPA PNJ Poster" width="100%">
+</p>
 
 # SAPA PNJ
 
