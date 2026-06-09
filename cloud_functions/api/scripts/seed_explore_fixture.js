@@ -1,14 +1,18 @@
 const SEED_PREFIX = 'seed_explore_';
-const VIEWER_UID = `${SEED_PREFIX}viewer`;
+const DEFAULT_VIEWER_UID = `${SEED_PREFIX}viewer`;
+const configuredViewerUid = process.env.SEED_VIEWER_UID?.trim();
+const VIEWER_UID = configuredViewerUid || DEFAULT_VIEWER_UID;
+const usesExternalViewer = VIEWER_UID !== DEFAULT_VIEWER_UID;
 
-const baseUsers = [
-  {
-    uid: VIEWER_UID,
-    email: 'seed.explore.viewer@sapapnj.test',
-    name: 'Seed Explore Viewer',
-    department: 'Teknik Informatika & Komputer',
-    department_code: 'TIK',
-  },
+const seedViewerUser = {
+  uid: DEFAULT_VIEWER_UID,
+  email: 'seed.explore.viewer@sapapnj.test',
+  name: 'Seed Explore Viewer',
+  department: 'Teknik Informatika & Komputer',
+  department_code: 'TIK',
+};
+
+const seedAuthorUsers = [
   {
     uid: `${SEED_PREFIX}followed_author`,
     email: 'seed.explore.followed@sapapnj.test',
@@ -64,7 +68,11 @@ const engagementUsers = Array.from({ length: 32 }, (_, index) => {
   };
 });
 
-const users = [...baseUsers, ...engagementUsers];
+const users = [
+  ...(usesExternalViewer ? [] : [seedViewerUser]),
+  ...seedAuthorUsers,
+  ...engagementUsers,
+];
 
 const communities = [
   {
@@ -260,6 +268,17 @@ async function cleanupSeedData(pool) {
     [`${SEED_PREFIX}%`]
   );
   await pool.execute('DELETE FROM users WHERE uid LIKE ?', [`${SEED_PREFIX}%`]);
+}
+
+async function assertViewerExists(pool) {
+  if (!usesExternalViewer) return;
+
+  const [rows] = await pool.execute('SELECT uid FROM users WHERE uid = ?', [VIEWER_UID]);
+  if (rows.length > 0) return;
+
+  throw new Error(
+    `SEED_VIEWER_UID=${VIEWER_UID} does not exist in users. Use an existing SQL user uid or omit SEED_VIEWER_UID.`
+  );
 }
 
 async function seedUsers(pool) {
@@ -532,7 +551,8 @@ async function printVerificationPreview(pool) {
   );
 
   console.log('\nSeeded explore fixture data.');
-  console.log(`Viewer UID: ${VIEWER_UID}`);
+  const viewerMode = usesExternalViewer ? 'configured existing user' : 'seeded fixture user';
+  console.log(`Viewer UID: ${VIEWER_UID} (${viewerMode})`);
   console.log('\nTrending preview from seeded recent posts:');
   for (const trend of trendingPreview) {
     console.log(`- ${trend.tag}: ${trend.count}`);
@@ -564,6 +584,7 @@ async function main() {
       return;
     }
 
+    await assertViewerExists(pool);
     await seedUsers(pool);
     await seedCommunities(pool);
     await seedFollows(pool);
