@@ -132,13 +132,20 @@ ALLOW_DEV_SEED=1 SEED_VIEWER_UID=your-user-uid npm run seed:explore
 - If the script says `Missing API npm dependencies`, run `npm install` in `cloud_functions/api`.
 - If the script says `Missing Cloud SQL environment variables`, export `INSTANCE_CONNECTION_NAME`, `DB_USER`, `DB_PASS`, and `DB_NAME`.
 - If the connector says `Missing instance connection name`, `INSTANCE_CONNECTION_NAME` is empty or not exported in the shell running the command.
-- If the deployed API says `Missing instance connection name` after a deploy, the function environment was probably replaced without `INSTANCE_CONNECTION_NAME`. Repair all DB env vars in one quoted argument:
+- If the deployed API says `Missing instance connection name` after a deploy, the function environment was probably replaced without `INSTANCE_CONNECTION_NAME`. Repair all DB env vars with a file so shell line wrapping cannot corrupt values:
 
 ```bash
+cat > /tmp/sapapnj-api-env.yaml <<'EOF'
+DB_USER: sapapnj-api
+DB_PASS: your-db-password
+DB_NAME: sapapnj
+INSTANCE_CONNECTION_NAME: sapapnj-gcp:asia-southeast2:sapapnj-db
+EOF
+
 gcloud functions deploy sapapnjApi \
   --gen2 \
   --region=asia-southeast2 \
-  --update-env-vars="DB_USER=sapapnj-api,DB_PASS=your-db-password,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db"
+  --env-vars-file=/tmp/sapapnj-api-env.yaml
 ```
 
 - If MySQL says `Access denied for user`, Cloud SQL was reached but the database rejected `DB_USER`/`DB_PASS` or the MySQL user host. Verify the values:
