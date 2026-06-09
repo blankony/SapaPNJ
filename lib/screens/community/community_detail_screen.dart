@@ -32,7 +32,7 @@ class CommunityDetailScreen extends StatefulWidget {
 }
 
 class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
-  final GcsService _cloudinaryService = GcsService();
+  final GcsService _gcsService = GcsService();
   final ApiService _api = ApiService();
   final ScrollController _scrollController = ScrollController();
   final int _postsLimit = 10;
@@ -307,7 +307,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     if (croppedFile == null) return;
     setState(() => _isUploadingImage = true);
     try {
-      final String? url = await _cloudinaryService.uploadImage(
+      final String? url = await _gcsService.uploadImage(
         File(croppedFile.path),
       );
       if (url != null) {

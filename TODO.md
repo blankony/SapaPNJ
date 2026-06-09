@@ -1,8 +1,8 @@
 # SAPA PNJ - INFRASTRUCTURE MIGRATION ROADMAP
 
-**Objective:** Complete decoupling from Firebase/Cloudinary and transition to a unified Google Cloud Platform (GCP) architecture to enforce centralized computational offloading and relational data integrity.
+**Objective:** Completed decoupling from Firebase and Cloudinary. The project now runs on a unified Google Cloud Platform (GCP) architecture enforcing centralized computational offloading and relational data integrity.
 
-## Phase 1: Media Storage Migration (Cloudinary -> Google Cloud Storage)
+## Phase 1: Media Storage Migration (Cloudinary → Google Cloud Storage) ✅
 - [x] Provision a GCS Bucket (`sapapnj-media-assets`) with appropriate IAM roles and CORS configuration. *(see documents/gcp_setup/GCP_SETUP_INSTRUCTIONS_phase1.txt)*
 - [x] Rip out the Cloudinary SDK and obsolete environment variables (`CLOUDINARY_URL`, `API_KEY`, etc.).
 - [x] Implement secure signed URL generation in backend/Cloud Functions for secure direct-to-GCS uploads from the Flutter client.

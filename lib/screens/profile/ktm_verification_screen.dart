@@ -20,7 +20,7 @@ class KtmVerificationScreen extends StatefulWidget {
 class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
   File? _ktmImage;
   bool _isUploading = false;
-  final GcsService _cloudinaryService = GcsService();
+  final GcsService _gcsService = GcsService();
 
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
@@ -55,7 +55,7 @@ class _KtmVerificationScreenState extends State<KtmVerificationScreen> {
 
     try {
       // 1. Upload Image
-      final String? url = await _cloudinaryService.uploadImage(_ktmImage!);
+      final String? url = await _gcsService.uploadImage(_ktmImage!);
 
       if (url != null && user != null) {
         // 2. Update via ApiService

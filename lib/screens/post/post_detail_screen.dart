@@ -14,7 +14,7 @@ import '../../services/gcs_service.dart';
 import '../../theme/app_theme.dart';
 import '../../services/overlay_service.dart';
 
-final GcsService _cloudinaryService = GcsService();
+final GcsService _gcsService = GcsService();
 final ApiService _apiService = ApiService();
 
 class PostDetailScreen extends StatefulWidget {
@@ -147,7 +147,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     String? mediaUrl;
     if (_selectedMediaFile != null) {
-      mediaUrl = await _cloudinaryService.uploadMedia(_selectedMediaFile!);
+      mediaUrl = await _gcsService.uploadMedia(_selectedMediaFile!);
       if (mediaUrl == null) {
         if (mounted) {
           OverlayService().showTopNotification(

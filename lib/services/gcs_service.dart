@@ -5,8 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as p;
 
-/// Response model — kept identical to the old CloudinaryResponse so callers
-/// don't need any changes beyond the import.
+/// Response model for GCS upload/delete operations.
 class GcsResponse {
   final String? secureUrl;
   final String? publicId;
@@ -31,7 +30,7 @@ class GcsService {
       : 'https://asia-southeast2-sapapnj-gcp.cloudfunctions.net';
 
   // ---------------------------------------------------------------------------
-  // Convenience wrappers (same signatures as old CloudinaryService)
+  // Convenience wrappers
   // ---------------------------------------------------------------------------
 
   Future<String?> uploadFile(File file, String resourceType) async {
@@ -43,7 +42,7 @@ class GcsService {
   Future<String?> uploadMedia(File file) => uploadFile(file, 'auto');
 
   // ---------------------------------------------------------------------------
-  // Core upload — mirrors CloudinaryService.uploadFileWithDetails
+  // Core upload
   // ---------------------------------------------------------------------------
 
   Future<GcsResponse> uploadFileWithDetails(File file, String resourceType) async {
@@ -102,7 +101,7 @@ class GcsService {
   }
 
   // ---------------------------------------------------------------------------
-  // Delete — mirrors CloudinaryService.deleteResource
+  // Delete a GCS object
   // ---------------------------------------------------------------------------
 
   Future<bool> deleteResource(String objectName, {String resourceType = 'image'}) async {

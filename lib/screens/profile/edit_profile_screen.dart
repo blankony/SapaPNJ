@@ -15,7 +15,7 @@ import '../../../data/pnj_data.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart';
 
-final GcsService _cloudinaryService = GcsService();
+final GcsService _gcsService = GcsService();
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -314,7 +314,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String? finalBannerUrl = _bannerImageUrl;
 
     if (_selectedImageFile != null) {
-      final uploadUrl = await _cloudinaryService.uploadImage(
+      final uploadUrl = await _gcsService.uploadImage(
         _selectedImageFile!,
       );
       if (uploadUrl == null) {
@@ -336,7 +336,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     if (_selectedBannerFile != null) {
-      final uploadUrl = await _cloudinaryService.uploadImage(
+      final uploadUrl = await _gcsService.uploadImage(
         _selectedBannerFile!,
       );
       if (uploadUrl == null) {

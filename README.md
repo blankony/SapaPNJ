@@ -57,7 +57,7 @@ The application leverages various Narrow AI technologies to perform specific int
 
 ### 6. Media & Optimization
 
-- **Cloudinary Integration:** Offloads media storage to Cloudinary for optimized delivery and reduced server load.
+- **Google Cloud Storage (GCS):** Media uploads are handled via signed-URL Cloud Functions and stored in a GCS bucket for optimized delivery and reduced server load.
 - **Offline Capabilities:** Local caching using Shared Preferences for settings and basic data.
 
 ## Screenshots
@@ -94,11 +94,10 @@ This project uses flutter_dotenv to securely manage API keys. You must create a 
 # Google AI Studio Key (for Spirit AI & Content Safety)
 GEMINI_API_KEY=your_google_gemini_api_key
 
-# Cloudinary Config (for Image/Video Uploads)
-CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-CLOUDINARY_UPLOAD_PRESET=your_cloudinary_upload_preset
+# Google Cloud Storage (for Image/Video Uploads)
+GCS_BUCKET_NAME=sapapnj-media-assets
+GCS_FUNCTION_URL=https://asia-southeast2-sapapnj-gcp.cloudfunctions.net
 
-# Optional: Required for deleting/moderating media from the app
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+# Backend API (Cloud Run)
+API_BASE_URL=https://your-cloud-run-url/api
 ```

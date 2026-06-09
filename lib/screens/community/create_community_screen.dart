@@ -18,7 +18,7 @@ class CreateCommunityScreen extends StatefulWidget {
 class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
-  final GcsService _cloudinaryService = GcsService();
+  final GcsService _gcsService = GcsService();
 
   bool _isLoading = false;
   String _selectedCategory = 'casual';
@@ -74,7 +74,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     try {
       String? docUrl;
       if (_verificationDoc != null) {
-        docUrl = await _cloudinaryService.uploadImage(_verificationDoc!);
+        docUrl = await _gcsService.uploadImage(_verificationDoc!);
       }
 
       bool isVerified = _selectedCategory != 'casual' && docUrl != null;

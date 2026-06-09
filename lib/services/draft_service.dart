@@ -94,7 +94,7 @@ class DraftService {
     if (drafts.length > 3) {
       DraftPost oldestDraft = drafts.last;
 
-      // Cleanup Cloudinary resources for the deleted draft
+      // Cleanup GCS resources for the deleted draft
       if (oldestDraft.publicIds.isNotEmpty) {
         String resourceType = oldestDraft.mediaType == 'video' ? 'video' : 'image';
         for (String pubId in oldestDraft.publicIds) {

@@ -165,19 +165,11 @@ STEP 6 — VERIFY EVERYTHING WORKS
        -d '{"objectName": "<objectName>"}'
 
 ================================================================================
-STEP 7 (OPTIONAL) — MIGRATE EXISTING CLOUDINARY ASSETS
+STEP 7 — (REMOVED)
 ================================================================================
 
-  If you have existing media on Cloudinary that needs to be preserved:
-
-  1. Export all Cloudinary URLs from your Firestore documents.
-  2. Download each asset using the Cloudinary URL.
-  3. Upload each asset to GCS:
-       gsutil cp <local_file> gs://sapapnj-media-assets/uploads/<filename>
-  4. Update the Firestore documents to point to the new GCS URLs:
-       https://storage.googleapis.com/sapapnj-media-assets/uploads/<filename>
-
-  A migration script can be written if needed — ask for help.
+  Cloudinary migration step was removed. No legacy Cloudinary assets existed.
+  All media is now served exclusively from Google Cloud Storage.
 
 ================================================================================
 NOTES
@@ -192,7 +184,7 @@ NOTES
       us-central1      (Iowa)
       europe-west1     (Belgium)
 
-  • The old cloudinary_service.dart file is kept in the repo but is no longer
-    imported by any code. You can safely delete it when ready.
+  • The old cloudinary_service.dart file has been removed from the repo.
+    All media operations now go through lib/services/gcs_service.dart.
 
 ================================================================================

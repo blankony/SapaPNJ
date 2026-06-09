@@ -26,7 +26,7 @@ import '../../widgets/post/media_preview_item.dart';
 import 'video_trimmer_screen.dart';
 import '../../services/app_localizations.dart';
 
-final GcsService _cloudinaryService = GcsService();
+final GcsService _gcsService = GcsService();
 
 class CreatePostScreen extends StatefulWidget {
   final String? postId;
@@ -892,7 +892,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               debugPrint('Video compression failed: $e');
             }
           }
-          final response = await _cloudinaryService.uploadFileWithDetails(
+          final response = await _gcsService.uploadFileWithDetails(
             fileToUp,
             _mediaType == 'video' ? 'video' : 'auto',
           );

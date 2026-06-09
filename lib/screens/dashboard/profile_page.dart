@@ -30,7 +30,7 @@ import 'profile/profile_empty_states.dart';
 import 'profile/profile_tab_header_delegate.dart';
 import 'profile/profile_info_body.dart';
 
-final GcsService _cloudinaryService = GcsService();
+final GcsService _gcsService = GcsService();
 final ApiService _apiService = ApiService();
 
 class ProfilePage extends StatefulWidget {
@@ -334,7 +334,7 @@ class _ProfilePageState extends State<ProfilePage>
 
     final OverlayEntry loadingOverlay = _showUploadingOverlay();
     try {
-      final String? downloadUrl = await _cloudinaryService.uploadImage(
+      final String? downloadUrl = await _gcsService.uploadImage(
         File(croppedFile.path),
       );
       loadingOverlay.remove();

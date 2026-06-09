@@ -33,7 +33,7 @@ class CommunitySettingsScreen extends StatefulWidget {
 
 class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
     with SingleTickerProviderStateMixin {
-  final GcsService _cloudinaryService = GcsService();
+  final GcsService _gcsService = GcsService();
   late TabController _tabController;
 
   late TextEditingController _nameController;
@@ -211,7 +211,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen>
 
       if (croppedFile == null) return;
       setState(() => _isUploadingImage = true);
-      final String? downloadUrl = await _cloudinaryService.uploadImage(
+      final String? downloadUrl = await _gcsService.uploadImage(
         File(croppedFile.path),
       );
 

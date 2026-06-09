@@ -10,7 +10,7 @@ import '../../services/app_localizations.dart'; // IMPORT INI DITAMBAHKAN
 import 'setup_department_screen.dart';
 import '../../services/overlay_service.dart';
 
-final GcsService _cloudinaryService = GcsService();
+final GcsService _gcsService = GcsService();
 
 class SetupProfileScreen extends StatefulWidget {
   const SetupProfileScreen({super.key});
@@ -113,10 +113,10 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> with SingleTick
 
     try {
       if (_avatarFile != null) {
-        avatarUrl = await _cloudinaryService.uploadImage(_avatarFile!);
+        avatarUrl = await _gcsService.uploadImage(_avatarFile!);
       }
       if (_bannerFile != null) {
-        bannerUrl = await _cloudinaryService.uploadImage(_bannerFile!);
+        bannerUrl = await _gcsService.uploadImage(_bannerFile!);
       }
 
       final Map<String, dynamic> updateData = {
