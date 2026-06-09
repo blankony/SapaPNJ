@@ -209,6 +209,27 @@ function assertSeedEnabled() {
   );
 }
 
+function getDatabasePoolFactory() {
+  try {
+    return require('../db').getPool;
+  } catch (error) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+      throw new Error(
+        [
+          'Missing API npm dependencies. Install them before running the seed fixture:',
+          '',
+          '  cd cloud_functions/api',
+          '  npm install',
+          '',
+          'This error happens before the script connects to Cloud SQL.',
+        ].join('\n')
+      );
+    }
+
+    throw error;
+  }
+}
+
 async function cleanupSeedData(pool) {
   await pool.execute(
     `DELETE FROM notifications
@@ -573,7 +594,7 @@ async function printVerificationPreview(pool) {
 async function main() {
   assertSeedEnabled();
 
-  const { getPool } = require('../db');
+  const getPool = getDatabasePoolFactory();
   const cleanupOnly = process.argv.includes('--cleanup');
   const pool = await getPool();
 

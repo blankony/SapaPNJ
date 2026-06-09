@@ -32,6 +32,12 @@ Run from the API folder:
 cd cloud_functions/api
 ```
 
+Install the API dependencies once before running backend scripts locally:
+
+```bash
+npm install
+```
+
 The script uses the same DB connection module as the API, so these variables must point to the database you want to test:
 
 ```bash
@@ -119,7 +125,7 @@ ALLOW_DEV_SEED=1 SEED_VIEWER_UID=your-user-uid npm run seed:explore
 ## Troubleshooting
 
 - If the script says `Refusing to seed`, add `ALLOW_DEV_SEED=1`.
+- If the script says `Missing API npm dependencies`, run `npm install` in `cloud_functions/api`.
 - If `SEED_VIEWER_UID` does not exist, log in once or create the SQL user first.
 - If the endpoint response differs from the script preview, confirm the auth token UID matches `SEED_VIEWER_UID`.
-- If dependencies are missing, run `npm install` in `cloud_functions/api`.
 - If Cloud SQL connection fails locally, confirm your application-default credentials can access the configured instance.
