@@ -232,7 +232,7 @@ class AboutPage extends StatelessWidget {
 
                   // Version
                   Text(
-                    '${t('about_version')} 1.0.0',
+                    '${t('about_version')} 2.0.0',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),

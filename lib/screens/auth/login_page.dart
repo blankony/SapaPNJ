@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -104,100 +105,123 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      debugPrint('[LOGIN] Getting GoogleSignIn instance...');
-      final googleSignIn = GoogleSignIn();
-
-      debugPrint('[LOGIN] Calling googleSignIn.signIn()...');
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      debugPrint('[LOGIN] googleUser result: ${googleUser?.email}');
-      if (googleUser == null) {
-        debugPrint(
-          '[LOGIN] googleUser is null (user canceled or failed silently).',
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final String email = googleUser.email;
-      debugPrint('[LOGIN] Extracted email: $email');
-      if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
-        debugPrint('[LOGIN] Email not from PNJ, signing out...');
-        await googleSignIn.signOut();
-        setState(
-          () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      debugPrint('[LOGIN] Getting googleUser.authentication...');
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      debugPrint(
-        '[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}',
-      );
-
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-      debugPrint('[LOGIN] Created GoogleAuthProvider credential.');
-
       UserCredential userCredential;
-      try {
-        debugPrint('[LOGIN] Calling FirebaseAuth signInWithCredential...');
-        userCredential = await FirebaseAuth.instance.signInWithCredential(
-          credential,
-        );
+      if (kIsWeb) {
+        debugPrint('[LOGIN] Web platform detected. Calling signInWithPopup...');
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.setCustomParameters({'prompt': 'select_account'});
+        userCredential = await FirebaseAuth.instance.signInWithPopup(googleProvider);
         debugPrint(
-          '[LOGIN] signInWithCredential success! UID: ${userCredential.user?.uid}',
+          '[LOGIN] signInWithPopup success! UID: ${userCredential.user?.uid}',
         );
-      } on FirebaseAuthException catch (e) {
+
+        final String? fbEmail = userCredential.user?.email;
+        if (fbEmail == null ||
+            !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
+          debugPrint('[LOGIN] Email not from PNJ on web, deleting user and signing out...');
+          await userCredential.user?.delete();
+          await FirebaseAuth.instance.signOut();
+          setState(
+            () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+      } else {
+        debugPrint('[LOGIN] Getting GoogleSignIn instance...');
+        final googleSignIn = GoogleSignIn();
+
+        debugPrint('[LOGIN] Calling googleSignIn.signIn()...');
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        debugPrint('[LOGIN] googleUser result: ${googleUser?.email}');
+        if (googleUser == null) {
+          debugPrint(
+            '[LOGIN] googleUser is null (user canceled or failed silently).',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        final String email = googleUser.email;
+        debugPrint('[LOGIN] Extracted email: $email');
+        if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
+          debugPrint('[LOGIN] Email not from PNJ, signing out...');
+          await googleSignIn.signOut();
+          setState(
+            () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        debugPrint('[LOGIN] Getting googleUser.authentication...');
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
         debugPrint(
-          '[LOGIN] FirebaseAuthException caught: ${e.code} | Message: ${e.message}',
+          '[LOGIN] Fetched googleAuth. idToken: ${googleAuth.idToken != null ? 'EXISTS' : 'NULL'}',
         );
-        if (e.code == 'account-exists-with-different-credential') {
-          final String? existingEmail = e.email;
-          if (existingEmail == null) {
-            await googleSignIn.signOut();
-            setState(
-              () => _errorMessage = 'Account merge failed: Unknown email.',
-            );
-            setState(() => _isLoading = false);
-            return;
-          }
-          final String? password = await _showPasswordPromptDialog(
-            existingEmail,
-          );
-          if (password == null || password.isEmpty) {
-            await googleSignIn.signOut();
-            setState(() => _isLoading = false);
-            return;
-          }
-          setState(() => _isLoading = true);
-          final AuthCredential emailCred = EmailAuthProvider.credential(
-            email: existingEmail,
-            password: password,
-          );
-          final UserCredential existingUser = await FirebaseAuth.instance
-              .signInWithCredential(emailCred);
-          userCredential = await existingUser.user!.linkWithCredential(
+
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+        debugPrint('[LOGIN] Created GoogleAuthProvider credential.');
+
+        try {
+          debugPrint('[LOGIN] Calling FirebaseAuth signInWithCredential...');
+          userCredential = await FirebaseAuth.instance.signInWithCredential(
             credential,
           );
-          debugPrint('[LOGIN] Linked credential successfully.');
-        } else {
-          rethrow;
+          debugPrint(
+            '[LOGIN] signInWithCredential success! UID: ${userCredential.user?.uid}',
+          );
+        } on FirebaseAuthException catch (e) {
+          debugPrint(
+            '[LOGIN] FirebaseAuthException caught: ${e.code} | Message: ${e.message}',
+          );
+          if (e.code == 'account-exists-with-different-credential') {
+            final String? existingEmail = e.email;
+            if (existingEmail == null) {
+              await googleSignIn.signOut();
+              setState(
+                () => _errorMessage = 'Account merge failed: Unknown email.',
+              );
+              setState(() => _isLoading = false);
+              return;
+            }
+            final String? password = await _showPasswordPromptDialog(
+              existingEmail,
+            );
+            if (password == null || password.isEmpty) {
+              await googleSignIn.signOut();
+              setState(() => _isLoading = false);
+              return;
+            }
+            setState(() => _isLoading = true);
+            final AuthCredential emailCred = EmailAuthProvider.credential(
+              email: existingEmail,
+              password: password,
+            );
+            final UserCredential existingUser = await FirebaseAuth.instance
+                .signInWithCredential(emailCred);
+            userCredential = await existingUser.user!.linkWithCredential(
+              credential,
+            );
+            debugPrint('[LOGIN] Linked credential successfully.');
+          } else {
+            rethrow;
+          }
         }
-      }
 
-      final String? fbEmail = userCredential.user?.email;
-      if (fbEmail == null ||
-          !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
-        await userCredential.user?.delete();
-        await FirebaseAuth.instance.signOut();
-        await googleSignIn.signOut();
-        setState(() => _errorMessage = 'Access Denied: Invalid email domain.');
-        setState(() => _isLoading = false);
-        return;
+        final String? fbEmail = userCredential.user?.email;
+        if (fbEmail == null ||
+            !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
+          await userCredential.user?.delete();
+          await FirebaseAuth.instance.signOut();
+          await googleSignIn.signOut();
+          setState(() => _errorMessage = 'Access Denied: Invalid email domain.');
+          setState(() => _isLoading = false);
+          return;
+        }
       }
 
       if (context.mounted) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -76,37 +77,71 @@ class _AccountCenterPageState extends State<AccountCenterPage> {
   }
 
   Future<void> _bindGoogleAccount() async {
-    var t = AppLocalizations.of(context)!;
     try {
-      final googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return;
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-      final String email = googleUser.email;
-      if (!(email.endsWith('@pnj.ac.id') ||
-          email.endsWith('.pnj.ac.id') ||
-          email.endsWith('@gmail.com'))) {
-        await googleSignIn.signOut();
+      if (kIsWeb) {
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.setCustomParameters({'prompt': 'select_account'});
+        final UserCredential userCredential = await user.linkWithPopup(googleProvider);
+        
+        final String? email = userCredential.user?.email;
+        if (email != null &&
+            !(email.endsWith('@pnj.ac.id') ||
+              email.endsWith('.pnj.ac.id') ||
+              email.endsWith('@gmail.com'))) {
+          await userCredential.user?.unlink('google.com');
+          if (mounted) {
+            OverlayService().showTopNotification(
+              context,
+              'Must use a valid PNJ email',
+              Icons.error,
+              () {},
+              color: Colors.red,
+            );
+          }
+          return;
+        }
+
         if (mounted) {
           OverlayService().showTopNotification(
             context,
-            'Must use a valid PNJ email',
-            Icons.error,
+            'Google account linked successfully',
+            Icons.check_circle,
             () {},
-            color: Colors.red,
+            color: Colors.green,
           );
         }
-        return;
-      }
+        _refreshUser();
+      } else {
+        final googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
+        final String email = googleUser.email;
+        if (!(email.endsWith('@pnj.ac.id') ||
+            email.endsWith('.pnj.ac.id') ||
+            email.endsWith('@gmail.com'))) {
+          await googleSignIn.signOut();
+          if (mounted) {
+            OverlayService().showTopNotification(
+              context,
+              'Must use a valid PNJ email',
+              Icons.error,
+              () {},
+              color: Colors.red,
+            );
+          }
+          return;
+        }
 
-      final User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+
         await user.linkWithCredential(credential);
         if (mounted) {
           OverlayService().showTopNotification(

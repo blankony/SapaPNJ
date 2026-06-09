@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -187,63 +188,81 @@ class _RegisterPageState extends State<RegisterPage> {
       _isLoading = true;
     });
     try {
-      final googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-      final String email = googleUser.email;
-      if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
-        await googleSignIn.signOut();
-        setState(
-          () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
       UserCredential userCredential;
-      try {
-        userCredential = await FirebaseAuth.instance.signInWithCredential(
-          credential,
+      if (kIsWeb) {
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.setCustomParameters({'prompt': 'select_account'});
+        userCredential = await FirebaseAuth.instance.signInWithPopup(googleProvider);
+        
+        final String? fbEmail = userCredential.user?.email;
+        if (fbEmail == null ||
+            !(fbEmail.endsWith('@pnj.ac.id') || fbEmail.endsWith('.pnj.ac.id'))) {
+          await userCredential.user?.delete();
+          await FirebaseAuth.instance.signOut();
+          setState(
+            () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+      } else {
+        final googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          setState(() => _isLoading = false);
+          return;
+        }
+        final String email = googleUser.email;
+        if (!(email.endsWith('@pnj.ac.id') || email.endsWith('.pnj.ac.id'))) {
+          await googleSignIn.signOut();
+          setState(
+            () => _errorMessage = 'Access Denied: Must use a valid PNJ email',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
         );
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'account-exists-with-different-credential') {
-          final String? existingEmail = e.email;
-          if (existingEmail == null) {
-            await googleSignIn.signOut();
-            setState(
-              () => _errorMessage = 'Account merge failed: Unknown email.',
-            );
-            setState(() => _isLoading = false);
-            return;
-          }
-          final String? password = await _showPasswordPromptDialog(
-            existingEmail,
-          );
-          if (password == null || password.isEmpty) {
-            await googleSignIn.signOut();
-            setState(() => _isLoading = false);
-            return;
-          }
-          setState(() => _isLoading = true);
-          final AuthCredential emailCred = EmailAuthProvider.credential(
-            email: existingEmail,
-            password: password,
-          );
-          final UserCredential existingUser = await FirebaseAuth.instance
-              .signInWithCredential(emailCred);
-          userCredential = await existingUser.user!.linkWithCredential(
+
+        try {
+          userCredential = await FirebaseAuth.instance.signInWithCredential(
             credential,
           );
-        } else {
-          rethrow;
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'account-exists-with-different-credential') {
+            final String? existingEmail = e.email;
+            if (existingEmail == null) {
+              await googleSignIn.signOut();
+              setState(
+                () => _errorMessage = 'Account merge failed: Unknown email.',
+              );
+              setState(() => _isLoading = false);
+              return;
+            }
+            final String? password = await _showPasswordPromptDialog(
+              existingEmail,
+            );
+            if (password == null || password.isEmpty) {
+              await googleSignIn.signOut();
+              setState(() => _isLoading = false);
+              return;
+            }
+            setState(() => _isLoading = true);
+            final AuthCredential emailCred = EmailAuthProvider.credential(
+              email: existingEmail,
+              password: password,
+            );
+            final UserCredential existingUser = await FirebaseAuth.instance
+                .signInWithCredential(emailCred);
+            userCredential = await existingUser.user!.linkWithCredential(
+              credential,
+            );
+          } else {
+            rethrow;
+          }
         }
       }
 
