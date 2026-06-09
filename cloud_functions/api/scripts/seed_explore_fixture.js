@@ -239,9 +239,9 @@ function assertDatabaseEnv() {
   );
 }
 
-function getDatabasePoolFactory() {
+function getDatabaseTools() {
   try {
-    return require('../db').getPool;
+    return require('../db');
   } catch (error) {
     if (error.code === 'MODULE_NOT_FOUND') {
       throw new Error(
@@ -656,11 +656,12 @@ async function main() {
   assertSeedEnabled();
   assertDatabaseEnv();
 
-  const getPool = getDatabasePoolFactory();
+  const { getPool, closePool } = getDatabaseTools();
   const cleanupOnly = process.argv.includes('--cleanup');
-  const pool = await getPool();
+  let pool;
 
   try {
+    pool = await getPool();
     await assertDatabaseConnection(pool);
     await cleanupSeedData(pool);
     if (cleanupOnly) {
@@ -676,7 +677,7 @@ async function main() {
     await seedLikesAndComments(pool);
     await printVerificationPreview(pool);
   } finally {
-    await pool.end();
+    await closePool();
   }
 }
 

@@ -153,6 +153,7 @@ export DB_PASS="your-db-password"
 
 If the listed MySQL user is host-restricted, make sure there is a `sapapnj-api` user for host `%`, because local Cloud SQL connector traffic can appear as `cloudsqlproxy~...`.
 
+- If the script prints `Seeded explore fixture data` but does not return to the shell prompt, the fixture has already been written. Stop the process with `Ctrl+C` and use the latest script version, which closes the Cloud SQL connector after the seed run.
 - If `SEED_VIEWER_UID` does not exist, log in once or create the SQL user first.
 - If the endpoint response differs from the script preview, confirm the auth token UID matches `SEED_VIEWER_UID`.
 - If Cloud SQL connection fails locally, confirm your application-default credentials can access the configured instance.

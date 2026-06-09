@@ -2,11 +2,12 @@ const mysql = require('mysql2/promise');
 const { Connector } = require('@google-cloud/cloud-sql-connector');
 
 let pool = null;
+let connector = null;
 
 async function getPool() {
   if (pool) return pool;
 
-  const connector = new Connector();
+  connector = new Connector();
   const clientOpts = await connector.getOptions({
     instanceConnectionName: process.env.INSTANCE_CONNECTION_NAME,
     ipType: 'PUBLIC',
@@ -25,4 +26,20 @@ async function getPool() {
   return pool;
 }
 
-module.exports = { getPool };
+async function closePool() {
+  const activePool = pool;
+  const activeConnector = connector;
+
+  pool = null;
+  connector = null;
+
+  if (activePool) {
+    await activePool.end();
+  }
+
+  if (activeConnector) {
+    activeConnector.close();
+  }
+}
+
+module.exports = { getPool, closePool };
