@@ -486,6 +486,7 @@ Return a concise summary only.
 
         loadedUiMessages.add(
           ChatMessage(
+            id: msg['id']?.toString(),
             text: text,
             isUser: isUser,
             timestamp: msg['timestamp'] != null
@@ -532,18 +533,20 @@ Return a concise summary only.
 
     _ttsManager.stop();
     final user = FirebaseAuth.instance.currentUser;
+    final userMsg = ChatMessage(text: text, isUser: true, timestamp: DateTime.now());
 
     setState(() {
-      _messages.add(
-        ChatMessage(text: text, isUser: true, timestamp: DateTime.now()),
-      );
+      _messages.add(userMsg);
       _historyContextRevision++;
       _isTyping = true;
       _hasConnectionError = false;
     });
     _scrollToBottom();
 
-    if (user != null) await _saveMessageToFirestore(user.uid, text, true);
+    if (user != null) {
+      final savedId = await _saveMessageToFirestore(user.uid, text, true);
+      userMsg.id = savedId;
+    }
 
     try {
       final response = await _chatSession.sendMessage(Content.text(text));
@@ -552,16 +555,16 @@ Return a concise summary only.
           t.translate('ai_error_catch'); // "I didn't catch that."
 
       if (mounted) {
+        final aiMsg = ChatMessage(text: aiText, isUser: false, timestamp: DateTime.now());
         setState(() {
           _isTyping = false;
-          _messages.add(
-            ChatMessage(text: aiText, isUser: false, timestamp: DateTime.now()),
-          );
+          _messages.add(aiMsg);
           _historyContextRevision++;
         });
         _scrollToBottom();
         if (user != null) {
-          await _saveMessageToFirestore(user.uid, aiText, false);
+          final savedId = await _saveMessageToFirestore(user.uid, aiText, false);
+          aiMsg.id = savedId;
         }
         unawaited(_compactChatHistoryIfNeeded());
       }
@@ -583,7 +586,7 @@ Return a concise summary only.
     }
   }
 
-  Future<void> _saveMessageToFirestore(
+  Future<String?> _saveMessageToFirestore(
     String uid,
     String text,
     bool isUser,
@@ -596,14 +599,163 @@ Return a concise summary only.
         final newSessionId = await ApiService().createChatSession(title: title);
         _currentSessionId = newSessionId;
       }
-      await ApiService().saveChatMessage(
+      return await ApiService().saveChatMessage(
         _currentSessionId!,
         text: text,
         isUser: isUser,
       );
     } catch (e) {
       debugPrint("Error saving chat message: $e");
+      return null;
     }
+  }
+
+  Future<void> _regenerateResponse(int userMsgIndex) async {
+    if (_isTyping) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    final userMsg = _messages[userMsgIndex];
+
+    // Build history prefix
+    final historyPrefix = _messages.sublist(0, userMsgIndex);
+
+    final historyContext = await _buildGeminiHistoryContext(
+      historyPrefix,
+      forceCompact: true,
+      lastCompactedMessageCount: 0,
+      summarizedMessageCount: 0,
+      previousSummary: null,
+    );
+
+    if (userMsgIndex + 1 < _messages.length) {
+      final aiMsg = _messages[userMsgIndex + 1];
+      if (aiMsg.id != null && _currentSessionId != null) {
+        await ApiService().deleteChatMessagesFrom(_currentSessionId!, aiMsg.id!);
+      }
+    }
+
+    setState(() {
+      _messages.removeRange(userMsgIndex + 1, _messages.length);
+      _chatSession = _model.startChat(history: historyContext.history);
+      _historyContextRevision++;
+      _isTyping = true;
+    });
+
+    _scrollToBottom();
+
+    var t = AppLocalizations.of(context)!;
+    try {
+      final response = await _chatSession.sendMessage(Content.text(userMsg.text));
+      final aiText = response.text ?? t.translate('ai_error_catch');
+
+      if (mounted) {
+        final aiMsg = ChatMessage(text: aiText, isUser: false, timestamp: DateTime.now());
+        setState(() {
+          _isTyping = false;
+          _messages.add(aiMsg);
+          _historyContextRevision++;
+        });
+        _scrollToBottom();
+        if (user != null && _currentSessionId != null) {
+          final savedId = await ApiService().saveChatMessage(
+            _currentSessionId!,
+            text: aiText,
+            isUser: false,
+          );
+          aiMsg.id = savedId;
+        }
+        unawaited(_compactChatHistoryIfNeeded());
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            ChatMessage(
+              text: t.translate('ai_error_connection'),
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          );
+          _historyContextRevision++;
+        });
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Future<void> _editMessage(int index, String newText) async {
+    if (_isTyping) return;
+    if (newText.trim().isEmpty) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    final userMsg = _messages[index];
+
+    if (userMsg.id != null && _currentSessionId != null) {
+      await ApiService().deleteChatMessagesFrom(_currentSessionId!, userMsg.id!);
+    }
+
+    final updatedMsg = ChatMessage(
+      text: newText,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+
+    setState(() {
+      _messages[index] = updatedMsg;
+    });
+
+    if (user != null && _currentSessionId != null) {
+      final savedId = await _saveMessageToFirestore(user.uid, newText, true);
+      updatedMsg.id = savedId;
+    }
+
+    await _regenerateResponse(index);
+  }
+
+  void _showEditDialog(int index) {
+    final originalText = _messages[index].text;
+    final editController = TextEditingController(text: originalText);
+    final t = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return FrostedAlertDialog(
+          title: Text(t.translate('ai_edit_prompt')),
+          content: TextField(
+            controller: editController,
+            maxLines: 5,
+            minLines: 1,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(t.translate('ai_cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newText = editController.text.trim();
+                Navigator.of(context).pop();
+                if (newText.isNotEmpty && newText != originalText) {
+                  _editMessage(index, newText);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SisapaTheme.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(t.translate('ai_save_regenerate')),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _scrollToBottom() {
@@ -775,11 +927,18 @@ Return a concise summary only.
       itemCount: _messages.length + (_isTyping ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _messages.length) return _buildTypingIndicator(theme, t);
+        final isMsgUser = _messages[index].isUser;
         return ChatBubble(
           message: _messages[index],
           onSpeak: _speak,
           onCopy: _copyToClipboard,
           onShare: _shareResponse,
+          onRetry: (isMsgUser || _isTyping || index < 1)
+              ? null
+              : () => _regenerateResponse(index - 1),
+          onEdit: (!isMsgUser || _isTyping)
+              ? null
+              : () => _showEditDialog(index),
         );
       },
     );

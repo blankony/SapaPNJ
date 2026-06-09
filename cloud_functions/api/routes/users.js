@@ -503,6 +503,34 @@ router.post('/:uid/chat-sessions/:sessionId/messages', async (req, res) => {
   res.status(201).json({ id });
 });
 
+// DELETE /api/users/:uid/chat-sessions/:sessionId/messages/:messageId — Truncate conversation from target message
+router.delete('/:uid/chat-sessions/:sessionId/messages/:messageId', async (req, res) => {
+  if (req.uid !== req.params.uid) return res.status(403).json({ error: 'Forbidden' });
+
+  const pool = await getPool();
+  const [rows] = await pool.execute(
+    'SELECT id FROM chat_messages WHERE session_id = ? ORDER BY timestamp ASC',
+    [req.params.sessionId]
+  );
+
+  const targetIndex = rows.findIndex(row => row.id === req.params.messageId);
+  if (targetIndex === -1) {
+    return res.status(404).json({ error: 'Message not found' });
+  }
+
+  const idsToDelete = rows.slice(targetIndex).map(row => row.id);
+
+  if (idsToDelete.length > 0) {
+    const placeholders = idsToDelete.map(() => '?').join(',');
+    await pool.execute(
+      `DELETE FROM chat_messages WHERE id IN (${placeholders})`,
+      idsToDelete
+    );
+  }
+
+  res.json({ success: true });
+});
+
 // DELETE /api/users/:uid — Delete user profile (cascades to all user data)
 router.delete('/:uid', async (req, res) => {
   if (req.uid !== req.params.uid) return res.status(403).json({ error: 'Forbidden' });

@@ -14,6 +14,8 @@ class ChatBubble extends StatelessWidget {
   final ValueChanged<String> onSpeak;
   final ValueChanged<String> onCopy;
   final ValueChanged<String> onShare;
+  final VoidCallback? onRetry;
+  final VoidCallback? onEdit;
 
   const ChatBubble({
     super.key,
@@ -21,6 +23,8 @@ class ChatBubble extends StatelessWidget {
     required this.onSpeak,
     required this.onCopy,
     required this.onShare,
+    this.onRetry,
+    this.onEdit,
   });
 
   @override
@@ -141,6 +145,28 @@ class ChatBubble extends StatelessWidget {
                           context,
                           Icons.share_rounded,
                           () => onShare(message.text),
+                        ),
+                        if (onRetry != null) ...[
+                          const SizedBox(width: 16),
+                          _buildActionIcon(
+                            context,
+                            Icons.refresh_rounded,
+                            onRetry!,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                if (isUser && onEdit != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, right: 4.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildActionIcon(
+                          context,
+                          Icons.edit_rounded,
+                          onEdit!,
                         ),
                       ],
                     ),

@@ -1133,14 +1133,32 @@ class ApiService {
   }
 
   /// Save message in a chat session.
-  Future<bool> saveChatMessage(String sessionId, {required String text, required bool isUser}) async {
+  Future<String?> saveChatMessage(String sessionId, {required String text, required bool isUser}) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final resp = await http.post(
       Uri.parse('$_baseUrl/api/users/$uid/chat-sessions/$sessionId/messages'),
       headers: await _headers(),
       body: jsonEncode({'text': text, 'isUser': isUser}),
     );
-    return resp.statusCode == 201;
+    if (resp.statusCode == 201) {
+      try {
+        final body = jsonDecode(resp.body);
+        return body['id'] as String?;
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Delete chat messages from a specific message onwards in a session.
+  Future<bool> deleteChatMessagesFrom(String sessionId, String messageId) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final resp = await http.delete(
+      Uri.parse('$_baseUrl/api/users/$uid/chat-sessions/$sessionId/messages/$messageId'),
+      headers: await _headers(),
+    );
+    return resp.statusCode == 200;
   }
 
   // ─────────────────────────────────────────────
