@@ -260,6 +260,37 @@ function getDatabasePoolFactory() {
   }
 }
 
+function formatRuntimeError(error) {
+  const message = error?.message || String(error);
+
+  if (error?.code === 'ER_ACCESS_DENIED_ERROR' || message.includes('Access denied for user')) {
+    return [
+      message,
+      '',
+      'Cloud SQL was reached, but MySQL rejected the login.',
+      '',
+      'Check these values in the same shell running the seed command:',
+      '',
+      '  echo "$INSTANCE_CONNECTION_NAME"',
+      '  echo "$DB_USER"',
+      '  echo "$DB_NAME"',
+      '',
+      'Then verify the password and MySQL user host in Cloud SQL:',
+      '',
+      '  gcloud sql users list --instance=sapapnj-db',
+      '  gcloud sql users set-password sapapnj-api --instance=sapapnj-db --password="your-db-password"',
+      '',
+      'If the user is host-restricted, ensure there is a sapapnj-api user for host "%".',
+    ].join('\n');
+  }
+
+  return message;
+}
+
+async function assertDatabaseConnection(pool) {
+  await pool.execute('SELECT 1');
+}
+
 async function cleanupSeedData(pool) {
   await pool.execute(
     `DELETE FROM notifications
@@ -630,6 +661,7 @@ async function main() {
   const pool = await getPool();
 
   try {
+    await assertDatabaseConnection(pool);
     await cleanupSeedData(pool);
     if (cleanupOnly) {
       console.log('Removed explore seed fixture data.');
@@ -649,6 +681,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.message);
+  console.error(formatRuntimeError(error));
   process.exitCode = 1;
 });

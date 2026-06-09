@@ -132,6 +132,27 @@ ALLOW_DEV_SEED=1 SEED_VIEWER_UID=your-user-uid npm run seed:explore
 - If the script says `Missing API npm dependencies`, run `npm install` in `cloud_functions/api`.
 - If the script says `Missing Cloud SQL environment variables`, export `INSTANCE_CONNECTION_NAME`, `DB_USER`, `DB_PASS`, and `DB_NAME`.
 - If the connector says `Missing instance connection name`, `INSTANCE_CONNECTION_NAME` is empty or not exported in the shell running the command.
+- If MySQL says `Access denied for user`, Cloud SQL was reached but the database rejected `DB_USER`/`DB_PASS` or the MySQL user host. Verify the values:
+
+```bash
+echo "$INSTANCE_CONNECTION_NAME"
+echo "$DB_USER"
+echo "$DB_NAME"
+gcloud sql users list --instance=sapapnj-db
+```
+
+If the password is wrong or forgotten, reset it and export the same value as `DB_PASS`:
+
+```bash
+gcloud sql users set-password sapapnj-api \
+  --instance=sapapnj-db \
+  --password="your-db-password"
+
+export DB_PASS="your-db-password"
+```
+
+If the listed MySQL user is host-restricted, make sure there is a `sapapnj-api` user for host `%`, because local Cloud SQL connector traffic can appear as `cloudsqlproxy~...`.
+
 - If `SEED_VIEWER_UID` does not exist, log in once or create the SQL user first.
 - If the endpoint response differs from the script preview, confirm the auth token UID matches `SEED_VIEWER_UID`.
 - If Cloud SQL connection fails locally, confirm your application-default credentials can access the configured instance.
