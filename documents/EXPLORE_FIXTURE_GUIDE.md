@@ -49,7 +49,7 @@ export DB_PASS="your-db-password"
 export DB_NAME="sapapnj"
 ```
 
-The instance connection name format is `PROJECT:REGION:INSTANCE`. The setup guide stores the deployment example in [GCP_SETUP_INSTRUCTIONS_phase2.txt](gcp_setup/GCP_SETUP_INSTRUCTIONS_phase2.txt).
+The instance connection name format is `PROJECT:REGION:INSTANCE`. The setup guide stores the deployment example in [GCP_SETUP_INSTRUCTIONS_phase2.md](gcp_setup/GCP_SETUP_INSTRUCTIONS_phase2.md).
 
 Use a dev or staging database. The script refuses to run unless `ALLOW_DEV_SEED=1` is set.
 
