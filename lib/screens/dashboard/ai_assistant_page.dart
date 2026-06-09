@@ -7,13 +7,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/api_service.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../services/ai_event_bus.dart';
 import '../../widgets/common/common_error_widget.dart';
 import '../../services/overlay_service.dart';
 import '../../services/voice_service.dart';
 import '../../services/app_localizations.dart'; // IMPORT LOCALIZATION
+import '../../services/haptic_service.dart';
 import '../../widgets/common/decorative_background.dart';
 import 'ai_assistant/chat_bubble.dart';
 import 'ai_assistant/chat_message.dart';
@@ -177,7 +177,7 @@ class _AiAssistantPageState extends State<AiAssistantPage>
     _ttsManager.stop();
     setState(() => _isRecording = true);
     _micScaleController.forward();
-    if (hapticNotifier.value) HapticFeedback.heavyImpact();
+    HapticService.heavyImpact();
 
     voiceService.startListening(
       onListeningStateChanged: (isListening) {},
@@ -844,7 +844,9 @@ Return a concise summary only.
         12,
         MediaQuery.of(context).padding.bottom + 12,
       ),
-      tint: theme.scaffoldBackgroundColor.withValues(alpha: isDark ? 0.86 : 0.82),
+      tint: theme.scaffoldBackgroundColor.withValues(
+        alpha: isDark ? 0.86 : 0.82,
+      ),
       blur: FrostedGlassTokens.strongBlurSigma,
       border: Border(
         top: FrostedGlassTokens.subtleBorderSide(context, opacity: 0.24),
@@ -909,7 +911,9 @@ Return a concise summary only.
                         shape: BoxShape.circle,
                         tint: (_isRecording ? Colors.red : theme.cardColor)
                             .withValues(
-                              alpha: _isRecording ? 0.84 : (isDark ? 0.78 : 0.74),
+                              alpha: _isRecording
+                                  ? 0.84
+                                  : (isDark ? 0.78 : 0.74),
                             ),
                         blur: FrostedGlassTokens.controlBlurSigma,
                         border: Border.all(

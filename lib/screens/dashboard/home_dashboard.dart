@@ -15,12 +15,12 @@ import 'search_page.dart';
 import 'profile_tab_page.dart';
 import '../post/create_post_screen.dart';
 import '../community/community_list_tab.dart';
-import '../../main.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/notification/notification_sheet.dart';
 import '../../services/overlay_service.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/ai_event_bus.dart';
+import '../../services/haptic_service.dart';
 
 import '../../services/draft_service.dart';
 import '../post/post_detail_screen.dart';
@@ -582,7 +582,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       ),
       leading: GestureDetector(
         onTap: () {
-          if (hapticNotifier.value) HapticFeedback.mediumImpact();
+          HapticService.mediumImpact();
           _scaffoldKey.currentState!.openDrawer();
         },
         child: Padding(
@@ -704,7 +704,9 @@ class _HomeDashboardState extends State<HomeDashboard>
           ),
           BottomNavyBarItem(
             icon: Icon(Icons.groups),
-            title: Text(AppLocalizations.of(context)!.translate('general_community')),
+            title: Text(
+              AppLocalizations.of(context)!.translate('general_community'),
+            ),
             activeColor: activeIconColor,
             inactiveColor: inactiveIconColor,
           ),

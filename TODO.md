@@ -73,7 +73,7 @@
 - [x] Opening keyboard on a blog post to reply causes lag
 - [x] Hide text input outline on the blog post reply section
 - [x] Add a smooth and bouncy pull down to refresh animation just like in the communities tab pull down refresh, for other page.
-- [ ] Getaran/Haptic does not work.
+- [x] Getaran/Haptic does not work.
 
 ## Major Refactor & Codebase Optimization
 - [x] **5.1 Utilities Centralization:** Identify commonly duplicated helper functions (e.g., date formatting, error handling, dialogs) and centralize them into `lib/utils/` or `lib/helpers/`.

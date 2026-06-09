@@ -10,6 +10,7 @@ import '../profile/blocked_users_page.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/app_localizations.dart';
+import '../../services/haptic_service.dart';
 import '../../widgets/settings/settings_tile.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -54,9 +55,17 @@ class SettingsPage extends StatelessWidget {
     if (code.contains('_')) {
       final parts = code.split('_');
       if (parts[1] == 'CN') {
-        languageNotifier.value = Locale.fromSubtags(languageCode: parts[0], scriptCode: 'Hans', countryCode: parts[1]);
+        languageNotifier.value = Locale.fromSubtags(
+          languageCode: parts[0],
+          scriptCode: 'Hans',
+          countryCode: parts[1],
+        );
       } else {
-        languageNotifier.value = Locale.fromSubtags(languageCode: parts[0], scriptCode: 'Hant', countryCode: parts[1]);
+        languageNotifier.value = Locale.fromSubtags(
+          languageCode: parts[0],
+          scriptCode: 'Hant',
+          countryCode: parts[1],
+        );
       }
     } else {
       languageNotifier.value = Locale(code);
@@ -93,13 +102,23 @@ class SettingsPage extends StatelessWidget {
                   {'code': 'id', 'name': 'Bahasa Indonesia', 'flag': '🇮🇩'},
                   {'code': 'ja', 'name': '日本語 (Japanese)', 'flag': '🇯🇵'},
                   {'code': 'ko', 'name': '한국어 (Korean)', 'flag': '🇰🇷'},
-                  {'code': 'zh_CN', 'name': '简体中文 (Simplified Chinese)', 'flag': '🇨🇳'},
-                  {'code': 'zh_TW', 'name': '繁體中文 (Traditional Chinese)', 'flag': '🇹🇼'},
+                  {
+                    'code': 'zh_CN',
+                    'name': '简体中文 (Simplified Chinese)',
+                    'flag': '🇨🇳',
+                  },
+                  {
+                    'code': 'zh_TW',
+                    'name': '繁體中文 (Traditional Chinese)',
+                    'flag': '🇹🇼',
+                  },
                 ].map((lang) {
                   bool isSelected = false;
                   String currentCode = languageNotifier.value.languageCode;
                   if (currentCode == 'zh') {
-                    if (languageNotifier.value.scriptCode == 'Hant' || languageNotifier.value.countryCode == 'TW' || languageNotifier.value.countryCode == 'HK') {
+                    if (languageNotifier.value.scriptCode == 'Hant' ||
+                        languageNotifier.value.countryCode == 'TW' ||
+                        languageNotifier.value.countryCode == 'HK') {
                       isSelected = lang['code'] == 'zh_TW';
                     } else {
                       isSelected = lang['code'] == 'zh_CN';
@@ -107,9 +126,12 @@ class SettingsPage extends StatelessWidget {
                   } else {
                     isSelected = currentCode == lang['code'];
                   }
-                  
+
                   return ListTile(
-                    leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
+                    leading: Text(
+                      lang['flag']!,
+                      style: const TextStyle(fontSize: 24),
+                    ),
                     title: Text(lang['name']!),
                     trailing: isSelected
                         ? Icon(Icons.check, color: SisapaTheme.blue)
@@ -218,6 +240,9 @@ class SettingsPage extends StatelessWidget {
                   hapticNotifier.value = value;
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setBool('is_haptic_enabled', value);
+                  if (value) {
+                    await HapticService.selectionClick();
+                  }
                 },
               );
             },
@@ -338,7 +363,6 @@ class SettingsPage extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _OptimizedThemeTile extends StatefulWidget {

@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
-import 'package:flutter/services.dart';
 
 import '../screens/post/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
@@ -12,7 +11,7 @@ import '../screens/community/community_detail_screen.dart';
 import '../services/overlay_service.dart';
 import '../services/app_localizations.dart';
 import '../services/gcs_service.dart';
-import '../main.dart';
+import '../services/haptic_service.dart';
 import '../theme/app_theme.dart';
 
 import 'blog_post_card/post_data_helpers.dart';
@@ -326,7 +325,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
     _likeController.forward().then((_) => _likeController.reverse());
-    if (hapticNotifier.value) HapticFeedback.mediumImpact();
+    HapticService.mediumImpact();
 
     setState(() {
       _isLiked = !_isLiked;
@@ -351,7 +350,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     if (currentUser == null) return;
 
     _repostController.forward().then((_) => _repostController.reverse());
-    if (hapticNotifier.value) HapticFeedback.mediumImpact();
+    HapticService.mediumImpact();
 
     final targetId = effectivePostId;
     final wrapperUserId = postAuthorId(widget.postData);
@@ -419,7 +418,7 @@ class _BlogPostCardState extends State<BlogPostCard>
   void _handleBookmarkToggle(bool isCurrentlyBookmarked) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    if (hapticNotifier.value) HapticFeedback.mediumImpact();
+    HapticService.mediumImpact();
     var t = AppLocalizations.of(context)!;
 
     setState(() {
@@ -705,7 +704,7 @@ class _BlogPostCardState extends State<BlogPostCard>
     if (effectiveIsOwner) {
       final scaffold = Scaffold.maybeOf(context);
       if (scaffold != null && scaffold.hasDrawer) {
-        if (hapticNotifier.value) HapticFeedback.mediumImpact();
+        HapticService.mediumImpact();
         scaffold.openDrawer();
         return;
       }
