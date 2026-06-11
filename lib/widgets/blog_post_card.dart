@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 
+import '../config/gcloud_config.dart';
 import '../screens/post/post_detail_screen.dart';
 import '../screens/dashboard/profile_page.dart';
 import '../screens/community/community_detail_screen.dart';
@@ -184,6 +185,18 @@ class _BlogPostCardState extends State<BlogPostCard>
       ? (postOriginalId(widget.postData) ?? widget.postId).toString()
       : widget.postId;
   Map<String, dynamic> get effectivePostData => _resolvedPostData ?? {};
+
+  String? _gcsObjectNameFromPublicUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.host != 'storage.googleapis.com') return null;
+
+    final segments = uri.pathSegments;
+    if (segments.length < 2 || segments.first != GcloudConfig.gcsBucketName) {
+      return null;
+    }
+
+    return segments.skip(1).join('/');
+  }
 
   bool get effectiveIsOwner {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -566,9 +579,8 @@ class _BlogPostCardState extends State<BlogPostCard>
 
         for (String url in mediaUrls) {
           try {
-            final match = RegExp(r'sapapnj-media-assets/(.*)').firstMatch(url);
-            if (match != null) {
-              final objectName = match.group(1)!;
+            final objectName = _gcsObjectNameFromPublicUrl(url);
+            if (objectName != null) {
               await GcsService().deleteResource(objectName);
             }
           } catch (e) {
