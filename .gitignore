@@ -194,3 +194,6 @@ google-services.json
 lib/firebase_options.dart
 
 pubspec.lock
+
+# Released APK files
+SAPAPNJ.apk
