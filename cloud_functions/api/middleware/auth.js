@@ -1,8 +1,13 @@
 const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
+  const firebaseProjectId = process.env.FIREBASE_PROJECT_ID;
+  if (!firebaseProjectId) {
+    throw new Error('Missing required env var: FIREBASE_PROJECT_ID');
+  }
+
   admin.initializeApp({
-    projectId: process.env.FIREBASE_PROJECT_ID || 'myfirebaseproject-c8c85'
+    projectId: firebaseProjectId,
   });
 }
 

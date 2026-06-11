@@ -4,7 +4,11 @@ const crypto = require("crypto");
 const path = require("path");
 
 const storage = new Storage();
-const BUCKET_NAME = process.env.GCS_BUCKET_NAME || "sapapnj-media-assets";
+const BUCKET_NAME = process.env.GCS_BUCKET_NAME;
+
+if (!BUCKET_NAME) {
+  throw new Error("Missing required env var: GCS_BUCKET_NAME");
+}
 
 // ---------------------------------------------------------------------------
 // POST /getSignedUploadUrl

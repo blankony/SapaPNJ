@@ -4,20 +4,28 @@ const { Connector } = require('@google-cloud/cloud-sql-connector');
 let pool = null;
 let connector = null;
 
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return value;
+}
+
 async function getPool() {
   if (pool) return pool;
 
   connector = new Connector();
   const clientOpts = await connector.getOptions({
-    instanceConnectionName: process.env.INSTANCE_CONNECTION_NAME,
+    instanceConnectionName: requireEnv('INSTANCE_CONNECTION_NAME'),
     ipType: 'PUBLIC',
   });
 
   pool = mysql.createPool({
     ...clientOpts,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+    user: requireEnv('DB_USER'),
+    password: requireEnv('DB_PASS'),
+    database: requireEnv('DB_NAME'),
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
