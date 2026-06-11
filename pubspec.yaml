@@ -67,6 +67,7 @@ flutter:
     - images/arnold.png
     - images/arya.png
     - documents/syarat_dan_ketentuan.pdf
+    - gcloud.conf
     - .env
     - assets/lang/
 

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
+import '../config/gcloud_config.dart';
 import 'feed_preferences_service.dart';
 
 /// Centralized HTTP client for the SapaPNJ REST API.
@@ -46,9 +46,7 @@ class ApiService {
     } catch (_) {}
   }
 
-  String get _baseUrl => (dotenv.env['API_BASE_URL']?.isNotEmpty == true)
-      ? dotenv.env['API_BASE_URL']!
-      : 'https://sapapnjapi-173197562227.asia-southeast2.run.app';
+  String get _baseUrl => GcloudConfig.apiBaseUrl;
 
   /// Get Firebase Auth ID token for authenticated requests.
   Future<String?> _getToken() async {
@@ -399,7 +397,9 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode({'uid': uid, 'email': email, 'name': name, 'nim': nim}),
     );
-    debugPrint('ApiService - POST /api/users Response: ${resp.statusCode} ${resp.body}');
+    debugPrint(
+      'ApiService - POST /api/users Response: ${resp.statusCode} ${resp.body}',
+    );
     if (resp.statusCode == 409) {
       throw ApiException('nim-already-in-use', 'NIM already registered');
     }
@@ -410,7 +410,10 @@ class ApiService {
   static final Map<String, DateTime> _userCacheTime = {};
 
   /// Get user profile (using MySQL backend).
-  Future<Map<String, dynamic>?> getUser(String uid, {bool forceRefresh = false}) async {
+  Future<Map<String, dynamic>?> getUser(
+    String uid, {
+    bool forceRefresh = false,
+  }) async {
     final now = DateTime.now();
     if (!forceRefresh && _userCache.containsKey(uid)) {
       if (now.difference(_userCacheTime[uid]!) < const Duration(minutes: 5)) {
@@ -422,7 +425,9 @@ class ApiService {
       Uri.parse('$_baseUrl/api/users/$uid'),
       headers: await _headers(),
     );
-    debugPrint('ApiService - GET /api/users/$uid Response: ${resp.statusCode} ${resp.body}');
+    debugPrint(
+      'ApiService - GET /api/users/$uid Response: ${resp.statusCode} ${resp.body}',
+    );
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) throw _error(resp);
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -438,7 +443,9 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode(fields),
     );
-    debugPrint('ApiService - PATCH /api/users/$uid Response: ${resp.statusCode} ${resp.body}');
+    debugPrint(
+      'ApiService - PATCH /api/users/$uid Response: ${resp.statusCode} ${resp.body}',
+    );
     if (resp.statusCode == 200) {
       _userCache.remove(uid);
       return true;
@@ -605,7 +612,6 @@ class ApiService {
     return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
   }
 
-
   /// Get follower UIDs.
   Future<List<String>> getFollowers(String uid) async {
     final resp = await http.get(
@@ -650,7 +656,9 @@ class ApiService {
       'user_uid': ?userUid,
       'q': ?query,
     };
-    final uri = Uri.parse('$_baseUrl/api/posts').replace(queryParameters: params);
+    final uri = Uri.parse(
+      '$_baseUrl/api/posts',
+    ).replace(queryParameters: params);
     final resp = await http.get(uri, headers: await _headers());
     if (loadRepostsFuture != null) {
       await loadRepostsFuture;
@@ -758,13 +766,19 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getTrendingTopics() async {
-    final resp = await http.get(Uri.parse('$_baseUrl/api/explore/trending'), headers: await _headers());
+    final resp = await http.get(
+      Uri.parse('$_baseUrl/api/explore/trending'),
+      headers: await _headers(),
+    );
     if (resp.statusCode != 200) throw _error(resp);
     return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
   }
 
   Future<List<Map<String, dynamic>>> getDiscoverRecommendations() async {
-    final resp = await http.get(Uri.parse('$_baseUrl/api/explore/discover'), headers: await _headers());
+    final resp = await http.get(
+      Uri.parse('$_baseUrl/api/explore/discover'),
+      headers: await _headers(),
+    );
     if (resp.statusCode != 200) throw _error(resp);
     final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
     return _hydrateExplorePostAuthors(posts);
@@ -773,7 +787,10 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getPersonalizedRecommendations({
     FeedPreferences? feedPreferences,
   }) async {
-    final resp = await http.get(Uri.parse('$_baseUrl/api/explore/recommended'), headers: await _headers());
+    final resp = await http.get(
+      Uri.parse('$_baseUrl/api/explore/recommended'),
+      headers: await _headers(),
+    );
     if (resp.statusCode != 200) throw _error(resp);
     final posts = List<Map<String, dynamic>>.from(jsonDecode(resp.body));
     final hydrated = await _hydrateExplorePostAuthors(posts);
@@ -796,7 +813,10 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedCommunities() async {
-    final resp = await http.get(Uri.parse('$_baseUrl/api/communities/recommended'), headers: await _headers());
+    final resp = await http.get(
+      Uri.parse('$_baseUrl/api/communities/recommended'),
+      headers: await _headers(),
+    );
     if (resp.statusCode != 200) throw _error(resp);
     return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
   }
@@ -831,11 +851,20 @@ class ApiService {
   }
 
   /// Add a comment. Returns comment ID.
-  Future<String> addComment(String postId, {String? text, String? mediaUrl, String? mediaType}) async {
+  Future<String> addComment(
+    String postId, {
+    String? text,
+    String? mediaUrl,
+    String? mediaType,
+  }) async {
     final resp = await http.post(
       Uri.parse('$_baseUrl/api/posts/$postId/comments'),
       headers: await _headers(),
-      body: jsonEncode({'text': text, 'media_url': mediaUrl, 'media_type': mediaType}),
+      body: jsonEncode({
+        'text': text,
+        'media_url': mediaUrl,
+        'media_type': mediaType,
+      }),
     );
     if (resp.statusCode != 201) throw _error(resp);
     return jsonDecode(resp.body)['id'];
@@ -961,12 +990,14 @@ class ApiService {
   // ─────────────────────────────────────────────
 
   /// Browse/search communities.
-  Future<List<Map<String, dynamic>>> getCommunities({String? query, String? category}) async {
-    final params = <String, String>{
-      'q': ?query,
-      'category': ?category,
-    };
-    final uri = Uri.parse('$_baseUrl/api/communities').replace(queryParameters: params.isEmpty ? null : params);
+  Future<List<Map<String, dynamic>>> getCommunities({
+    String? query,
+    String? category,
+  }) async {
+    final params = <String, String>{'q': ?query, 'category': ?category};
+    final uri = Uri.parse(
+      '$_baseUrl/api/communities',
+    ).replace(queryParameters: params.isEmpty ? null : params);
     final resp = await http.get(uri, headers: await _headers());
     if (resp.statusCode != 200) return [];
     return List<Map<String, dynamic>>.from(jsonDecode(resp.body));
@@ -1066,7 +1097,11 @@ class ApiService {
   }
 
   /// Update member role.
-  Future<bool> updateMemberRole(String communityId, String userUid, String role) async {
+  Future<bool> updateMemberRole(
+    String communityId,
+    String userUid,
+    String role,
+  ) async {
     final resp = await http.patch(
       Uri.parse('$_baseUrl/api/communities/$communityId/members/$userUid'),
       headers: await _headers(),
@@ -1133,7 +1168,11 @@ class ApiService {
   }
 
   /// Save message in a chat session.
-  Future<String?> saveChatMessage(String sessionId, {required String text, required bool isUser}) async {
+  Future<String?> saveChatMessage(
+    String sessionId, {
+    required String text,
+    required bool isUser,
+  }) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final resp = await http.post(
       Uri.parse('$_baseUrl/api/users/$uid/chat-sessions/$sessionId/messages'),
@@ -1152,10 +1191,15 @@ class ApiService {
   }
 
   /// Delete chat messages from a specific message onwards in a session.
-  Future<bool> deleteChatMessagesFrom(String sessionId, String messageId) async {
+  Future<bool> deleteChatMessagesFrom(
+    String sessionId,
+    String messageId,
+  ) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final resp = await http.delete(
-      Uri.parse('$_baseUrl/api/users/$uid/chat-sessions/$sessionId/messages/$messageId'),
+      Uri.parse(
+        '$_baseUrl/api/users/$uid/chat-sessions/$sessionId/messages/$messageId',
+      ),
       headers: await _headers(),
     );
     return resp.statusCode == 200;
@@ -1193,7 +1237,10 @@ class ApiService {
   Exception _error(http.Response resp) {
     try {
       final body = jsonDecode(resp.body);
-      return ApiException(resp.statusCode.toString(), body['error'] ?? 'Unknown error');
+      return ApiException(
+        resp.statusCode.toString(),
+        body['error'] ?? 'Unknown error',
+      );
     } catch (_) {
       return ApiException(resp.statusCode.toString(), resp.body);
     }

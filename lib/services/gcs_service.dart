@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as p;
+
+import '../config/gcloud_config.dart';
 
 /// Response model for GCS upload/delete operations.
 class GcsResponse {
@@ -21,13 +22,8 @@ class GcsResponse {
 ///   2. Client PUTs the file directly to GCS using that URL.
 ///   3. Cloud Function returns the final public URL.
 class GcsService {
-  String get _bucketName => (dotenv.env['GCS_BUCKET_NAME']?.isNotEmpty == true)
-      ? dotenv.env['GCS_BUCKET_NAME']!
-      : 'sapapnj-media-assets';
-
-  String get _functionBaseUrl => (dotenv.env['GCS_FUNCTION_URL']?.isNotEmpty == true)
-      ? dotenv.env['GCS_FUNCTION_URL']!
-      : 'https://asia-southeast2-sapapnj-gcp.cloudfunctions.net';
+  String get _bucketName => GcloudConfig.gcsBucketName;
+  String get _functionBaseUrl => GcloudConfig.gcsFunctionUrl;
 
   // ---------------------------------------------------------------------------
   // Convenience wrappers
@@ -45,14 +41,19 @@ class GcsService {
   // Core upload
   // ---------------------------------------------------------------------------
 
-  Future<GcsResponse> uploadFileWithDetails(File file, String resourceType) async {
+  Future<GcsResponse> uploadFileWithDetails(
+    File file,
+    String resourceType,
+  ) async {
     if (_bucketName.isEmpty || _functionBaseUrl.isEmpty) {
       return GcsResponse(error: "GCS credentials missing.");
     }
 
     try {
       final fileName = p.basename(file.path);
-      debugPrint("GCS: Requesting signed URL for $fileName with type $resourceType");
+      debugPrint(
+        "GCS: Requesting signed URL for $fileName with type $resourceType",
+      );
       // 1. Request a signed upload URL from the Cloud Function.
       final signResponse = await http.post(
         Uri.parse('$_functionBaseUrl/getSignedUploadUrl'),
@@ -64,7 +65,9 @@ class GcsService {
       );
 
       if (signResponse.statusCode != 200) {
-        debugPrint('GCS sign URL failed: ${signResponse.statusCode} - body: ${signResponse.body}');
+        debugPrint(
+          'GCS sign URL failed: ${signResponse.statusCode} - body: ${signResponse.body}',
+        );
         return GcsResponse(error: 'Failed to get upload URL');
       }
 
@@ -73,7 +76,9 @@ class GcsService {
       final String objectName = signData['objectName'];
       final String contentType = signData['contentType'];
 
-      debugPrint("GCS: Got signed URL. Starting PUT request to storage.googleapis.com...");
+      debugPrint(
+        "GCS: Got signed URL. Starting PUT request to storage.googleapis.com...",
+      );
       // 2. PUT the file directly to GCS.
       final fileBytes = await file.readAsBytes();
       final uploadResponse = await http.put(
@@ -82,17 +87,19 @@ class GcsService {
         body: fileBytes,
       );
 
-      if (uploadResponse.statusCode == 200 || uploadResponse.statusCode == 201) {
+      if (uploadResponse.statusCode == 200 ||
+          uploadResponse.statusCode == 201) {
         final publicUrl =
             'https://storage.googleapis.com/$_bucketName/$objectName';
         debugPrint("GCS: Upload successful. Public URL: $publicUrl");
-        return GcsResponse(
-          secureUrl: publicUrl,
-          publicId: objectName,
-        );
+        return GcsResponse(secureUrl: publicUrl, publicId: objectName);
       } else {
-        debugPrint('GCS upload failed: ${uploadResponse.statusCode} - body: ${uploadResponse.body}');
-        return GcsResponse(error: 'Upload to GCS failed (${uploadResponse.statusCode})');
+        debugPrint(
+          'GCS upload failed: ${uploadResponse.statusCode} - body: ${uploadResponse.body}',
+        );
+        return GcsResponse(
+          error: 'Upload to GCS failed (${uploadResponse.statusCode})',
+        );
       }
     } catch (e, stackTrace) {
       debugPrint('GCS upload exception: $e\nStacktrace: $stackTrace');
@@ -104,7 +111,10 @@ class GcsService {
   // Delete a GCS object
   // ---------------------------------------------------------------------------
 
-  Future<bool> deleteResource(String objectName, {String resourceType = 'image'}) async {
+  Future<bool> deleteResource(
+    String objectName, {
+    String resourceType = 'image',
+  }) async {
     if (_functionBaseUrl.isEmpty) {
       debugPrint("WARNING: GCS Function URL missing. Cannot delete.");
       return false;
@@ -136,7 +146,8 @@ class GcsService {
 
   String _resolveContentType(String fileName, String resourceType) {
     final ext = p.extension(fileName).toLowerCase();
-    if (resourceType == 'image' || ['.jpg', '.jpeg', '.png', '.gif', '.webp'].contains(ext)) {
+    if (resourceType == 'image' ||
+        ['.jpg', '.jpeg', '.png', '.gif', '.webp'].contains(ext)) {
       switch (ext) {
         case '.png':
           return 'image/png';
