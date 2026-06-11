@@ -10,15 +10,22 @@
 
 ## Step 1 — GCP Project Setup
 
+From the repository root, load `gcloud.conf` first. This keeps the guide usable
+for any GCP project without editing commands one by one.
+
 ```bash
+set -a
+source gcloud.conf
+set +a
+
 # Authenticate with Google Cloud
 gcloud auth login
 
 # Create a new project (skip if you already have one)
-gcloud projects create sapapnj-gcp --name="SapaPNJ"
+gcloud projects create "$GCP_PROJECT_ID" --name="SapaPNJ"
 
 # Set it as active
-gcloud config set project sapapnj-gcp
+gcloud config set project "$GCP_PROJECT_ID"
 
 # Enable required APIs
 gcloud services enable storage.googleapis.com
@@ -36,13 +43,13 @@ gcloud services enable run.googleapis.com
 
 ```bash
 # Create the bucket (choose a region close to you)
-gcloud storage buckets create gs://sapapnj-media-assets \
-  --location=asia-southeast2 \
+gcloud storage buckets create "gs://$GCS_BUCKET_NAME" \
+  --location="$GCP_REGION" \
   --default-storage-class=STANDARD \
   --uniform-bucket-level-access
 
 # Make objects publicly readable (so CachedNetworkImage can fetch them)
-gcloud storage buckets add-iam-policy-binding gs://sapapnj-media-assets \
+gcloud storage buckets add-iam-policy-binding "gs://$GCS_BUCKET_NAME" \
   --member=allUsers \
   --role=roles/storage.objectViewer
 ```
@@ -65,7 +72,7 @@ Create a `cors.json` file:
 Apply it:
 
 ```bash
-gcloud storage buckets update gs://sapapnj-media-assets --cors-file=cors.json
+gcloud storage buckets update "gs://$GCS_BUCKET_NAME" --cors-file=cors.json
 ```
 
 ---
@@ -74,16 +81,16 @@ gcloud storage buckets update gs://sapapnj-media-assets --cors-file=cors.json
 
 ```bash
 # Create the service account
-gcloud iam service-accounts create sapapnj-media-fn \
+gcloud iam service-accounts create "$GCP_SERVICE_ACCOUNT" \
   --display-name="SapaPNJ Media Functions"
 
 # Grant it permission to sign URLs and manage the bucket
-gcloud projects add-iam-policy-binding sapapnj-gcp \
-  --member="serviceAccount:sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
+  --member="serviceAccount:$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/storage.admin"
 
-gcloud projects add-iam-policy-binding sapapnj-gcp \
-  --member="serviceAccount:sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
+  --member="serviceAccount:$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/iam.serviceAccountTokenCreator"
 ```
 
@@ -105,12 +112,12 @@ npm install
 gcloud functions deploy getSignedUploadUrl \
   --gen2 \
   --runtime=nodejs22 \
-  --region=asia-southeast2 \
+  --region="$GCP_REGION" \
   --trigger-http \
   --allow-unauthenticated \
   --entry-point=getSignedUploadUrl \
-  --set-env-vars=GCS_BUCKET_NAME=sapapnj-media-assets \
-  --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com \
+  --set-env-vars="GCS_BUCKET_NAME=$GCS_BUCKET_NAME" \
+  --service-account="$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" \
   --source=.
 ```
 
@@ -120,37 +127,37 @@ gcloud functions deploy getSignedUploadUrl \
 gcloud functions deploy deleteObject \
   --gen2 \
   --runtime=nodejs22 \
-  --region=asia-southeast2 \
+  --region="$GCP_REGION" \
   --trigger-http \
   --allow-unauthenticated \
   --entry-point=deleteObject \
-  --set-env-vars=GCS_BUCKET_NAME=sapapnj-media-assets \
-  --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com \
+  --set-env-vars="GCS_BUCKET_NAME=$GCS_BUCKET_NAME" \
+  --service-account="$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" \
   --source=.
 ```
 
 After deployment, the URLs will look like:
 
 ```
-https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/getSignedUploadUrl
-https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/deleteObject
+https://$GCP_REGION-$GCP_PROJECT_ID.cloudfunctions.net/getSignedUploadUrl
+https://$GCP_REGION-$GCP_PROJECT_ID.cloudfunctions.net/deleteObject
 ```
 
 The **base URL** (without the function name) is what you need:
 
 ```
-https://asia-southeast2-sapapnj-gcp.cloudfunctions.net
+https://$GCP_REGION-$GCP_PROJECT_ID.cloudfunctions.net
 ```
 
 ---
 
-## Step 5 — Update Your `.env` File
+## Step 5 — Update `gcloud.conf`
 
-Open the `.env` file in the project root and fill in:
+Open `gcloud.conf` in the project root and fill in the actual media values:
 
 ```env
-GCS_BUCKET_NAME=sapapnj-media-assets
-GCS_FUNCTION_URL=https://asia-southeast2-sapapnj-gcp.cloudfunctions.net
+GCS_BUCKET_NAME=your-gcs-bucket-name
+GCS_FUNCTION_URL=https://REGION-PROJECT_ID.cloudfunctions.net
 ```
 
 Use the actual base URL from Step 4 output.
@@ -162,7 +169,7 @@ Use the actual base URL from Step 4 output.
 ### 1. Test the signed URL endpoint
 
 ```bash
-curl -X POST https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/getSignedUploadUrl \
+curl -X POST "$GCS_FUNCTION_URL/getSignedUploadUrl" \
   -H "Content-Type: application/json" \
   -d '{"fileName": "test.png", "contentType": "image/png"}'
 ```
@@ -183,13 +190,13 @@ curl -X PUT "<uploadUrl>" \
 Open in browser:
 
 ```
-https://storage.googleapis.com/sapapnj-media-assets/<objectName>
+https://storage.googleapis.com/YOUR_GCS_BUCKET_NAME/<objectName>
 ```
 
 ### 4. Test deletion
 
 ```bash
-curl -X POST https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/deleteObject \
+curl -X POST "$GCS_FUNCTION_URL/deleteObject" \
   -H "Content-Type: application/json" \
   -d '{"objectName": "<objectName>"}'
 ```

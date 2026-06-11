@@ -30,6 +30,10 @@ Run from the API folder:
 
 ```bash
 cd cloud_functions/api
+
+set -a
+source ../../gcloud.conf
+set +a
 ```
 
 Install the API dependencies once before running backend scripts locally:
@@ -40,13 +44,12 @@ npm install
 
 If `npm install` warns about Node `v26`, switch to Node `22` for this API project. The Cloud Functions runtime and some transitive packages currently target Node 22 or lower.
 
-The script uses the same DB connection module as the API, so these variables must point to the database you want to test:
+The script uses the same DB connection module as the API. `gcloud.conf`
+provides the database routing values; set only the database password in your
+shell:
 
 ```bash
-export INSTANCE_CONNECTION_NAME="sapapnj-gcp:asia-southeast2:sapapnj-db"
-export DB_USER="sapapnj-api"
 export DB_PASS="your-db-password"
-export DB_NAME="sapapnj"
 ```
 
 The instance connection name format is `PROJECT:REGION:INSTANCE`. The setup guide stores the deployment example in [GCP_SETUP_INSTRUCTIONS_phase2.md](gcp_setup/GCP_SETUP_INSTRUCTIONS_phase2.md).
@@ -135,16 +138,17 @@ ALLOW_DEV_SEED=1 SEED_VIEWER_UID=your-user-uid npm run seed:explore
 - If the deployed API says `Missing instance connection name` after a deploy, the function environment was probably replaced without `INSTANCE_CONNECTION_NAME`. Repair all DB env vars with a file so shell line wrapping cannot corrupt values:
 
 ```bash
-cat > /tmp/sapapnj-api-env.yaml <<'EOF'
-DB_USER: sapapnj-api
+cat > /tmp/sapapnj-api-env.yaml <<EOF
+DB_USER: $DB_USER
 DB_PASS: your-db-password
-DB_NAME: sapapnj
-INSTANCE_CONNECTION_NAME: sapapnj-gcp:asia-southeast2:sapapnj-db
+DB_NAME: $DB_NAME
+INSTANCE_CONNECTION_NAME: $INSTANCE_CONNECTION_NAME
+FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID
 EOF
 
-gcloud functions deploy sapapnjApi \
+gcloud functions deploy "$API_FUNCTION_NAME" \
   --gen2 \
-  --region=asia-southeast2 \
+  --region="$GCP_REGION" \
   --env-vars-file=/tmp/sapapnj-api-env.yaml
 ```
 
@@ -154,20 +158,22 @@ gcloud functions deploy sapapnjApi \
 echo "$INSTANCE_CONNECTION_NAME"
 echo "$DB_USER"
 echo "$DB_NAME"
-gcloud sql users list --instance=sapapnj-db
+gcloud sql users list --instance="$DB_INSTANCE"
 ```
 
 If the password is wrong or forgotten, reset it and export the same value as `DB_PASS`:
 
 ```bash
-gcloud sql users set-password sapapnj-api \
-  --instance=sapapnj-db \
+gcloud sql users set-password "$DB_USER" \
+  --instance="$DB_INSTANCE" \
   --password="your-db-password"
 
 export DB_PASS="your-db-password"
 ```
 
-If the listed MySQL user is host-restricted, make sure there is a `sapapnj-api` user for host `%`, because local Cloud SQL connector traffic can appear as `cloudsqlproxy~...`.
+If the listed MySQL user is host-restricted, make sure there is a matching
+`DB_USER` user for host `%`, because local Cloud SQL connector traffic can
+appear as `cloudsqlproxy~...`.
 
 - If the script prints `Seeded explore fixture data` but does not return to the shell prompt, the fixture has already been written. Stop the process with `Ctrl+C` and use the latest script version, which closes the Cloud SQL connector after the seed run.
 - If `SEED_VIEWER_UID` does not exist, log in once or create the SQL user first.

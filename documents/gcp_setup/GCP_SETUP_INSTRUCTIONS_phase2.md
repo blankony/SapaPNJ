@@ -4,9 +4,23 @@
 
 - **Phase 1 completed** (Cloud Functions deployed, GCS bucket configured)
 - **Google Cloud SDK** (`gcloud` CLI) installed and authenticated
-- Active project: `sapapnj-gcp`
+- `gcloud.conf` filled with your target project, region, Firebase project, and
+  database values
 
 ---
+
+## Step 0 — Load `gcloud.conf`
+
+Run these commands from the repository root before following the rest of this
+guide:
+
+```bash
+set -a
+source gcloud.conf
+set +a
+
+gcloud config set project "$GCP_PROJECT_ID"
+```
 
 ## Step 1 — Enable Cloud SQL API
 
@@ -21,11 +35,11 @@ gcloud services enable sql-component.googleapis.com
 
 ```bash
 # Create a MySQL 8.0 instance (db-f1-micro = cheapest tier)
-# Region: asia-southeast2 (Jakarta) — same as your Cloud Functions
-gcloud sql instances create sapapnj-db \
+# Region should match GCP_REGION from gcloud.conf.
+gcloud sql instances create "$DB_INSTANCE" \
   --database-version=MYSQL_8_0 \
   --tier=db-f1-micro \
-  --region=asia-southeast2 \
+  --region="$GCP_REGION" \
   --storage-type=SSD \
   --storage-size=10GB \
   --availability-type=zonal \
@@ -37,7 +51,7 @@ gcloud sql instances create sapapnj-db \
 Verify the instance is running:
 
 ```bash
-gcloud sql instances describe sapapnj-db --format="value(state)"
+gcloud sql instances describe "$DB_INSTANCE" --format="value(state)"
 # Should output: RUNNABLE
 ```
 
@@ -47,11 +61,11 @@ gcloud sql instances describe sapapnj-db --format="value(state)"
 
 ```bash
 # Create the database
-gcloud sql databases create sapapnj --instance=sapapnj-db
+gcloud sql databases create "$DB_NAME" --instance="$DB_INSTANCE"
 
 # Create a user for the API (replace YOUR_PASSWORD with a strong password)
-gcloud sql users create sapapnj-api \
-  --instance=sapapnj-db \
+gcloud sql users create "$DB_USER" \
+  --instance="$DB_INSTANCE" \
   --password=YOUR_PASSWORD
 ```
 
@@ -60,8 +74,8 @@ gcloud sql users create sapapnj-api \
 ## Step 4 — Grant Cloud Functions Access to Cloud SQL
 
 ```bash
-gcloud projects add-iam-policy-binding sapapnj-gcp \
-  --member="serviceAccount:sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
+  --member="serviceAccount:$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudsql.client"
 ```
 
@@ -72,20 +86,22 @@ gcloud projects add-iam-policy-binding sapapnj-gcp \
 Get the instance connection name:
 
 ```bash
-gcloud sql instances describe sapapnj-db --format="value(connectionName)"
-# Output: sapapnj-gcp:asia-southeast2:sapapnj-db
+gcloud sql instances describe "$DB_INSTANCE" --format="value(connectionName)"
+# Output format: PROJECT_ID:REGION:DB_INSTANCE
 ```
+
+Copy the output into `INSTANCE_CONNECTION_NAME` in `gcloud.conf`.
 
 ### Option A: Apply schema via `gcloud`
 
 ```bash
-gcloud sql connect sapapnj-db --user=sapapnj-api
+gcloud sql connect "$DB_INSTANCE" --user="$DB_USER"
 ```
 
 Once connected:
 
 ```sql
-USE sapapnj;
+USE your_database_name_from_gcloud_conf;
 -- Paste the contents of cloud_functions/api/schema.sql
 ```
 
@@ -105,20 +121,34 @@ cd cloud_functions/api
 npm install
 ```
 
-> **Important:** Keep the entire `--set-env-vars` value as one shell argument. Do not press Enter inside `DB_USER`, `DB_PASS`, `DB_NAME`, or `INSTANCE_CONNECTION_NAME`.
+> **Important:** Use the `--env-vars-file` form below for API deployment so
+> shell line wrapping cannot corrupt `DB_PASS` or `INSTANCE_CONNECTION_NAME`.
+
+Create an env file for deployment. Keep `DB_PASS` outside `gcloud.conf` because
+it is a server secret.
+
+```bash
+cat > /tmp/sapapnj-api-env.yaml <<EOF
+DB_USER: $DB_USER
+DB_PASS: YOUR_PASSWORD
+DB_NAME: $DB_NAME
+INSTANCE_CONNECTION_NAME: $INSTANCE_CONNECTION_NAME
+FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID
+EOF
+```
 
 ### Option A: Linux / macOS / GCP Cloud Shell (Bash)
 
 ```bash
-gcloud functions deploy sapapnjApi \
+gcloud functions deploy "$API_FUNCTION_NAME" \
   --gen2 \
   --runtime=nodejs22 \
-  --region=asia-southeast2 \
+  --region="$GCP_REGION" \
   --trigger-http \
   --allow-unauthenticated \
-  --entry-point=sapapnjApi \
-  --set-env-vars="DB_USER=sapapnj-api,DB_PASS=REDACTED,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db" \
-  --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com \
+  --entry-point="$API_FUNCTION_NAME" \
+  --env-vars-file=/tmp/sapapnj-api-env.yaml \
+  --service-account="$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" \
   --source=. \
   --memory=256MB \
   --timeout=60s
@@ -127,15 +157,15 @@ gcloud functions deploy sapapnjApi \
 ### Option B: Windows PowerShell
 
 ```powershell
-gcloud functions deploy sapapnjApi `
+gcloud functions deploy "$env:API_FUNCTION_NAME" `
   --gen2 `
   --runtime=nodejs22 `
-  --region=asia-southeast2 `
+  --region="$env:GCP_REGION" `
   --trigger-http `
   --allow-unauthenticated `
-  --entry-point=sapapnjApi `
-  --set-env-vars="DB_USER=sapapnj-api,DB_PASS=REDACTED,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db" `
-  --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com `
+  --entry-point="$env:API_FUNCTION_NAME" `
+  --env-vars-file=/tmp/sapapnj-api-env.yaml `
+  --service-account="${env:GCP_SERVICE_ACCOUNT}@${env:GCP_PROJECT_ID}.iam.gserviceaccount.com" `
   --source=. `
   --memory=256MB `
   --timeout=60s
@@ -144,7 +174,7 @@ gcloud functions deploy sapapnjApi `
 ### Option C: Single line (works everywhere)
 
 ```bash
-gcloud functions deploy sapapnjApi --gen2 --runtime=nodejs22 --region=asia-southeast2 --trigger-http --allow-unauthenticated --entry-point=sapapnjApi --set-env-vars="DB_USER=sapapnj-api,DB_PASS=YOUR_PASSWORD,DB_NAME=sapapnj,INSTANCE_CONNECTION_NAME=sapapnj-gcp:asia-southeast2:sapapnj-db" --service-account=sapapnj-media-fn@sapapnj-gcp.iam.gserviceaccount.com --source=. --memory=256MB --timeout=60s
+gcloud functions deploy "$API_FUNCTION_NAME" --gen2 --runtime=nodejs22 --region="$GCP_REGION" --trigger-http --allow-unauthenticated --entry-point="$API_FUNCTION_NAME" --env-vars-file=/tmp/sapapnj-api-env.yaml --service-account="$GCP_SERVICE_ACCOUNT@$GCP_PROJECT_ID.iam.gserviceaccount.com" --source=. --memory=256MB --timeout=60s
 ```
 
 ### Repair existing environment variables
@@ -153,34 +183,35 @@ If you need to repair env vars after a password reset or broken deploy, use the 
 
 ```bash
 cat > /tmp/sapapnj-api-env.yaml <<'EOF'
-DB_USER: sapapnj-api
+DB_USER: YOUR_DB_USER
 DB_PASS: YOUR_PASSWORD
-DB_NAME: sapapnj
-INSTANCE_CONNECTION_NAME: sapapnj-gcp:asia-southeast2:sapapnj-db
+DB_NAME: YOUR_DB_NAME
+INSTANCE_CONNECTION_NAME: PROJECT_ID:REGION:DB_INSTANCE
+FIREBASE_PROJECT_ID: YOUR_FIREBASE_PROJECT_ID
 EOF
 
-gcloud functions deploy sapapnjApi \
+gcloud functions deploy "$API_FUNCTION_NAME" \
   --gen2 \
-  --region=asia-southeast2 \
+  --region="$GCP_REGION" \
   --env-vars-file=/tmp/sapapnj-api-env.yaml
 ```
 
 After deployment, note the URL:
 
 ```
-https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi
+https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION_NAME
 ```
 
 This is your `API_BASE_URL`.
 
 ---
 
-## Step 7 — Update Your `.env` File
+## Step 7 — Update `gcloud.conf`
 
-Open the `.env` file in the project root and add:
+Open `gcloud.conf` in the project root and add the actual API URL:
 
 ```env
-API_BASE_URL=https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi
+API_BASE_URL=https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION_NAME
 ```
 
 Use the actual URL from Step 6 output.
@@ -192,7 +223,7 @@ Use the actual URL from Step 6 output.
 ### 1. Test health check
 
 ```bash
-curl https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi/api/health
+curl "$API_BASE_URL/api/health"
 ```
 
 Expected response: `{"status":"ok"}`
@@ -203,7 +234,7 @@ Requires a Firebase ID token:
 
 ```bash
 curl -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN" \
-  https://asia-southeast2-sapapnj-gcp.cloudfunctions.net/sapapnjApi/api/users/YOUR_UID
+  "$API_BASE_URL/api/users/YOUR_UID"
 ```
 
 ---
@@ -211,7 +242,7 @@ curl -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN" \
 ## Notes
 
 - The Cloud SQL instance (`db-f1-micro`) costs **~$7–10/month**.
-  - Stop when not in use: `gcloud sql instances patch sapapnj-db --activation-policy=NEVER`
-  - Restart: `gcloud sql instances patch sapapnj-db --activation-policy=ALWAYS`
+  - Stop when not in use: `gcloud sql instances patch "$DB_INSTANCE" --activation-policy=NEVER`
+  - Restart: `gcloud sql instances patch "$DB_INSTANCE" --activation-policy=ALWAYS`
 - The API uses `@google-cloud/cloud-sql-connector` for IAM-based auth. No need to manage SSL certificates or IP whitelists.
 - For production, remove `--allow-unauthenticated` and enforce Firebase Auth token verification on all endpoints (already implemented in middleware).

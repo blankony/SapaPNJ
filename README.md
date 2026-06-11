@@ -74,7 +74,8 @@ Here is a sneak peek of the application. For the complete list of all 47 screens
 
 ## Getting Started
 
-Firebase and API key configuration is required before running the application.
+Firebase, Google Cloud, and API key configuration is required before running the
+application.
 
 ### 1. Firebase Project Setup
 
@@ -83,21 +84,57 @@ Firebase and API key configuration is required before running the application.
 - **Enable Services:**
   - **Authentication:** Enable the `Email/Password` sign-in provider.
 
-### 2. Environment Configuration (.env)
+### 2. Google Cloud Runtime Configuration (`gcloud.conf`)
 
-This project uses flutter_dotenv to securely manage API keys. You must create a .env file in the root directory of the project to enable AI features (Spirit AI, Content Guard) and Media Uploads.
+All deploy-specific Google Cloud and Firebase client values live in
+`gcloud.conf`. Edit this file when moving the app to another GCP/Firebase
+project; do not edit Dart source files for project IDs, Firebase app IDs,
+bucket names, or backend URLs.
 
-1. Create a file named .env in the root of your project folder.
-2. Copy and paste the keys below, replacing the values with your own API keys:
+At minimum, verify these values before building or deploying:
+
+```env
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_REGION=asia-southeast2
+GCP_SERVICE_ACCOUNT=sapapnj-media-fn
+
+GCS_BUCKET_NAME=your-gcs-bucket-name
+GCS_FUNCTION_URL=https://REGION-PROJECT_ID.cloudfunctions.net
+
+API_SERVICE_NAME=sapapnjapi
+API_FUNCTION_NAME=sapapnjApi
+API_BASE_URL=https://your-api-base-url
+
+DB_NAME=sapapnj
+DB_USER=sapapnj-api
+DB_INSTANCE=sapapnj-db
+INSTANCE_CONNECTION_NAME=PROJECT_ID:REGION:DB_INSTANCE
+
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+FIREBASE_STORAGE_BUCKET=your-firebase-storage-bucket
+```
+
+Also replace the platform-specific `FIREBASE_*_API_KEY`,
+`FIREBASE_*_APP_ID`, auth domain, measurement ID, and bundle ID entries with
+the values from your Firebase project.
+
+For Android Google Sign-In, also replace `android/app/google-services.json`
+with the file downloaded from the same Firebase project. The Dart Firebase
+options now come from `gcloud.conf`, but Android still uses
+`google-services.json` for native Google Sign-In resources.
+
+### 3. Secret Client Configuration (`.env`)
+
+This project uses `flutter_dotenv` for client-side secrets and optional local
+overrides. Create a `.env` file in the root directory before building the app.
+Keep deploy/project routing in `gcloud.conf`; keep API secrets here.
 
 ```.env
 # Google AI Studio Key (for Spirit AI & Content Safety)
 GEMINI_API_KEY=your_google_gemini_api_key
-
-# Google Cloud Storage (for Image/Video Uploads)
-GCS_BUCKET_NAME=sapapnj-media-assets
-GCS_FUNCTION_URL=https://asia-southeast2-sapapnj-gcp.cloudfunctions.net
-
-# Backend API (Cloud Run)
-API_BASE_URL=https://your-cloud-run-url/api
 ```
+
+Do not place server-only secrets such as `DB_PASS` in `.env`, because Flutter
+assets are bundled into the client build. Export server secrets only in the
+shell used for deployment.

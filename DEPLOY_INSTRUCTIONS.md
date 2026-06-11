@@ -37,30 +37,65 @@ cd SapaPNJ
 git pull
 ```
 
-### 4. Navigate to the API folder
+### 4. Load deployment config
+
+`gcloud.conf` is the source of truth for project, region, service name, Firebase
+project ID, and Cloud SQL connection name. Review it before deploying:
+
+```bash
+set -a
+source gcloud.conf
+set +a
+
+gcloud config set project "$GCP_PROJECT_ID"
+```
+
+### 5. Navigate to the API folder
 
 ```bash
 cd cloud_functions/api
 ```
 
-### 5. Deploy to Cloud Run
+Set the database password only in your shell. Do not commit it to `gcloud.conf`
+or `.env`.
 
 ```bash
-gcloud run deploy sapapnjapi --region=asia-southeast2 --source=. --allow-unauthenticated
+export DB_PASS="YOUR_DATABASE_PASSWORD"
 ```
 
-### 6. Handle prompts
+### 6. Deploy to Cloud Run
+
+Use the deploy helper. It reads `gcloud.conf`, requires `DB_PASS`, and deploys
+to the configured project and region.
+
+```bash
+./deploy.sh
+```
+
+Equivalent manual command:
+
+```bash
+gcloud run deploy "$API_SERVICE_NAME" \
+  --project="$GCP_PROJECT_ID" \
+  --region="$GCP_REGION" \
+  --source=. \
+  --allow-unauthenticated \
+  --set-env-vars="DB_USER=$DB_USER,DB_PASS=$DB_PASS,DB_NAME=$DB_NAME,INSTANCE_CONNECTION_NAME=$INSTANCE_CONNECTION_NAME,FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID"
+```
+
+### 7. Handle prompts
 
 - If prompted to select a project, choose your GCP project.
 - If prompted to enable APIs, type `Y`.
 
-### 7. Wait for completion
+### 8. Wait for completion
 
 Build and deployment usually takes **2–5 minutes**.
 
-### 8. Done
+### 9. Update `gcloud.conf`
 
-The new endpoint will be live at your Cloud Run URL.
+After deployment, copy the Cloud Run service URL into `API_BASE_URL` in
+`gcloud.conf`, then rebuild/redeploy the Flutter client.
 
 ---
 
@@ -69,7 +104,7 @@ The new endpoint will be live at your Cloud Run URL.
 In Cloud Shell, test the health endpoint:
 
 ```bash
-curl https://YOUR_CLOUD_RUN_URL/api/health
+curl "$API_BASE_URL/api/health"
 ```
 
 Expected response:
