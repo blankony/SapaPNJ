@@ -139,6 +139,17 @@ gcloud sql instances create "newsapapnj-db" \
   --availability-type=zonal \
   --assign-ip
 
+
+NAME: newsapapnj-db
+DATABASE_VERSION: MYSQL_8_0
+LOCATION: asia-southeast2-b
+TIER: db-f1-micro
+PRIMARY_ADDRESS: 34.101.162.7
+PRIVATE_ADDRESS: -
+STATUS: RUNNABLE
+
+
+
 # 2. Membuat database 'newsapapnj'
 gcloud sql databases create "newsapapnj" --instance="newsapapnj-db"
 
@@ -237,6 +248,8 @@ chmod +x deploy.sh
 
 ## Langkah 8: Konfigurasi Client (Lokal Anda)
 
+gcloud run services list --project=newsapapnj-gcp --region=asia-southeast2
+
 Setelah deployment selesai di Cloud Shell:
 1. Salin file `gcloud.conf` hasil editan Anda di Cloud Shell ke folder proyek lokal Anda.
 2. Buat file `.env` di komputer lokal Anda pada root folder proyek NewSapaPNJ, dan masukkan API key Google Gemini Anda:
@@ -252,11 +265,3 @@ Setelah deployment selesai di Cloud Shell:
    ```
 
 ---
-
-## Langkah Opsional: Seed Data Explore (Dari Cloud Shell)
-Untuk mengisi data postingan palsu dan trending agar fitur pencarian dan discovery bisa langsung dicoba:
-```bash
-cd ~/SapaPNJ/cloud_functions/api
-export DB_PASS="newsapapnj-db-pass"
-ALLOW_DEV_SEED=1 npm run seed:explore
-```
